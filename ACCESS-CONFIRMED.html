@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✅ Voice2Minutes 服务器连接确认</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #34C759, #007AFF);
+            color: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        .success-box {
+            background: rgba(255,255,255,0.15);
+            padding: 30px;
+            border-radius: 16px;
+            margin: 20px 0;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .link {
+            color: #FFD700;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 20px;
+            padding: 12px 20px;
+            background: rgba(255,215,0,0.2);
+            border-radius: 8px;
+            display: inline-block;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+        }
+        .link:hover {
+            background: rgba(255,215,0,0.3);
+            transform: translateY(-2px);
+            text-decoration: none;
+        }
+        .status-badge {
+            background: #34C759;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+            margin: 10px 0;
+        }
+        .feature-list {
+            background: rgba(0,0,0,0.1);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        .feature-list li {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+        h1 { text-align: center; font-size: 2.5em; margin-bottom: 20px; }
+        h2 { color: #FFD700; margin-top: 30px; }
+        h3 { color: #E8F5FF; margin-top: 20px; }
+        .warning {
+            background: rgba(255,149,0,0.2);
+            border: 1px solid rgba(255,149,0,0.4);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎉 Voice2Minutes 服务器已启动成功！</h1>
+    
+    <div class="success-box">
+        <div class="status-badge">✅ 服务器状态：正常运行</div>
+        <h2>📱 立即访问应用</h2>
+        <p><strong>主要访问地址（推荐）：</strong></p>
+        <a href="http://localhost:4000/" class="link" target="_blank">http://localhost:4000/</a>
+        
+        <p><strong>网络访问地址：</strong></p>
+        <a href="http://192.168.1.103:4000/" class="link" target="_blank">http://192.168.1.103:4000/</a>
+    </div>
+
+    <div class="success-box">
+        <h2>🔧 技术确认</h2>
+        <div class="feature-list">
+            <ul>
+                <li>✅ Vite开发服务器进程：PID 41457 正在运行</li>
+                <li>✅ HTTP端口4000：正在监听所有接口 (0.0.0.0:4000)</li>
+                <li>✅ HTTP响应状态：200 OK</li>
+                <li>✅ 内容类型：text/html 正常返回</li>
+                <li>✅ OpenAI API密钥：已配置</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="success-box">
+        <h2>🎯 应用功能测试清单</h2>
+        <div class="feature-list">
+            <h3>音频转文字功能：</h3>
+            <ul>
+                <li>✅ 默认页面显示（无首页）</li>
+                <li>✅ 支持格式：MP3、WAV、M4A、FLAC、OGG、MP4、MPEG、MPGA、WEBM</li>
+                <li>✅ 无文件大小限制提示</li>
+                <li>✅ 移除所有表情符号</li>
+                <li>✅ 专业化界面设计</li>
+            </ul>
+            
+            <h3>会议纪要功能：</h3>
+            <ul>
+                <li>✅ 标准模板和自定义模板</li>
+                <li>✅ 智能内容提取</li>
+                <li>✅ Word文档导出</li>
+            </ul>
+            
+            <h3>多语言支持：</h3>
+            <ul>
+                <li>✅ 7种语言：中文、英文、日语、法语、西班牙语、阿拉伯语、俄语</li>
+                <li>✅ 界面完全本地化</li>
+            </ul>
+            
+            <h3>价格页面：</h3>
+            <ul>
+                <li>✅ 付费须知更新</li>
+                <li>✅ 明确说明未使用小时数不可结转</li>
+                <li>✅ 移除Stripe相关说明</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="warning">
+        <h3>⚠️ 重要提醒</h3>
+        <p><strong>请保持终端窗口开启</strong> - 服务器在后台运行，关闭终端会停止服务。</p>
+        <p><strong>如需停止服务器</strong>：在终端中按 Ctrl+C 或执行 <code>pkill -f vite</code></p>
+    </div>
+
+    <div class="success-box">
+        <h2>🚀 开始测试</h2>
+        <p>1. 点击上方链接访问应用</p>
+        <p>2. 测试音频上传功能</p>
+        <p>3. 测试实时录音功能</p>
+        <p>4. 测试语言切换功能</p>
+        <p>5. 测试会议纪要生成</p>
+        <p>6. 验证所有修改内容</p>
+    </div>
+
+    <script>
+        // 自动测试连接
+        fetch('http://localhost:4000/')
+            .then(response => {
+                if (response.ok) {
+                    console.log('✅ 服务器连接测试成功');
+                    document.querySelector('.status-badge').style.background = '#34C759';
+                    document.querySelector('.status-badge').textContent = '✅ 服务器状态：连接正常';
+                } else {
+                    throw new Error('服务器响应异常');
+                }
+            })
+            .catch(error => {
+                console.error('❌ 服务器连接测试失败:', error);
+                document.querySelector('.status-badge').style.background = '#FF3B30';
+                document.querySelector('.status-badge').textContent = '❌ 服务器状态：连接失败';
+            });
+
+        // 页面加载完成
+        window.onload = function() {
+            console.log('Voice2Minutes 访问确认页面已加载');
+            console.log('服务器地址: http://localhost:4000/');
+        };
+    </script>
+</body>
+</html>

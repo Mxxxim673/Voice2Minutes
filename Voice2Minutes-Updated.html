@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice2Minutes - 专业音频转会议纪要应用</title>
+    <style>
+        :root {
+            --primary-blue: #007AFF;
+            --primary-blue-hover: #0056CC;
+            --primary-blue-light: #E3F2FD;
+            --secondary-gray: #8E8E93;
+            --light-gray: #F2F2F7;
+            --medium-gray: #C7C7CC;
+            --dark-gray: #1C1C1E;
+            --success-green: #34C759;
+            --warning-orange: #FF9500;
+            --error-red: #FF3B30;
+            --background-primary: #FFFFFF;
+            --background-secondary: #F2F2F7;
+            --text-primary: #000000;
+            --text-secondary: #8E8E93;
+            --border-color: #C6C6C8;
+            --font-size-large: 34px;
+            --font-size-title: 28px;
+            --font-size-headline: 22px;
+            --font-size-body: 17px;
+            --font-size-callout: 16px;
+            --font-size-subhead: 15px;
+            --font-size-footnote: 13px;
+            --font-weight-regular: 400;
+            --font-weight-medium: 500;
+            --font-weight-semibold: 600;
+            --font-weight-bold: 700;
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --spacing-xl: 32px;
+            --spacing-xxl: 48px;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            font-size: var(--font-size-body);
+            font-weight: var(--font-weight-regular);
+            line-height: 1.47;
+            color: var(--text-primary);
+            background-color: var(--background-secondary);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 var(--spacing-md);
+        }
+        
+        .nav-bar {
+            background-color: var(--background-primary);
+            border-bottom: 1px solid var(--border-color);
+            padding: var(--spacing-md) 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        
+        .nav-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: var(--font-size-headline);
+            font-weight: var(--font-weight-bold);
+            color: var(--primary-blue);
+            text-decoration: none;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: var(--spacing-lg);
+            list-style: none;
+        }
+        
+        .nav-link {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: var(--font-weight-medium);
+            transition: color 0.2s ease-in-out;
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+        }
+        
+        .nav-link:hover,
+        .nav-link.active {
+            color: var(--primary-blue);
+            background-color: var(--primary-blue-light);
+        }
+        
+        .card {
+            background: var(--background-primary);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .page-header {
+            text-align: center;
+            padding: var(--spacing-xxl) 0 var(--spacing-xl);
+        }
+        
+        .page-title {
+            font-size: var(--font-size-large);
+            font-weight: var(--font-weight-bold);
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .page-subtitle {
+            font-size: var(--font-size-body);
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 24px;
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-callout);
+            font-weight: var(--font-weight-semibold);
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            min-height: 44px;
+        }
+        
+        .button-primary {
+            background-color: var(--primary-blue);
+            color: white;
+        }
+        
+        .button-primary:hover {
+            background-color: var(--primary-blue-hover);
+            transform: translateY(-1px);
+        }
+        
+        .button-outline {
+            background-color: transparent;
+            border: 1px solid var(--primary-blue);
+            color: var(--primary-blue);
+        }
+        
+        .button-outline:hover {
+            background-color: var(--primary-blue-light);
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--spacing-lg);
+            margin-top: var(--spacing-xl);
+        }
+        
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--spacing-md);
+        }
+        
+        .template-option {
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: var(--background-primary);
+        }
+        
+        .template-option:hover,
+        .template-option.selected {
+            border-color: var(--primary-blue);
+            background-color: var(--primary-blue-light);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .template-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .template-badge {
+            font-size: 20px;
+            color: var(--primary-blue);
+            background-color: var(--light-gray);
+            padding: var(--spacing-sm);
+            border-radius: var(--radius-sm);
+        }
+        
+        .dropzone {
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xxl);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: var(--background-secondary);
+        }
+        
+        .dropzone:hover,
+        .dropzone.active {
+            border-color: var(--primary-blue);
+            background-color: var(--primary-blue-light);
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            color: var(--primary-blue);
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .file-info {
+            font-size: var(--font-size-subhead);
+            color: var(--text-secondary);
+            margin: var(--spacing-xs) 0;
+        }
+        
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .pricing-card {
+            background: var(--background-primary);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+            text-align: center;
+            position: relative;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .pricing-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-blue);
+        }
+        
+        .pricing-card.popular {
+            border-color: var(--success-green);
+            transform: scale(1.05);
+        }
+        
+        .popular-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--success-green);
+            color: white;
+            padding: var(--spacing-xs) var(--spacing-md);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-footnote);
+            font-weight: var(--font-weight-semibold);
+        }
+        
+        .plan-price {
+            font-size: var(--font-size-title);
+            font-weight: var(--font-weight-bold);
+            color: var(--primary-blue);
+            margin: var(--spacing-md) 0;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: var(--spacing-xl);
+            color: var(--text-secondary);
+            font-size: var(--font-size-footnote);
+            border-top: 1px solid var(--border-color);
+            margin-top: var(--spacing-xxl);
+        }
+        
+        .page {
+            display: none;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        .success-message {
+            background-color: var(--success-green);
+            color: white;
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-lg);
+            text-align: center;
+            margin: var(--spacing-lg) 0;
+            font-weight: var(--font-weight-semibold);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 var(--spacing-sm);
+            }
+            
+            .nav-content {
+                flex-direction: column;
+                gap: var(--spacing-md);
+            }
+            
+            .nav-links {
+                gap: var(--spacing-md);
+            }
+            
+            .page-header {
+                padding: var(--spacing-lg) 0;
+            }
+            
+            .page-title {
+                font-size: var(--font-size-title);
+            }
+            
+            .feature-grid,
+            .template-grid,
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav-bar">
+        <div class="container nav-content">
+            <a href="#" class="logo">Voice2Minutes</a>
+            <ul class="nav-links">
+                <li><a href="#" class="nav-link active" data-page="audio">音频转文字</a></li>
+                <li><a href="#" class="nav-link" data-page="minutes">会议纪要</a></li>
+                <li><a href="#" class="nav-link" data-page="pricing">价格</a></li>
+            </ul>
+            <select id="languageSelect" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+                <option value="zh">中文</option>
+                <option value="en">English</option>
+                <option value="ja">日本語</option>
+                <option value="fr">Français</option>
+                <option value="es">Español</option>
+                <option value="ar">العربية</option>
+                <option value="ru">Русский</option>
+            </select>
+        </div>
+    </nav>
+
+    <!-- Audio to Text Page (Default) -->
+    <div id="audio" class="page active">
+        <div class="container">
+            <div class="page-header">
+                <h1 class="page-title">音频转文字</h1>
+                <p class="page-subtitle">将您的音频录音转换为准确的文字转录</p>
+            </div>
+
+            <div class="card">
+                <h2 style="margin-bottom: 24px;">上传音频文件</h2>
+                <div class="dropzone">
+                    <div class="upload-icon">↑</div>
+                    <p style="margin-bottom: 8px;">点击或拖拽音频文件到此处</p>
+                    <p class="file-info">支持格式：MP3、WAV、M4A、FLAC、OGG、MP4、MPEG、MPGA、WEBM</p>
+                </div>
+                <input type="file" accept="audio/*" style="display: none;" id="audioFile">
+                <button class="button button-primary" style="width: 100%; margin-top: 24px;" onclick="document.getElementById('audioFile').click();">
+                    选择音频文件
+                </button>
+            </div>
+
+            <div class="card">
+                <h2 style="margin-bottom: 24px;">实时录音</h2>
+                <div style="background-color: var(--background-secondary); border-radius: 12px; padding: 24px; text-align: center;">
+                    <div style="height: 60px; background: var(--light-gray); border-radius: 8px; margin-bottom: 24px; display: flex; align-items: center; justify-content: center;">
+                        <span style="color: var(--text-secondary);">波形显示区域</span>
+                    </div>
+                    <button class="button button-primary">
+                        开始录音
+                    </button>
+                </div>
+            </div>
+
+            <div class="card" style="background-color: var(--primary-blue-light);">
+                <h3 style="color: var(--primary-blue); margin-bottom: 16px;">使用说明</h3>
+                <ul style="color: var(--text-primary); padding-left: 24px;">
+                    <li>支持拖拽上传多种音频格式</li>
+                    <li>实时录音功能带波形可视化</li>
+                    <li>高质量音频转录服务</li>
+                    <li>转录完成后可复制文本或导出Word文档</li>
+                    <li>支持大文件处理</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Meeting Minutes Page -->
+    <div id="minutes" class="page">
+        <div class="container">
+            <div class="page-header">
+                <h1 class="page-title">会议纪要生成</h1>
+                <p class="page-subtitle">从您的转录中生成结构化的会议纪要</p>
+            </div>
+
+            <div class="card">
+                <h2 style="margin-bottom: 24px;">选择模板</h2>
+                <div class="template-grid">
+                    <div class="template-option selected">
+                        <div class="template-header">
+                            <h3>标准模板</h3>
+                            <div class="template-badge">■</div>
+                        </div>
+                        <p style="color: var(--text-secondary); margin-bottom: 16px;">包含预定义章节的标准会议格式</p>
+                        <div style="font-size: 14px; color: var(--primary-blue);">7个章节</div>
+                    </div>
+                    
+                    <div class="template-option">
+                        <div class="template-header">
+                            <h3>自定义模板</h3>
+                            <div class="template-badge">◆</div>
+                        </div>
+                        <p style="color: var(--text-secondary); margin-bottom: 16px;">创建您自己的自定义会议格式</p>
+                        <div style="font-size: 14px; color: var(--primary-blue);">自定义章节</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-bottom: 16px;">标准模板预览</h3>
+                <div style="background-color: var(--background-secondary); border-radius: 12px; padding: 24px;">
+                    <div style="padding: 8px 0; border-bottom: 1px solid var(--border-color); font-weight: 600; color: var(--primary-blue);">1. 会议主题</div>
+                    <div style="padding: 8px 0; border-bottom: 1px solid var(--border-color); font-weight: 600; color: var(--primary-blue);">2. 日期</div>
+                    <div style="padding: 8px 0; border-bottom: 1px solid var(--border-color); font-weight: 600; color: var(--primary-blue);">3. 参会者</div>
+                    <div style="padding: 8px 0; border-bottom: 1px solid var(--border-color); font-weight: 600; color: var(--primary-blue);">4. 议题</div>
+                    <div style="padding: 8px 0; border-bottom: 1px solid var(--border-color); font-weight: 600; color: var(--primary-blue);">5. 决定事宜</div>
+                    <div style="padding: 8px 0; border-bottom: 1px solid var(--border-color); font-weight: 600; color: var(--primary-blue);">6. To-Do及日程安排</div>
+                    <div style="padding: 8px 0; font-weight: 600; color: var(--primary-blue);">7. 其他</div>
+                </div>
+                <button class="button button-primary" style="width: 100%; margin-top: 24px;">
+                    开始生成纪要
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pricing Page -->
+    <div id="pricing" class="page">
+        <div class="container">
+            <div class="page-header">
+                <h1 class="page-title">价格与订阅</h1>
+                <p class="page-subtitle">选择最适合您的计划</p>
+            </div>
+
+            <div class="card">
+                <h2 style="text-align: center; margin-bottom: 32px;">一次性购买</h2>
+                <div class="pricing-grid">
+                    <div class="pricing-card">
+                        <div style="font-size: 24px; font-weight: 700; margin-bottom: 8px;">5 <span style="font-size: 16px; color: var(--text-secondary);">小时</span></div>
+                        <div class="plan-price">¥500</div>
+                        <div style="font-size: 14px; color: var(--text-secondary);">¥100 每小时</div>
+                    </div>
+                    
+                    <div class="pricing-card">
+                        <div style="font-size: 24px; font-weight: 700; margin-bottom: 8px;">10 <span style="font-size: 16px; color: var(--text-secondary);">小时</span></div>
+                        <div class="plan-price">¥950</div>
+                        <div style="font-size: 14px; color: var(--text-secondary);">¥95 每小时</div>
+                    </div>
+                    
+                    <div class="pricing-card popular">
+                        <div class="popular-badge">推荐</div>
+                        <div style="font-size: 24px; font-weight: 700; margin-bottom: 8px;">30 <span style="font-size: 16px; color: var(--text-secondary);">小时</span></div>
+                        <div class="plan-price">¥2,400</div>
+                        <div style="font-size: 14px; color: var(--text-secondary);">¥80 每小时</div>
+                    </div>
+                    
+                    <div class="pricing-card">
+                        <div style="font-size: 24px; font-weight: 700; margin-bottom: 8px;">100 <span style="font-size: 16px; color: var(--text-secondary);">小时</span></div>
+                        <div class="plan-price">¥6,900</div>
+                        <div style="font-size: 14px; color: var(--text-secondary);">¥69 每小时</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 style="text-align: center; margin-bottom: 32px;">订阅</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; max-width: 800px; margin: 0 auto;">
+                    <div style="background: linear-gradient(135deg, var(--primary-blue-light) 0%, var(--background-primary) 100%); border: 2px solid var(--primary-blue); border-radius: 16px; padding: 32px; text-align: center;">
+                        <div style="font-size: 16px; font-weight: 600; color: var(--primary-blue); margin-bottom: 8px;">月付</div>
+                        <div style="font-size: 24px; font-weight: 700; margin-bottom: 8px;">30 <span style="font-size: 16px; color: var(--text-secondary);">小时</span></div>
+                        <div class="plan-price">¥2,200 <span style="font-size: 16px; color: var(--text-secondary);">/月</span></div>
+                        <div style="font-size: 14px; color: var(--text-secondary);">¥73 每小时</div>
+                    </div>
+                    
+                    <div style="background: linear-gradient(135deg, var(--primary-blue-light) 0%, var(--background-primary) 100%); border: 2px solid var(--primary-blue); border-radius: 16px; padding: 32px; text-align: center;">
+                        <div style="font-size: 16px; font-weight: 600; color: var(--primary-blue); margin-bottom: 8px;">年付</div>
+                        <div style="font-size: 24px; font-weight: 700; margin-bottom: 8px;">360 <span style="font-size: 16px; color: var(--text-secondary);">小时</span></div>
+                        <div class="plan-price">¥24,900 <span style="font-size: 16px; color: var(--text-secondary);">/年</span></div>
+                        <div style="font-size: 14px; color: var(--success-green); font-weight: 600;">比月付节省 ¥1,500</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="background-color: var(--primary-blue-light);">
+                <h3 style="color: var(--primary-blue); margin-bottom: 16px;">付费须知</h3>
+                <ul style="color: var(--text-primary); padding-left: 24px;">
+                    <li>价格以日元（¥）显示</li>
+                    <li>所有计划包含安全处理和数据隐私保护</li>
+                    <li>一次性购买永不到期</li>
+                    <li>订阅可随时取消</li>
+                    <li>订阅用户未使用小时数不可结转</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>© 2025 Voice2Minutes. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Simple page navigation
+        document.addEventListener('DOMContentLoaded', function() {
+            const navLinks = document.querySelectorAll('.nav-link');
+            const pages = document.querySelectorAll('.page');
+            
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Remove active class from all links and pages
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    pages.forEach(p => p.classList.remove('active'));
+                    
+                    // Add active class to clicked link
+                    this.classList.add('active');
+                    
+                    // Show corresponding page
+                    const pageId = this.getAttribute('data-page');
+                    document.getElementById(pageId).classList.add('active');
+                });
+            });
+            
+            // Language selector functionality
+            const languageSelect = document.getElementById('languageSelect');
+            languageSelect.addEventListener('change', function() {
+                console.log('Language changed to:', this.value);
+                // In a real app, this would trigger i18n translation
+            });
+            
+            // Log successful load
+            console.log('Voice2Minutes 专业版本已加载成功！');
+            console.log('已移除表情符号，更新支持格式，添加日语支持。');
+        });
+
+        // Simulate some interactive features
+        function simulateFeature(featureName) {
+            alert(`${featureName} 功能演示\n\n在完整版本中，这里将提供:\n• 高质量音频转录服务\n• 智能会议纪要生成\n• 文件上传处理\n• 实时录音功能\n• Word文档导出\n\n请在开发环境中测试完整功能。`);
+        }
+
+        // Add click handlers for demonstration
+        document.addEventListener('click', function(e) {
+            if (e.target.textContent.includes('选择音频文件')) {
+                simulateFeature('音频文件上传');
+            } else if (e.target.textContent.includes('开始录音')) {
+                simulateFeature('实时录音');
+            } else if (e.target.textContent.includes('开始生成纪要')) {
+                simulateFeature('智能会议纪要生成');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+{
+  "common": {
+    "appName": "Voice2Minutes",
+    "loading": "読み込み中...",
+    "error": "エラー",
+    "success": "成功",
+    "cancel": "キャンセル",
+    "save": "保存",
+    "copy": "テキストをコピー",
+    "export": "Wordにエクスポート",
+    "clear": "現在の記録をクリア",
+    "start": "開始",
+    "stop": "停止",
+    "upload": "アップロード",
+    "download": "ダウンロード"
+  },
+  "navigation": {
+    "audioToText": "音声文字起こし",
+    "pricing": "料金"
+  },
+  "audioToText": {
+    "title": "音声文字起こし",
+    "subtitle": "音声録音を正確なテキスト転写に変換します",
+    "uploadAudio": "音声ファイルをアップロード",
+    "recordAudio": "音声録音",
+    "startTranscription": "文字起こし開始",
+    "taskCompleted": "タスク完了！",
+    "supportedFormats": "対応形式：MP3、WAV、M4A、FLAC、OGG、MP4、MPEG、MPGA、WEBM",
+    "recording": "録音中...",
+    "processing": "音声を処理中...",
+    "transcriptionComplete": "転写が正常に完了しました！",
+    "error": "転写中にエラーが発生しました",
+    "quickActions": "クイックアクション",
+    "fileUploaded": "ファイルがアップロードされ、転写の準備ができました",
+    "usageInstructions": "使用方法",
+    "instructions": {
+      "step1": "音声ファイルをアップロードするか、ブラウザで直接録音してください",
+      "step2": "「転写を開始」をクリックして音声をテキストに変換します",
+      "step3": "転写結果を確認してコピーしてください",
+      "step4": "転写結果を確認し、必要に応じてエクスポートしてください"
+    },
+    "audioInputMethod": "音声入力方式",
+    "dragDropText": "クリックまたは音声ファイルをここにドラッグ",
+    "dragDropActiveText": "ファイルをここにドロップ...",
+    "dividerOr": "または",
+    "liveRecording": "リアルタイム録音",
+    "speaker": "話者",
+    "paymentNotice": "支払いについて"
+  },
+  "pricing": {
+    "title": "料金とサブスクリプション",
+    "subtitle": "あなたに最適なプランを選択してください",
+    "oneTimePurchases": "時間プラン",
+    "subscriptions": "サブスクリプション",
+    "hours": "時間",
+    "monthly": "月額",
+    "annual": "年額",
+    "selectPlan": "プランを選択",
+    "paymentNotice": "お支払いについて",
+    "mostPopular": "人気プラン",
+    "perHour": "時間あたり",
+    "paymentInfo": {
+      "currency": "価格は日本円（¥）で表示されています",
+      "security": "すべてのプランでセキュアな処理とデータプライバシーが含まれます",
+      "oneTime": "時間のみを購入した場合、使用期限はなく、累積可能です。",
+      "cancellation": "サブスクリプションはいつでもキャンセル可能です"
+    },
+    "plans": {
+      "5hours": "5時間",
+      "10hours": "10時間",
+      "30hours": "30時間",
+      "100hours": "100時間",
+      "monthly30": "月額（30時間）",
+      "annual360": "年額（360時間）"
+    }
+  },
+  "footer": {
+    "copyright": "voice2minutes {{year}} all rights reserved"
+  }
+}

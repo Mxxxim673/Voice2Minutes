@@ -1,0 +1,80 @@
+{
+  "common": {
+    "appName": "Voice2Minutes",
+    "loading": "جاري التحميل...",
+    "error": "خطأ",
+    "success": "نجح",
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "copy": "نسخ النص",
+    "export": "تصدير إلى Word",
+    "clear": "مسح السجل الحالي",
+    "start": "بدء",
+    "stop": "توقف",
+    "upload": "رفع",
+    "download": "تحميل"
+  },
+  "navigation": {
+    "audioToText": "الصوت إلى النص",
+    "pricing": "الأسعار"
+  },
+  "audioToText": {
+    "title": "تحويل الصوت إلى نص",
+    "subtitle": "حول تسجيلاتك الصوتية إلى نصوص مكتوبة دقيقة",
+    "uploadAudio": "رفع ملف صوتي",
+    "recordAudio": "تسجيل صوتي",
+    "startTranscription": "بدء النسخ",
+    "taskCompleted": "تمت المهمة!",
+    "supportedFormats": "الصيغ المدعومة: MP3، WAV، M4A، FLAC، OGG، MP4، MPEG، MPGA، WEBM",
+    "recording": "جاري التسجيل...",
+    "processing": "جاري معالجة الصوت...",
+    "transcriptionComplete": "تم إكمال النسخ بنجاح!",
+    "error": "حدث خطأ أثناء النسخ",
+    "quickActions": "الإجراءات السريعة",
+    "fileUploaded": "تم رفع الملف، جاهز للنسخ",
+    "usageInstructions": "طريقة الاستخدام",
+    "instructions": {
+      "step1": "ارفع ملف صوتي أو سجل مباشرة في متصفحك",
+      "step2": "انقر على 'بدء النسخ' لتحويل الصوت إلى نص",
+      "step3": "راجع وانسخ نتيجة النسخ",
+      "step4": "راجع وصدر نسخة النص حسب الحاجة"
+    },
+    "audioInputMethod": "طريقة إدخال الصوت",
+    "dragDropText": "انقر أو اسحب الملف الصوتي هنا",
+    "dragDropActiveText": "أفلت الملف هنا...",
+    "dividerOr": "أو",
+    "liveRecording": "التسجيل المباشر",
+    "speaker": "المتحدث",
+    "paymentNotice": "إشعار الدفع"
+  },
+  "pricing": {
+    "title": "الأسعار والاشتراك",
+    "subtitle": "اختر الخطة التي تناسبك",
+    "oneTimePurchases": "شراء مدة",
+    "subscriptions": "اشتراكات",
+    "hours": "ساعات",
+    "monthly": "شهري",
+    "annual": "سنوي",
+    "selectPlan": "اختر خطة",
+    "paymentNotice": "إشعار الدفع",
+    "mostPopular": "الأكثر شعبية",
+    "perHour": "في الساعة",
+    "paymentInfo": {
+      "currency": "الأسعار معروضة بالين الياباني (¥)",
+      "security": "جميع الخطط تشمل معالجة آمنة وخصوصية البيانات",
+      "oneTime": "عند شراء المدة بشكل منفصل، لا يوجد تاريخ انتهاء صلاحية، ويمكن تجميعها.",
+      "cancellation": "يمكن إلغاء الاشتراكات في أي وقت"
+    },
+    "plans": {
+      "5hours": "5 ساعات",
+      "10hours": "10 ساعات",
+      "30hours": "30 ساعة",
+      "100hours": "100 ساعة",
+      "monthly30": "شهري (30 ساعة)",
+      "annual360": "سنوي (360 ساعة)"
+    }
+  },
+  "footer": {
+    "copyright": "voice2minutes {{year}} جميع الحقوق محفوظة"
+  }
+}

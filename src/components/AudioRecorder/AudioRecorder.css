@@ -1,0 +1,140 @@
+.audio-recorder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.waveform-container {
+  width: 100%;
+  max-width: 400px;
+  height: 80px;
+  background-color: var(--background-secondary);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.waveform {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 50px;
+  width: 100%;
+  justify-content: center;
+}
+
+.waveform-bar {
+  width: 3px;
+  background-color: var(--light-gray);
+  border-radius: 2px;
+  transition: height 0.1s ease-out, background-color 0.2s ease;
+  min-height: 4px;
+}
+
+.recording-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+  width: 100%;
+}
+
+.recording-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.recording-indicator {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--error-red);
+}
+
+.recording-dot {
+  width: 8px;
+  height: 8px;
+  background-color: var(--error-red);
+  border-radius: 50%;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.recording-time {
+  font-size: var(--font-size-headline);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+}
+
+.start-recording-button {
+  font-size: var(--font-size-callout);
+  padding: 12px 24px;
+  min-width: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.mic-icon {
+  font-size: 20px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+.stop-button {
+  background-color: var(--error-red);
+  color: white;
+  border: none;
+}
+
+.stop-button:hover {
+  background-color: #e60000;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .waveform-container {
+    height: 80px;
+    padding: var(--spacing-sm);
+  }
+  
+  .waveform {
+    height: 50px;
+  }
+  
+  .waveform-bar {
+    width: 2px;
+    gap: 1px;
+  }
+  
+  .recording-time {
+    font-size: var(--font-size-title);
+  }
+  
+  .start-recording-button {
+    min-width: auto;
+    width: 100%;
+  }
+}

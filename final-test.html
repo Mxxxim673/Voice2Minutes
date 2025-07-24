@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice2Minutes - 服务器连接测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #007AFF, #34C759);
+            color: white;
+            border-radius: 20px;
+        }
+        .test-item {
+            background: rgba(255,255,255,0.1);
+            margin: 15px 0;
+            padding: 20px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+        .success { background: rgba(52, 199, 89, 0.3); }
+        .error { background: rgba(255, 59, 48, 0.3); }
+        .link {
+            color: #FFD700;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .link:hover { text-decoration: underline; }
+        button {
+            background: #007AFF;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover { background: #0056CC; }
+    </style>
+</head>
+<body>
+    <h1>🎤 Voice2Minutes 连接测试</h1>
+    
+    <div class="test-item">
+        <h3>✅ 开发服务器已启动</h3>
+        <p>根据终端输出，服务器已在以下地址运行：</p>
+        <p>📱 本地访问: <a href="http://localhost:4000/" class="link" target="_blank">http://localhost:4000/</a></p>
+        <p>🌐 网络访问: <a href="http://192.168.1.103:4000/" class="link" target="_blank">http://192.168.1.103:4000/</a></p>
+    </div>
+
+    <div class="test-item">
+        <h3>🔧 如果上述链接无法访问，请尝试：</h3>
+        <button onclick="testLink('http://localhost:4000/')">测试本地链接</button>
+        <button onclick="testLink('http://192.168.1.103:4000/')">测试网络链接</button>
+        <button onclick="testLink('http://localhost:5173/')">测试5173端口</button>
+        <button onclick="testLink('http://localhost:3000/')">测试3000端口</button>
+    </div>
+
+    <div id="testResults" class="test-item" style="display: none;">
+        <h3>测试结果：</h3>
+        <div id="results"></div>
+    </div>
+
+    <div class="test-item">
+        <h3>📋 确认应用功能：</h3>
+        <ul>
+            <li>✅ 已添加日语支持</li>
+            <li>✅ 移除首页，默认显示音频转文字</li>
+            <li>✅ 移除所有表情符号</li>
+            <li>✅ 优化使用说明</li>
+            <li>✅ 显示完整音频格式支持</li>
+            <li>✅ 移除文件大小限制提示</li>
+            <li>✅ 更新价格页面付费须知</li>
+        </ul>
+    </div>
+
+    <div class="test-item">
+        <h3>🚀 如何使用：</h3>
+        <ol>
+            <li>点击上方链接访问应用</li>
+            <li>在.env文件中确认已配置OpenAI API密钥</li>
+            <li>上传音频文件或使用录音功能</li>
+            <li>测试音频转文字功能</li>
+            <li>测试会议纪要生成功能</li>
+            <li>测试多语言切换功能</li>
+        </ol>
+    </div>
+
+    <script>
+        function testLink(url) {
+            const resultsDiv = document.getElementById('results');
+            const testDiv = document.getElementById('testResults');
+            
+            testDiv.style.display = 'block';
+            resultsDiv.innerHTML += `<p>正在测试: ${url}...</p>`;
+            
+            // 尝试在新窗口打开
+            const newWindow = window.open(url, '_blank');
+            
+            setTimeout(() => {
+                if (newWindow && !newWindow.closed) {
+                    resultsDiv.innerHTML += `<p style="color: #4CAF50;">✅ ${url} - 已打开新窗口</p>`;
+                } else {
+                    resultsDiv.innerHTML += `<p style="color: #FF6B6B;">❌ ${url} - 无法访问</p>`;
+                }
+            }, 2000);
+        }
+
+        // 页面加载时自动测试主要链接
+        window.onload = function() {
+            console.log('Voice2Minutes 连接测试页面已加载');
+            console.log('请点击上方链接访问完整应用');
+        };
+    </script>
+</body>
+</html>

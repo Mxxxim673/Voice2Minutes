@@ -1,0 +1,80 @@
+{
+  "common": {
+    "appName": "Voice2Minutes",
+    "loading": "加载中...",
+    "error": "错误",
+    "success": "成功",
+    "cancel": "取消",
+    "save": "保存",
+    "copy": "复制文本",
+    "export": "导出为Word",
+    "clear": "清除当前记录",
+    "start": "开始",
+    "stop": "停止",
+    "upload": "上传",
+    "download": "下载"
+  },
+  "navigation": {
+    "audioToText": "音频转文字",
+    "pricing": "价格"
+  },
+  "audioToText": {
+    "title": "音频转文字",
+    "subtitle": "将您的音频录音转换为准确的文字转录",
+    "uploadAudio": "上传音频文件",
+    "recordAudio": "录制音频",
+    "startTranscription": "开始转文字",
+    "taskCompleted": "任务完成！",
+    "supportedFormats": "支持格式：MP3、WAV、M4A、FLAC、OGG、MP4、MPEG、MPGA、WEBM",
+    "recording": "录制中...",
+    "processing": "正在处理您的音频...",
+    "transcriptionComplete": "转录成功完成！",
+    "error": "转录过程中发生错误",
+    "quickActions": "快捷操作",
+    "fileUploaded": "文件已上传，可以开始转录",
+    "usageInstructions": "使用说明",
+    "instructions": {
+      "step1": "上传音频文件或直接在浏览器中录音",
+      "step2": "点击\\\"开始转写\\\"将音频转为文字",
+      "step3": "查看并复制转写结果",
+      "step4": "查看并根据需要导出您的转录文本"
+    },
+    "audioInputMethod": "音频输入方式",
+    "dragDropText": "点击或拖放音频文件到这里",
+    "dragDropActiveText": "拖放文件到这里...",
+    "dividerOr": "或",
+    "liveRecording": "实时录制",
+    "speaker": "说话人",
+    "paymentNotice": "付费须知"
+  },
+  "pricing": {
+    "title": "价格与订阅",
+    "subtitle": "选择最适合您的计划",
+    "oneTimePurchases": "购买时长",
+    "subscriptions": "订阅",
+    "hours": "小时",
+    "monthly": "月付",
+    "annual": "年付",
+    "selectPlan": "选择计划",
+    "paymentNotice": "付费须知",
+    "mostPopular": "最受欢迎",
+    "perHour": "每小时",
+    "paymentInfo": {
+      "currency": "价格以日元（¥）显示",
+      "security": "所有计划均包含安全处理和数据隐私保护",
+      "oneTime": "单独购买时长使用的情况下没有使用期限,并且可累计",
+      "cancellation": "订阅可随时取消"
+    },
+    "plans": {
+      "5hours": "5小时",
+      "10hours": "10小时",
+      "30hours": "30小时", 
+      "100hours": "100小时",
+      "monthly30": "月付（30小时）",
+      "annual360": "年付（360小时）"
+    }
+  },
+  "footer": {
+    "copyright": "voice2minutes {{year}} 版权所有"
+  }
+}

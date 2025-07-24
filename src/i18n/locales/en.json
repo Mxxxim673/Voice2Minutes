@@ -1,0 +1,80 @@
+{
+  "common": {
+    "appName": "Voice2Minutes",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "copy": "Copy Text",
+    "export": "Export to Word",
+    "clear": "Clear Current Record",
+    "start": "Start",
+    "stop": "Stop",
+    "upload": "Upload",
+    "download": "Download"
+  },
+  "navigation": {
+    "audioToText": "Audio to Text",
+    "pricing": "Pricing"
+  },
+  "audioToText": {
+    "title": "Audio to Text Conversion",
+    "subtitle": "Convert your audio recordings to accurate text transcriptions",
+    "uploadAudio": "Upload Audio File",
+    "recordAudio": "Record Audio",
+    "startTranscription": "Start Transcription",
+    "taskCompleted": "Task Completed!",
+    "supportedFormats": "Supported formats: MP3, WAV, M4A, FLAC, OGG, MP4, MPEG, MPGA, WEBM",
+    "recording": "Recording...",
+    "processing": "Processing your audio...",
+    "transcriptionComplete": "Transcription completed successfully!",
+    "error": "An error occurred during transcription",
+    "quickActions": "Quick Actions",
+    "fileUploaded": "File uploaded, ready to transcribe",
+    "usageInstructions": "How to Use",
+    "instructions": {
+      "step1": "Upload an audio file or record directly in your browser",
+      "step2": "Click 'Start Transcription' to convert audio to text",
+      "step3": "Review and copy the transcription result",
+      "step4": "Review and export your transcription as needed"
+    },
+    "audioInputMethod": "Audio Input Method",
+    "dragDropText": "Click or drag audio file here",
+    "dragDropActiveText": "Drop the file here...",
+    "dividerOr": "or",
+    "liveRecording": "Live Recording",
+    "speaker": "Speaker",
+    "paymentNotice": "Payment Notice"
+  },
+  "pricing": {
+    "title": "Pricing & Subscription",
+    "subtitle": "Choose the plan that works best for you",
+    "oneTimePurchases": "Purchase Duration",
+    "subscriptions": "Subscriptions",
+    "hours": "hours",
+    "monthly": "Monthly",
+    "annual": "Annual",
+    "selectPlan": "Select Plan",
+    "paymentNotice": "Payment Notice",
+    "mostPopular": "Most Popular",
+    "perHour": "per hour",
+    "paymentInfo": {
+      "currency": "Prices are displayed in Japanese Yen (¥)",
+      "security": "All plans include secure processing and data privacy",
+      "oneTime": "When purchasing duration alone, there is no expiration date, and it can be accumulated.",
+      "cancellation": "Subscriptions can be cancelled anytime"
+    },
+    "plans": {
+      "5hours": "5 hours",
+      "10hours": "10 hours", 
+      "30hours": "30 hours",
+      "100hours": "100 hours",
+      "monthly30": "Monthly (30 hours)",
+      "annual360": "Annual (360 hours)"
+    }
+  },
+  "footer": {
+    "copyright": "voice2minutes {{year}} all rights reserved"
+  }
+}
