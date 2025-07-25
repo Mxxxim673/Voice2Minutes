@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../../contexts/AuthContext';
+import { checkRecordingLimit } from '../../services/usageService';
 import './RecordingModal.css';
 
 interface RecordingModalProps {
@@ -10,11 +12,13 @@ interface RecordingModalProps {
 
 const RecordingModal: React.FC<RecordingModalProps> = ({ isOpen, onClose, onRecordingComplete }) => {
   const { t } = useTranslation();
+  const { user, isGuest } = useAuth();
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [audioData, setAudioData] = useState<number[]>(Array(32).fill(0));
   const [hasRecording, setHasRecording] = useState(false);
+  const [limitReached, setLimitReached] = useState(false);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -23,6 +27,7 @@ const RecordingModal: React.FC<RecordingModalProps> = ({ isOpen, onClose, onReco
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const visualizationIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const recordedAudioBlobRef = useRef<Blob | null>(null);
 
   useEffect(() => {
     return () => {
@@ -80,8 +85,20 @@ const RecordingModal: React.FC<RecordingModalProps> = ({ isOpen, onClose, onReco
       };
 
       mediaRecorderRef.current.onstop = () => {
+        console.log('🎬 MediaRecorder onstop 事件触发');
+        console.log('📊 AudioChunks 数量:', audioChunksRef.current.length);
+        
+        if (audioChunksRef.current.length === 0) {
+          console.error('⚠️ 没有录音数据chunks');
+          return;
+        }
+        
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+        recordedAudioBlobRef.current = audioBlob;
         setHasRecording(true);
+        
+        console.log('📦 录音完成，数据大小:', audioBlob.size, 'bytes');
+        console.log('✅ hasRecording 状态已设置为 true');
       };
 
       mediaRecorderRef.current.start();
@@ -89,16 +106,34 @@ const RecordingModal: React.FC<RecordingModalProps> = ({ isOpen, onClose, onReco
       setIsPaused(false);
       setRecordingTime(0);
 
-      // Start timer
+      // Start timer with usage limit checking
       intervalRef.current = setInterval(() => {
-        setRecordingTime((prev) => prev + 1);
+        setRecordingTime((prev) => {
+          const newTime = prev + 1;
+          const newTimeMinutes = newTime / 60;
+          
+          // 检查用户剩余配额
+          const userQuotaMinutes = user?.quotaMinutes || 10;
+          const userUsedMinutes = user?.usedMinutes || 0;
+          const remainingMinutes = userQuotaMinutes - userUsedMinutes;
+          
+          // 如果录音时长超过剩余配额，自动停止录音
+          if (newTimeMinutes >= remainingMinutes) {
+            setLimitReached(true);
+            // Auto-stop recording when limit reached
+            setTimeout(stopRecording, 100);
+            return newTime;
+          }
+          
+          return newTime;
+        });
       }, 1000);
 
       // Start audio visualization
       startAudioVisualization();
     } catch (error) {
       console.error('Error starting recording:', error);
-      alert('Unable to access microphone. Please check permissions.');
+      alert(t('audioToText.microphoneError'));
     }
   };
 
@@ -122,9 +157,26 @@ const RecordingModal: React.FC<RecordingModalProps> = ({ isOpen, onClose, onReco
       mediaRecorderRef.current.resume();
       setIsPaused(false);
       
-      // Restart timer
+      // Restart timer with usage limit checking
       intervalRef.current = setInterval(() => {
-        setRecordingTime((prev) => prev + 1);
+        setRecordingTime((prev) => {
+          const newTime = prev + 1;
+          const newTimeMinutes = newTime / 60;
+          
+          // 检查用户剩余配额
+          const userQuotaMinutes = user?.quotaMinutes || 10;
+          const userUsedMinutes = user?.usedMinutes || 0;
+          const remainingMinutes = userQuotaMinutes - userUsedMinutes;
+          
+          // 如果录音时长超过剩余配额，自动停止录音
+          if (newTimeMinutes >= remainingMinutes) {
+            setLimitReached(true);
+            setTimeout(stopRecording, 100);
+            return newTime;
+          }
+          
+          return newTime;
+        });
       }, 1000);
       
       // Restart visualization
@@ -133,8 +185,12 @@ const RecordingModal: React.FC<RecordingModalProps> = ({ isOpen, onClose, onReco
   };
 
   const stopRecording = () => {
+    console.log('🛑 停止录音');
+    console.log('📊 当前 MediaRecorder 状态:', mediaRecorderRef.current?.state);
+    
     if (mediaRecorderRef.current && 
         (mediaRecorderRef.current.state === 'recording' || mediaRecorderRef.current.state === 'paused')) {
+      console.log('⏹️ 调用 MediaRecorder.stop()');
       mediaRecorderRef.current.stop();
     }
 
@@ -148,6 +204,8 @@ const RecordingModal: React.FC<RecordingModalProps> = ({ isOpen, onClose, onReco
     setIsRecording(false);
     setIsPaused(false);
     setAudioData(Array(32).fill(0));
+    
+    console.log('✅ 录音状态已清理');
   };
 
   const startAudioVisualization = () => {
@@ -194,10 +252,19 @@ const RecordingModal: React.FC<RecordingModalProps> = ({ isOpen, onClose, onReco
   };
 
   const handleStartTranscription = () => {
-    if (hasRecording && audioChunksRef.current.length > 0) {
+    if (hasRecording && recordedAudioBlobRef.current) {
+      console.log('🎤 开始转录录音，数据大小:', recordedAudioBlobRef.current.size, 'bytes');
+      onRecordingComplete(recordedAudioBlobRef.current);
+      handleClose();
+    } else if (hasRecording && audioChunksRef.current.length > 0) {
+      // 备用方案：如果 ref 中没有数据，从 chunks 重新创建
       const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+      console.log('🎤 备用方案：从chunks创建录音，数据大小:', audioBlob.size, 'bytes');
       onRecordingComplete(audioBlob);
       handleClose();
+    } else {
+      console.error('❌ 没有录音数据可以转录');
+      alert(t('audioToText.noRecordingData'));
     }
   };
 
@@ -208,7 +275,9 @@ const RecordingModal: React.FC<RecordingModalProps> = ({ isOpen, onClose, onReco
     setRecordingTime(0);
     setAudioData(Array(32).fill(0));
     setHasRecording(false);
+    setLimitReached(false);
     audioChunksRef.current = [];
+    recordedAudioBlobRef.current = null;
     onClose();
   };
 
@@ -247,8 +316,43 @@ const RecordingModal: React.FC<RecordingModalProps> = ({ isOpen, onClose, onReco
             </div>
           </div>
 
-          {/* Recording time */}
-          <div className="recording-time">{formatTime(recordingTime)}</div>
+          {/* Recording time and limit info */}
+          <div className="recording-time">
+            {formatTime(recordingTime)}
+          </div>
+          
+          {/* Usage limit warning */}
+          {isGuest && (
+            <div className="usage-limit-info">
+              <p className="limit-text">
+                {t('auth.guestLimitations.timeLimit')} ({Math.max(0, 5 - Math.floor(recordingTime / 60))} {t('usage.minutes')} {t('usage.remainingTime').toLowerCase()})
+              </p>
+            </div>
+          )}
+          
+          {/* User quota limit info */}
+          {!isGuest && user && (
+            <div className="usage-limit-info">
+              <p className="limit-text">
+                剩余配额: {Math.max(0, ((user.quotaMinutes || 10) - (user.usedMinutes || 0) - Math.floor(recordingTime / 60))).toFixed(1)} 分钟
+              </p>
+            </div>
+          )}
+          
+          {limitReached && (
+            <div className="limit-reached-warning" style={{ 
+              backgroundColor: '#ff6b35', 
+              color: 'white', 
+              padding: '10px', 
+              borderRadius: '5px',
+              marginTop: '10px'
+            }}>
+              <p>⏰ 您的试用时长已结束! 录音已自动停止。</p>
+              <p style={{ fontSize: '14px', marginTop: '5px' }}>
+                💡 请购买更多时长继续使用录音功能。
+              </p>
+            </div>
+          )}
 
           {/* Control buttons */}
           <div className="modal-controls">

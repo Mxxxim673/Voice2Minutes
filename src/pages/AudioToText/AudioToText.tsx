@@ -1,10 +1,12 @@
 import React, { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDropzone } from 'react-dropzone';
+import { useAuth } from '../../contexts/AuthContext';
 import RecordingModal from '../../components/RecordingModal/RecordingModal';
 import TranscriptionResult from '../../components/TranscriptionResult/TranscriptionResult';
 import { transcribeAudio } from '../../services/audioService';
 import { exportToWord } from '../../utils/exportUtils';
+import { checkUsageLimit, recordUsage, truncateAudioForLimit, getAudioDuration } from '../../services/usageService';
 import './AudioToText.css';
 
 interface TranscriptionData {
@@ -14,11 +16,13 @@ interface TranscriptionData {
 
 const AudioToText: React.FC = () => {
   const { t } = useTranslation();
+  const { user, isGuest, isAuthenticated, updateUserQuota } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
   const [transcriptionResult, setTranscriptionResult] = useState<TranscriptionData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isRecordingModalOpen, setIsRecordingModalOpen] = useState(false);
+  const [usageLimitWarning, setUsageLimitWarning] = useState<string | null>(null);
 
   // Restore transcription result on page load
   React.useEffect(() => {
@@ -31,13 +35,41 @@ const AudioToText: React.FC = () => {
     }
   }, []);
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
     if (file) {
-      setUploadedFile(file);
-      setError(null);
+      // Check if guests can upload files
+      if (isGuest) {
+        setError(t('auth.guestLimitations.noUpload'));
+        return;
+      }
+      
+      try {
+        // Check usage limits
+        const limitCheck = await checkUsageLimit(file);
+        if (!limitCheck.allowed) {
+          setError(limitCheck.message || 'Usage limit exceeded');
+          setUsageLimitWarning(limitCheck.message || null);
+          return;
+        }
+        
+        // If file is too long for user's quota, truncate it
+        const userQuota = user?.quotaMinutes || 10;
+        const remainingMinutes = (user?.quotaMinutes || 10) - (user?.usedMinutes || 0);
+        const { file: processedFile, wasTruncated } = await truncateAudioForLimit(file, remainingMinutes);
+        
+        if (wasTruncated) {
+          setUsageLimitWarning(t('audioToText.fileTruncated', { minutes: remainingMinutes.toFixed(1) }));
+        }
+        
+        setUploadedFile(processedFile);
+        setError(null);
+      } catch (error) {
+        console.error('File processing error:', error);
+        setError(t('audioToText.fileProcessingError'));
+      }
     }
-  }, []);
+  }, [isGuest, user, t]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -51,9 +83,57 @@ const AudioToText: React.FC = () => {
   const handleTranscription = async (audioFile: File) => {
     setIsProcessing(true);
     setError(null);
+    setUsageLimitWarning(null);
     
     try {
-      const transcriptionText = await transcribeAudio(audioFile);
+      // Check usage limits before transcription
+      const limitCheck = await checkUsageLimit(audioFile);
+      if (!limitCheck.allowed) {
+        setError(limitCheck.message || '您的试用时长已结束!');
+        setIsProcessing(false);
+        return;
+      }
+      
+      const userType = isGuest ? 'guest' : (user?.userType || 'trial');
+      const currentUsage = user?.usedMinutes || 0;
+      
+      // 获取音频时长并检查是否需要截断
+      const originalDuration = await getAudioDuration(audioFile);
+      const remainingMinutes = (user?.quotaMinutes || 10) - (user?.usedMinutes || 0);
+      
+      let actualAudioFile = audioFile;
+      let actualDuration = originalDuration;
+      let wasTruncated = false;
+      
+      // 如果音频时长超过剩余配额，进行截断处理
+      if (originalDuration > remainingMinutes) {
+        const truncateResult = await truncateAudioForLimit(audioFile, remainingMinutes);
+        actualAudioFile = truncateResult.file;
+        actualDuration = Math.min(originalDuration, remainingMinutes);
+        wasTruncated = truncateResult.wasTruncated;
+        
+        if (wasTruncated) {
+          setUsageLimitWarning(`⚠️ 音频文件过长，仅转换前 ${remainingMinutes.toFixed(1)} 分钟内容`);
+        }
+      }
+      
+      const transcriptionText = await transcribeAudio(actualAudioFile, userType, currentUsage);
+      
+      // 更新使用量 - 通过 AuthContext 同步状态
+      if (!isGuest && user) {
+        const newUsedMinutes = (user.usedMinutes || 0) + actualDuration;
+        updateUserQuota(newUsedMinutes);
+        
+        // 检查是否已经用完配额
+        if (newUsedMinutes >= (user.quotaMinutes || 10)) {
+          setUsageLimitWarning('您的试用时长已结束! 请购买更多时长继续使用。');
+        } else if ((user.quotaMinutes || 10) - newUsedMinutes <= 1) {
+          setUsageLimitWarning(t('audioToText.quotaLowWarning'));
+        }
+      }
+      
+      // 同时记录到服务端（如果需要）
+      await recordUsage(actualAudioFile, transcriptionText);
       
       const result: TranscriptionData = {
         text: transcriptionText,
@@ -63,6 +143,9 @@ const AudioToText: React.FC = () => {
       setTranscriptionResult(result);
       // Store transcription in localStorage
       localStorage.setItem('transcriptionResult', result.text);
+      
+      console.log(`✅ 转录完成，实际使用时长: ${actualDuration.toFixed(2)} 分钟${wasTruncated ? ' (已截断)' : ''}`);
+      
     } catch (error) {
       console.error('Transcription error:', error);
       setError(t('audioToText.error') || 'An error occurred during transcription');
@@ -78,7 +161,18 @@ const AudioToText: React.FC = () => {
   };
 
   const handleRecordingComplete = (audioBlob: Blob) => {
+    console.log('🎙️ handleRecordingComplete 被调用，音频数据大小:', audioBlob.size, 'bytes');
+    
+    if (audioBlob.size === 0) {
+      console.error('❌ 音频数据为空，无法进行转录');
+      setError('录音数据为空，请重新录制');
+      return;
+    }
+    
     const audioFile = new File([audioBlob], 'recording.wav', { type: 'audio/wav' });
+    console.log('📁 已创建音频文件:', audioFile.name, '大小:', audioFile.size, 'bytes');
+    
+    console.log('🚀 准备开始转录...');
     handleTranscription(audioFile);
   };
 
@@ -118,19 +212,27 @@ const AudioToText: React.FC = () => {
       <div className="container">
         <div className="page-header">
           <h1 className="page-title">{t('audioToText.title')}</h1>
+          <p className="page-subtitle">
+            {isGuest 
+              ? t('audioToText.guestModeSubtitle')
+              : t('audioToText.remainingTime', { 
+                  minutes: user ? Math.max(0, (user.quotaMinutes || 10) - (user.usedMinutes || 0)).toFixed(1) : 10 
+                })
+            }
+          </p>
         </div>
 
         <div className="main-content">
           {/* Left side - Input section */}
           <div className="input-section">
             <div className="card">
-              <h2 style={{ marginBottom: 'var(--spacing-lg)', textAlign: 'center', color: 'var(--text-primary)', fontSize: 'var(--font-size-title3)' }}>
+              <h2>
                 {t('audioToText.audioInputMethod')}
               </h2>
               
               {/* Upload Section */}
               <div className="audio-upload-area">
-                <h3 style={{ marginBottom: 'var(--spacing-sm)', color: 'var(--text-secondary)', fontSize: 'var(--font-size-subhead)' }}>
+                <h3>
                   {t('audioToText.uploadAudio')}
                 </h3>
                 <div
@@ -153,7 +255,7 @@ const AudioToText: React.FC = () => {
                     </div>
                   ) : (
                     <div className="dropzone-content">
-                      <div className="upload-icon" style={{ fontSize: '48px', color: 'var(--primary-blue)' }}>↑</div>
+                      <div className="upload-icon">📁</div>
                       <p>{isDragActive ? t('audioToText.dragDropActiveText') : t('audioToText.dragDropText')}</p>
                       <p className="file-info">{t('audioToText.supportedFormats')}</p>
                     </div>
@@ -170,7 +272,7 @@ const AudioToText: React.FC = () => {
 
               {/* Record Section */}
               <div className="audio-record-area">
-                <h3 style={{ marginBottom: 'var(--spacing-sm)', color: 'var(--text-secondary)', fontSize: 'var(--font-size-subhead)' }}>
+                <h3>
                   {t('audioToText.liveRecording')}
                 </h3>
                 <div className="record-controls">
@@ -178,7 +280,7 @@ const AudioToText: React.FC = () => {
                     onClick={handleOpenRecordingModal}
                     className="button button-primary start-recording-button"
                   >
-                    <span className="mic-icon">◉</span>
+                    <span className="mic-icon">🎙️</span>
                     {t('audioToText.liveRecording')}
                   </button>
                 </div>
@@ -195,7 +297,7 @@ const AudioToText: React.FC = () => {
                   value={transcriptionResult?.text || ''}
                   readOnly
                   className="output-textarea"
-                  placeholder={transcriptionResult ? t('audioToText.transcriptionComplete') : ''}
+                  placeholder={transcriptionResult ? t('audioToText.transcriptionComplete') : t('audioToText.outputPlaceholder')}
                 />
               </div>
               
@@ -209,16 +311,30 @@ const AudioToText: React.FC = () => {
                   {isProcessing ? t('audioToText.processing') : t('audioToText.startTranscription')}
                 </button>
                 <button
-                  onClick={() => transcriptionResult && navigator.clipboard.writeText(transcriptionResult.text)}
-                  className="button action-button button-secondary"
+                  onClick={() => {
+                    if (isGuest) {
+                      alert(t('auth.guestLimitations.noCopy'));
+                      return;
+                    }
+                    transcriptionResult && navigator.clipboard.writeText(transcriptionResult.text);
+                  }}
+                  className={`button action-button button-secondary ${isGuest ? 'button-disabled' : ''}`}
                   disabled={!transcriptionResult}
+                  title={isGuest ? t('auth.guestLimitations.noCopy') : ''}
                 >
                   {t('common.copy')}
                 </button>
                 <button
-                  onClick={handleExportToWord}
-                  className="button action-button button-secondary"
+                  onClick={() => {
+                    if (isGuest) {
+                      alert(t('auth.guestLimitations.noExport'));
+                      return;
+                    }
+                    handleExportToWord();
+                  }}
+                  className={`button action-button button-secondary ${isGuest ? 'button-disabled' : ''}`}
                   disabled={!transcriptionResult}
+                  title={isGuest ? t('auth.guestLimitations.noExport') : ''}
                 >
                   {t('common.export')}
                 </button>
@@ -243,6 +359,12 @@ const AudioToText: React.FC = () => {
                 大文件正在分段处理，这可能需要几分钟时间...
               </p>
             )}
+          </div>
+        )}
+
+        {usageLimitWarning && (
+          <div className="warning-message card" style={{ backgroundColor: 'var(--warning-orange)', color: 'white' }}>
+            <p>{usageLimitWarning}</p>
           </div>
         )}
 

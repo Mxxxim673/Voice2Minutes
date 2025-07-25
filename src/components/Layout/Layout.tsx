@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../../contexts/AuthContext';
 import LanguageSelector from '../LanguageSelector/LanguageSelector';
 
 interface LayoutProps {
@@ -9,6 +10,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { t } = useTranslation();
+  const { user, isGuest, logout } = useAuth();
   const location = useLocation();
   const currentYear = new Date().getFullYear();
 
@@ -31,6 +33,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </li>
             <li>
               <Link 
+                to="/usage" 
+                className={`nav-link ${location.pathname === '/usage' ? 'active' : ''}`}
+              >
+                {t('navigation.usage')}
+              </Link>
+            </li>
+            <li>
+              <Link 
                 to="/pricing" 
                 className={`nav-link ${location.pathname === '/pricing' ? 'active' : ''}`}
               >
@@ -39,7 +49,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </li>
           </ul>
           
-          <LanguageSelector />
+          <div className="nav-right">
+            <LanguageSelector />
+            {user ? (
+              <div className="user-menu">
+                <span className="user-email">{user.email}</span>
+                <button onClick={logout} className="logout-button">
+                  {t('auth.logout')}
+                </button>
+              </div>
+            ) : (
+              <Link to="/auth" className="auth-button">
+                {t('auth.login')}
+              </Link>
+            )}
+          </div>
         </div>
       </nav>
 

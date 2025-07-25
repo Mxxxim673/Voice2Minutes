@@ -1,0 +1,509 @@
+.admin-panel {
+  padding: var(--spacing-lg) 0;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: 100vh;
+}
+
+/* 管理员登录界面 */
+.admin-login {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
+}
+
+.login-card {
+  background: white;
+  padding: var(--spacing-xxl);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+}
+
+.login-card h1 {
+  color: var(--primary-blue);
+  margin: 0 0 var(--spacing-md) 0;
+  font-size: var(--font-size-title1);
+}
+
+.login-card p {
+  color: var(--text-secondary);
+  margin: 0 0 var(--spacing-xl) 0;
+  font-size: var(--font-size-body);
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.form-group {
+  text-align: left;
+}
+
+.password-input {
+  width: 100%;
+  padding: var(--spacing-md);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body);
+  transition: border-color 0.3s ease;
+}
+
+.password-input:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px var(--primary-blue-light);
+}
+
+.login-button {
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--primary-blue);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.login-button:hover {
+  background: var(--primary-blue-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.error-message {
+  background: #fee;
+  color: #c33;
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  border: 1px solid #fcc;
+  font-size: var(--font-size-footnote);
+}
+
+.login-hint {
+  margin-top: var(--spacing-lg);
+  padding: var(--spacing-md);
+  background: var(--background-secondary);
+  border-radius: var(--radius-sm);
+}
+
+.login-hint p {
+  margin: 0;
+  font-size: var(--font-size-footnote);
+  color: var(--text-secondary);
+}
+
+.login-hint code {
+  background: var(--light-gray);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: 'Monaco', 'Consolas', monospace;
+  color: var(--primary-blue);
+}
+
+.admin-header {
+  text-align: center;
+  margin-bottom: var(--spacing-xl);
+  padding: var(--spacing-xl);
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.admin-header h1 {
+  color: var(--primary-blue);
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: var(--font-size-title1);
+}
+
+.admin-header p {
+  color: var(--text-secondary);
+  margin: 0;
+  font-size: var(--font-size-subhead);
+}
+
+.admin-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+.admin-section {
+  background: white;
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  border-left: 4px solid var(--primary-blue);
+}
+
+.admin-section h2 {
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-lg) 0;
+  font-size: var(--font-size-title2);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.admin-section h3 {
+  color: var(--text-primary);
+  margin: var(--spacing-lg) 0 var(--spacing-md) 0;
+  font-size: var(--font-size-title3);
+}
+
+.admin-section h4 {
+  color: var(--text-primary);
+  margin: var(--spacing-md) 0 var(--spacing-sm) 0;
+  font-size: var(--font-size-subhead);
+}
+
+/* 用户切换区域 */
+.user-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.user-card {
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: var(--background-secondary);
+}
+
+.user-card:hover {
+  border-color: var(--primary-blue);
+  box-shadow: var(--shadow-sm);
+}
+
+.user-card.selected {
+  border-color: var(--primary-blue);
+  background: var(--primary-blue-light);
+  box-shadow: var(--shadow-md);
+}
+
+.user-icon {
+  font-size: 32px;
+  text-align: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.user-info h3 {
+  margin: 0 0 var(--spacing-xs) 0;
+  font-size: var(--font-size-subhead);
+  text-align: center;
+  color: var(--text-primary);
+}
+
+.user-info p {
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: var(--font-size-footnote);
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.user-quota {
+  background: var(--light-gray);
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  text-align: center;
+  font-size: var(--font-size-caption);
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.user-plan {
+  background: var(--success-green);
+  color: white;
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  text-align: center;
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* 当前用户状态 */
+.current-user-status {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--background-secondary);
+  border-radius: var(--radius-md);
+}
+
+.status-item {
+  padding: var(--spacing-sm);
+  background: white;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--primary-blue);
+}
+
+.status-item strong {
+  color: var(--text-primary);
+  display: block;
+  margin-bottom: var(--spacing-xs);
+}
+
+/* 控制按钮 */
+.simulation-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+}
+
+.purchase-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.purchase-buttons,
+.subscription-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+}
+
+.scenario-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.scenario-item {
+  padding: var(--spacing-md);
+  background: var(--background-secondary);
+  border-radius: var(--radius-md);
+}
+
+.scenario-select {
+  width: 100%;
+  padding: var(--spacing-sm);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: white;
+  margin-top: var(--spacing-sm);
+}
+
+.file-input {
+  width: 100%;
+  padding: var(--spacing-sm);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: white;
+  margin-top: var(--spacing-sm);
+}
+
+.file-info {
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  background: var(--success-green);
+  color: white;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-footnote);
+}
+
+/* 快速导航 */
+.quick-nav {
+  display: flex;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.nav-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--primary-blue);
+  color: white;
+  text-decoration: none;
+  border-radius: var(--radius-md);
+  font-weight: var(--font-weight-semibold);
+  transition: all 0.3s ease;
+}
+
+.nav-button:hover {
+  background: var(--primary-blue-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* 系统信息 */
+.system-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm);
+  background: var(--background-secondary);
+  border-radius: var(--radius-sm);
+}
+
+.info-item strong {
+  color: var(--text-primary);
+}
+
+.button-small {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-caption);
+}
+
+.button-success {
+  background-color: var(--success-green);
+  color: white;
+}
+
+.button-success:hover {
+  background-color: #27ae60;
+}
+
+/* 音频模拟区域 */
+.audio-simulation {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+.audio-simulation h3 {
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-md) 0;
+  font-size: var(--font-size-title3);
+  border-bottom: 2px solid var(--primary-blue-light);
+  padding-bottom: var(--spacing-sm);
+}
+
+.recording-controls,
+.upload-controls,
+.transcription-controls,
+.permission-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+}
+
+.button-primary {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--primary-blue);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.button-primary:hover {
+  background: var(--primary-blue-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.button-secondary {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--light-gray);
+  color: var(--text-primary);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.button-secondary:hover {
+  border-color: var(--primary-blue);
+  background: var(--primary-blue-light);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.button-warning {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: #ff9500;
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.button-warning:hover {
+  background: #e6851a;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .admin-panel {
+    padding: var(--spacing-md) 0;
+  }
+  
+  .admin-header {
+    padding: var(--spacing-lg);
+  }
+  
+  .admin-section {
+    padding: var(--spacing-lg);
+  }
+  
+  .user-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .current-user-status {
+    grid-template-columns: 1fr;
+  }
+  
+  .simulation-controls {
+    flex-direction: column;
+  }
+  
+  .purchase-buttons,
+  .subscription-buttons {
+    flex-direction: column;
+  }
+  
+  .scenario-controls {
+    grid-template-columns: 1fr;
+  }
+  
+  .quick-nav {
+    flex-direction: column;
+  }
+  
+  .info-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-sm);
+  }
+  
+  .recording-controls,
+  .upload-controls,
+  .transcription-controls,
+  .permission-controls {
+    flex-direction: column;
+  }
+  
+  .audio-simulation {
+    gap: var(--spacing-lg);
+  }
+}

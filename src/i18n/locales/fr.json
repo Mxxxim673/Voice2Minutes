@@ -16,6 +16,7 @@
   },
   "navigation": {
     "audioToText": "Audio vers Texte",
+    "usage": "Statistiques d'Utilisation",
     "pricing": "Tarification"
   },
   "audioToText": {
@@ -45,7 +46,16 @@
     "dividerOr": "ou",
     "liveRecording": "Enregistrement en direct",
     "speaker": "Intervenant",
-    "paymentNotice": "Avis de paiement"
+    "paymentNotice": "Avis de paiement",
+    "fileProcessingError": "Erreur de traitement du fichier audio",
+    "fileTruncated": "Le fichier a été tronqué à {{minutes}} minutes en raison de la limite d'utilisation",
+    "quotaLowWarning": "Votre quota d'utilisation est faible",
+    "usageLimitReached": "Limite de temps d'utilisation atteinte !",
+    "guestModeSubtitle": "Mode Invité - Découvrez la conversion audio vers texte",
+    "remainingTime": "Temps restant: {{minutes}} minutes",
+    "outputPlaceholder": "Les résultats de transcription apparaîtront ici...\n\n📝 Fonctionnalités disponibles:\n• Télécharger des fichiers audio pour transcription\n• Enregistrement audio en temps réel\n• Copier le texte de transcription\n• Exporter vers un document Word",
+    "microphoneError": "Impossible d'accéder au microphone. Veuillez vérifier les autorisations.",
+    "noRecordingData": "Aucune donnée d'enregistrement, veuillez d'abord enregistrer l'audio"
   },
   "pricing": {
     "title": "Tarification et Abonnement",
@@ -72,6 +82,86 @@
       "100hours": "100 heures",
       "monthly30": "Mensuel (30 heures)",
       "annual360": "Annuel (360 heures)"
+    }
+  },
+  "usage": {
+    "title": "Statistiques d'Utilisation",
+    "totalQuota": "Quota Total",
+    "usedTime": "Temps Utilisé",
+    "remainingTime": "Temps Restant",
+    "dailyUsage": "Utilisation Quotidienne",
+    "hours": "h",
+    "minutes": "m",
+    "seconds": "s",
+    "used": "utilisé",
+    "duration": "Durée",
+    "files": "Fichiers",
+    "noData": "Aucune donnée d'utilisation disponible",
+    "purchaseCTA": "Acheter de la Durée ou S'abonner à Notre Service",
+    "monthly": "Mensuel",
+    "yearly": "Annuel",
+    "trialNote": "La priorité sera donnée au quota d'essai, puis le quota payé sera consommé.",
+    "status": {
+      "guest": "Invité",
+      "trial": "Essai",
+      "paid": "Utilisateur Payant",
+      "subscription": "Abonnement",
+      "unknown": "Inconnu"
+    },
+    "periods": {
+      "week": "7 Derniers Jours",
+      "month": "30 Derniers Jours",
+      "quarter": "90 Derniers Jours"
+    },
+    "guestNotice": {
+      "title": "Les Utilisateurs Enregistrés Peuvent Voir l'Expérience",
+      "description": "Les utilisateurs invités ne peuvent pas accéder aux statistiques d'utilisation. Veuillez vous inscrire pour débloquer cette fonctionnalité.",
+      "register": "S'inscrire Maintenant"
+    },
+    "loginToUnlock": "Connectez-vous pour débloquer toutes les fonctionnalités"
+  },
+  "auth": {
+    "welcomeBack": "Bon Retour",
+    "createAccount": "Créer un Compte",
+    "verifyEmail": "Vérifier l'Email",
+    "loginSubtitle": "Connectez-vous pour accéder à toutes les fonctionnalités",
+    "registerSubtitle": "Rejoignez-nous pour débloquer toutes les fonctionnalités",
+    "email": "Adresse Email",
+    "password": "Mot de Passe",
+    "confirmPassword": "Confirmer le Mot de Passe",
+    "verificationCode": "Code de Vérification",
+    "emailPlaceholder": "Entrez votre adresse email",
+    "passwordPlaceholder": "Entrez votre mot de passe",
+    "confirmPasswordPlaceholder": "Confirmez votre mot de passe",
+    "passwordHint": "Le mot de passe doit contenir au moins 6 caractères",
+    "login": "Se Connecter",
+    "register": "S'inscrire",
+    "verify": "Vérifier l'Email",
+    "continueAsGuest": "Continuer en tant qu'Invité",
+    "dividerOr": "ou",
+    "noAccount": "Vous n'avez pas de compte ?",
+    "hasAccount": "Vous avez déjà un compte ?",
+    "passwordMismatch": "Les mots de passe ne correspondent pas",
+    "passwordTooShort": "Le mot de passe doit contenir au moins 6 caractères",
+    "registerSuccess": "Inscription réussie ! Veuillez vérifier votre email pour la vérification.",
+    "verifySuccess": "Email vérifié avec succès ! Redirection...",
+    "verifyFailed": "La vérification de l'email a échoué. Veuillez réessayer.",
+    "genericError": "Une erreur s'est produite. Veuillez réessayer.",
+    "verifyTitle": "Vérifiez Votre Email",
+    "verifyDescription": "Nous avons envoyé un code de vérification à {{email}}. Veuillez entrer le code ci-dessous.",
+    "noVerificationEmail": "Vous n'avez pas reçu l'email ?",
+    "resendVerification": "Renvoyer le Code",
+    "verificationResent": "Code de vérification renvoyé avec succès !",
+    "resendFailed": "Échec du renvoi du code de vérification. Veuillez réessayer.",
+    "logout": "Se Déconnecter",
+    "guestSimpleNotice": "Certaines fonctionnalités sont limitées en mode invité. Veuillez vous connecter pour une fonctionnalité complète.",
+    "guestLimitations": {
+      "title": "Limitations des Utilisateurs Invités :",
+      "timeLimit": "• Limite de temps d'enregistrement de 5 minutes",
+      "noUpload": "• Impossible de télécharger des fichiers audio",
+      "noCopy": "• Impossible de copier le texte de transcription",
+      "noExport": "• Impossible d'exporter vers Word",
+      "noUsageStats": "• Impossible de voir les statistiques d'utilisation"
     }
   },
   "footer": {

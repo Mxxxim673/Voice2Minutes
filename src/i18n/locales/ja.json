@@ -16,6 +16,7 @@
   },
   "navigation": {
     "audioToText": "音声文字起こし",
+    "usage": "使用量統計",
     "pricing": "料金"
   },
   "audioToText": {
@@ -45,7 +46,16 @@
     "dividerOr": "または",
     "liveRecording": "リアルタイム録音",
     "speaker": "話者",
-    "paymentNotice": "支払いについて"
+    "paymentNotice": "支払いについて",
+    "fileProcessingError": "音声ファイルの処理エラー",
+    "fileTruncated": "使用制限により、ファイルは{{minutes}}分にカットされました",
+    "quotaLowWarning": "使用可能な時間がわずかです",
+    "usageLimitReached": "使用時間の制限に達しました！",
+    "guestModeSubtitle": "ゲストモード - 音声文字起こし体験",
+    "remainingTime": "残り時間: {{minutes}} 分",
+    "outputPlaceholder": "転写結果がここに表示されます...\n\n📝 利用可能な機能:\n• 音声ファイルのアップロード転写\n• リアルタイム音声録音\n• 転写テキストのコピー\n• Word文書へのエクスポート",
+    "microphoneError": "マイクにアクセスできません。権限を確認してください。",
+    "noRecordingData": "録音データがありません。まず音声を録音してください"
   },
   "pricing": {
     "title": "料金とサブスクリプション",
@@ -72,6 +82,86 @@
       "100hours": "100時間",
       "monthly30": "月額（30時間）",
       "annual360": "年額（360時間）"
+    }
+  },
+  "usage": {
+    "title": "使用量統計",
+    "totalQuota": "総利用枠",
+    "usedTime": "使用時間",
+    "remainingTime": "残り時間",
+    "dailyUsage": "日々の使用量",
+    "hours": "時間",
+    "minutes": "分",
+    "seconds": "秒",
+    "used": "使用済み",
+    "duration": "時間長",
+    "files": "ファイル",
+    "noData": "使用データはありません",
+    "purchaseCTA": "時間を購入 / サブスク登録",
+    "monthly": "月次",
+    "yearly": "年次",
+    "trialNote": "試用枠が優先的に使用され、その後有料枠が消費されます。",
+    "status": {
+      "guest": "ゲスト",
+      "trial": "試用",
+      "paid": "有料ユーザー",
+      "subscription": "サブスクリプション",
+      "unknown": "不明"
+    },
+    "periods": {
+      "week": "過去7日間",
+      "month": "過去30日間",
+      "quarter": "過去90日間"
+    },
+    "guestNotice": {
+      "title": "登録ユーザーは体験を確認できます",
+      "description": "ゲストユーザーは使用量統計を確認できません。この機能をご利用いただくには登録してください。",
+      "register": "今すぐ登録"
+    },
+    "loginToUnlock": "ログイン後、すべての機能が解除されます"
+  },
+  "auth": {
+    "welcomeBack": "おかえりなさい",
+    "createAccount": "アカウント作成",
+    "verifyEmail": "メール認証",
+    "loginSubtitle": "すべての機能にアクセスするためにサインインしてください",
+    "registerSubtitle": "完全な機能を利用するために参加してください",
+    "email": "メールアドレス",
+    "password": "パスワード",
+    "confirmPassword": "パスワード確認",
+    "verificationCode": "認証コード",
+    "emailPlaceholder": "メールアドレスを入力してください",
+    "passwordPlaceholder": "パスワードを入力してください",
+    "confirmPasswordPlaceholder": "パスワードを確認してください",
+    "passwordHint": "パスワードは6文字以上である必要があります",
+    "login": "サインイン",
+    "register": "登録",
+    "verify": "メール認証",
+    "continueAsGuest": "ゲストとして続行",
+    "dividerOr": "または",
+    "noAccount": "アカウントをお持ちでないですか？",
+    "hasAccount": "すでにアカウントをお持ちですか？",
+    "passwordMismatch": "パスワードが一致しません",
+    "passwordTooShort": "パスワードは6文字以上である必要があります",
+    "registerSuccess": "登録が完了しました！認証のためメールをご確認ください。",
+    "verifySuccess": "メール認証が完了しました！リダイレクト中...",
+    "verifyFailed": "メール認証に失敗しました。再度お試しください。",
+    "genericError": "エラーが発生しました。再度お試しください。",
+    "verifyTitle": "メールをご確認ください",
+    "verifyDescription": "{{email}}に認証コードを送信しました。以下にコードを入力してください。",
+    "noVerificationEmail": "メールが届いていませんか？",
+    "resendVerification": "コードを再送信",
+    "verificationResent": "認証コードを再送信しました！",
+    "resendFailed": "認証コードの再送信に失敗しました。再度お試しください。",
+    "logout": "ログアウト",
+    "guestSimpleNotice": "ゲストモードでは一部の機能が制限されます。完全な機能を体験するにはログインしてください。",
+    "guestLimitations": {
+      "title": "ゲストユーザーの制限：",
+      "timeLimit": "• 録音時間は5分間に制限されます",
+      "noUpload": "• 音声ファイルをアップロードできません",
+      "noCopy": "• 転写テキストをコピーできません",
+      "noExport": "• Wordにエクスポートできません",
+      "noUsageStats": "• 使用量統計を確認できません"
     }
   },
   "footer": {

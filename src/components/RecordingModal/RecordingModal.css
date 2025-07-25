@@ -117,6 +117,32 @@
   font-size: 16px;
 }
 
+.usage-limit-info {
+  text-align: center;
+  margin: var(--spacing-sm) 0;
+}
+
+.limit-text {
+  font-size: var(--font-size-footnote);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.limit-reached-warning {
+  background-color: var(--error-red);
+  color: white;
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  text-align: center;
+  margin: var(--spacing-sm) 0;
+}
+
+.limit-reached-warning p {
+  margin: 0;
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-semibold);
+}
+
 .button-highlighted {
   animation: pulse-highlight 2s ease-in-out infinite;
 }

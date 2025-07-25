@@ -184,6 +184,53 @@ body {
   align-items: center;
 }
 
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.user-email {
+  font-size: var(--font-size-footnote);
+  color: var(--text-secondary);
+}
+
+.logout-button {
+  background: none;
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-footnote);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.logout-button:hover {
+  background-color: var(--light-gray);
+}
+
+.auth-button {
+  background-color: var(--primary-blue);
+  color: white;
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-semibold);
+  transition: all 0.3s ease;
+}
+
+.auth-button:hover {
+  background-color: var(--primary-blue-hover);
+}
+
 .logo {
   font-size: var(--font-size-headline);
   font-weight: var(--font-weight-bold);

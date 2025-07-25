@@ -1,3 +1,5 @@
+import { enforceApiQuotaLimits, recordApiUsage, preprocessAudioForLimits } from './apiService';
+
 const API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 const WHISPER_API_ENDPOINT = 'https://api.openai.com/v1/audio/transcriptions';
 const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
@@ -78,22 +80,55 @@ const combineSegmentTranscriptions = (transcriptions: string[]): string => {
   return combined;
 };
 
-export const transcribeAudio = async (audioFile: File): Promise<string> => {
+export const transcribeAudio = async (
+  audioFile: File, 
+  userType: 'guest' | 'trial' | 'paid' | 'subscription' | 'admin' = 'guest',
+  currentUsage: number = 0
+): Promise<string> => {
   if (!API_KEY) {
     throw new Error('OpenAI API key not configured. Please add VITE_OPENAI_API_KEY to your .env file.');
   }
 
   console.log(`Processing audio file: ${audioFile.name}, size: ${(audioFile.size / 1024 / 1024).toFixed(2)}MB`);
 
-  // For files larger than 25MB, we need to use Web Audio API for proper audio segmentation
-  // Simple byte slicing doesn't work for audio files as it breaks the file structure
-  if (audioFile.size > MAX_FILE_SIZE) {
-    console.log('File is larger than 25MB, attempting Web Audio API segmentation');
-    return await transcribeWithWebAudioAPI(audioFile);
-  }
+  // Check API quota limits before processing
+  try {
+    const preprocessResult = await preprocessAudioForLimits(audioFile, userType, currentUsage);
+    
+    if (!preprocessResult.success) {
+      throw new Error(preprocessResult.error || 'Usage quota exceeded');
+    }
 
-  console.log('Using direct processing');
-  return await transcribeFile(audioFile);
+    const { processedFile, wasTruncated, processedDuration } = preprocessResult.data!;
+    
+    if (wasTruncated) {
+      console.warn(`Audio file truncated to ${processedDuration.toFixed(1)} minutes due to usage limits`);
+    }
+
+    // For files larger than 25MB, we need to use Web Audio API for proper audio segmentation
+    // Simple byte slicing doesn't work for audio files as it breaks the file structure
+    let transcriptionResult: string;
+    if (processedFile.size > MAX_FILE_SIZE) {
+      console.log('File is larger than 25MB, attempting Web Audio API segmentation');
+      transcriptionResult = await transcribeWithWebAudioAPI(processedFile);
+    } else {
+      console.log('Using direct processing');
+      transcriptionResult = await transcribeFile(processedFile);
+    }
+
+    // Record usage after successful transcription
+    await recordApiUsage(processedFile, transcriptionResult, userType);
+
+    // Add truncation notice if applicable
+    if (wasTruncated) {
+      transcriptionResult += `\n\n[${processedDuration.toFixed(1)} minutes processed - Usage limit reached]`;
+    }
+
+    return transcriptionResult;
+  } catch (error) {
+    console.error('Transcription failed:', error);
+    throw error;
+  }
 };
 
 const transcribeFile = async (audioFile: File): Promise<string> => {
