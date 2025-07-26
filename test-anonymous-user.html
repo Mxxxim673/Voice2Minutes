@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>未登录用户访客身份测试</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: #00ff00;
+            line-height: 1.6;
+        }
+        
+        h1 {
+            color: #ffff00;
+            text-align: center;
+        }
+        
+        .test-section {
+            background: #2a2a2a;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #00ff00;
+        }
+        
+        .error {
+            border-left-color: #ff4444;
+            color: #ff9999;
+        }
+        
+        .warning {
+            border-left-color: #ffaa00;
+            color: #ffdd99;
+        }
+        
+        .success {
+            border-left-color: #00ff00;
+            color: #99ff99;
+        }
+        
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-family: inherit;
+        }
+        
+        button:hover {
+            background: #45a049;
+        }
+        
+        .danger {
+            background: #f44336;
+        }
+        
+        .danger:hover {
+            background: #da190b;
+        }
+        
+        pre {
+            background: #333;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        
+        .status.ok {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .status.fail {
+            background: #f44336;
+            color: white;
+        }
+        
+        .status.warn {
+            background: #ff9800;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 未登录用户访客身份识别测试</h1>
+    
+    <div class="test-section">
+        <h2>📋 测试控制</h2>
+        <button onclick="runFullTest()">🚀 运行完整测试</button>
+        <button onclick="clearAllData()" class="danger">🧹 清除所有数据</button>
+        <button onclick="showCurrentState()">📊 显示当前状态</button>
+        <button onclick="simulateRecording()">🎙️ 模拟录音</button>
+        <button onclick="testBackendSync()">🌐 测试后端同步</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>📊 当前状态</h2>
+        <div id="currentStatus">点击"显示当前状态"查看</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>📝 测试日志</h2>
+        <pre id="testLog">准备开始测试...</pre>
+    </div>
+    
+    <div class="test-section">
+        <h2>🔍 问题诊断</h2>
+        <div id="diagnosis">等待诊断结果...</div>
+    </div>
+
+    <script>
+        // 日志功能
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logElement = document.getElementById('testLog');
+            const prefix = type === 'error' ? '❌' : type === 'warn' ? '⚠️' : type === 'success' ? '✅' : 'ℹ️';
+            logElement.textContent += `[${timestamp}] ${prefix} ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(`${prefix} ${message}`);
+        }
+        
+        // 简化的访客身份服务
+        class GuestIdentityService {
+            constructor() {
+                this.VISITOR_ID_KEY = 'visitor_id';
+                this.GUEST_USAGE_KEY = 'guestUsedMinutes';
+                this.GUEST_IDENTITY_KEY = 'guest_identity';
+                this.GUEST_SESSIONS_KEY = 'guest_sessions';
+                this.GUEST_LIMIT_MINUTES = 5;
+            }
+            
+            generateUUID() {
+                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                    const r = Math.random() * 16 | 0;
+                    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                    return v.toString(16);
+                });
+            }
+            
+            generateSimpleFingerprint() {
+                const components = [
+                    navigator.userAgent,
+                    navigator.language,
+                    screen.width + 'x' + screen.height,
+                    new Date().getTimezoneOffset(),
+                    navigator.hardwareConcurrency || 0
+                ];
+                
+                let hash = 0;
+                const str = components.join('|');
+                for (let i = 0; i < str.length; i++) {
+                    const char = str.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash;
+                }
+                return Math.abs(hash).toString(16);
+            }
+            
+            async getGuestIdentity() {
+                let visitorId = localStorage.getItem(this.VISITOR_ID_KEY);
+                if (!visitorId) {
+                    visitorId = this.generateUUID();
+                    localStorage.setItem(this.VISITOR_ID_KEY, visitorId);
+                    log(`生成新的访客ID: ${visitorId.substring(0, 8)}...`);
+                }
+                
+                const fingerprint = this.generateSimpleFingerprint();
+                const totalMinutesUsed = Number(localStorage.getItem(this.GUEST_USAGE_KEY) || '0');
+                const sessions = JSON.parse(localStorage.getItem(this.GUEST_SESSIONS_KEY) || '[]');
+                
+                const identity = {
+                    visitorId,
+                    fingerprint,
+                    deviceInfo: {
+                        userAgent: navigator.userAgent,
+                        language: navigator.language,
+                        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                        screen: `${screen.width}x${screen.height}`
+                    },
+                    usageInfo: {
+                        totalMinutesUsed,
+                        sessionsCount: sessions.length,
+                        lastUsedAt: new Date().toISOString(),
+                        createdAt: new Date().toISOString()
+                    }
+                };
+                
+                localStorage.setItem(this.GUEST_IDENTITY_KEY, JSON.stringify(identity));
+                return identity;
+            }
+            
+            async validateGuestAccess() {
+                const identity = await this.getGuestIdentity();
+                const remainingMinutes = Math.max(0, this.GUEST_LIMIT_MINUTES - identity.usageInfo.totalMinutesUsed);
+                const isAllowed = remainingMinutes > 0;
+                
+                let riskLevel = 'low';
+                const warnings = [];
+                
+                if (identity.usageInfo.totalMinutesUsed >= this.GUEST_LIMIT_MINUTES) {
+                    riskLevel = 'high';
+                    warnings.push('已达到访客用户使用上限');
+                } else if (identity.usageInfo.totalMinutesUsed >= this.GUEST_LIMIT_MINUTES * 0.8) {
+                    riskLevel = 'medium';
+                    warnings.push('接近访客用户使用上限');
+                }
+                
+                if (identity.usageInfo.sessionsCount > 20) {
+                    riskLevel = 'high';
+                    warnings.push('访问频率异常');
+                }
+                
+                return {
+                    isAllowed,
+                    remainingMinutes,
+                    identity,
+                    riskLevel,
+                    warnings
+                };
+            }
+            
+            recordSession() {
+                const sessions = JSON.parse(localStorage.getItem(this.GUEST_SESSIONS_KEY) || '[]');
+                sessions.push({
+                    timestamp: new Date().toISOString(),
+                    userAgent: navigator.userAgent
+                });
+                
+                if (sessions.length > 50) {
+                    sessions.splice(0, sessions.length - 50);
+                }
+                
+                localStorage.setItem(this.GUEST_SESSIONS_KEY, JSON.stringify(sessions));
+                log(`记录新会话，总会话数: ${sessions.length}`);
+            }
+            
+            updateUsage(minutesUsed) {
+                const currentUsage = Number(localStorage.getItem(this.GUEST_USAGE_KEY) || '0');
+                const newUsage = currentUsage + minutesUsed;
+                localStorage.setItem(this.GUEST_USAGE_KEY, newUsage.toString());
+                log(`使用量更新: +${minutesUsed}分钟, 总计: ${newUsage}分钟`);
+                
+                // 更新身份信息中的使用量
+                const identity = localStorage.getItem(this.GUEST_IDENTITY_KEY);
+                if (identity) {
+                    const identityData = JSON.parse(identity);
+                    identityData.usageInfo.totalMinutesUsed = newUsage;
+                    identityData.usageInfo.lastUsedAt = new Date().toISOString();
+                    localStorage.setItem(this.GUEST_IDENTITY_KEY, JSON.stringify(identityData));
+                }
+            }
+            
+            async reportGuestIdentity(identity) {
+                try {
+                    const response = await fetch('http://localhost:3001/api/guest/identity', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            visitorId: identity.visitorId,
+                            fingerprint: identity.fingerprint,
+                            deviceInfo: identity.deviceInfo,
+                            usageInfo: identity.usageInfo
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        log(`后端上报成功: ${result.message}`, 'success');
+                        return result;
+                    } else {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                } catch (error) {
+                    log(`后端上报失败: ${error.message}`, 'error');
+                    throw error;
+                }
+            }
+            
+            clearGuestData() {
+                localStorage.removeItem(this.VISITOR_ID_KEY);
+                localStorage.removeItem(this.GUEST_USAGE_KEY);
+                localStorage.removeItem(this.GUEST_IDENTITY_KEY);
+                localStorage.removeItem(this.GUEST_SESSIONS_KEY);
+                log('所有访客数据已清除', 'warn');
+            }
+        }
+        
+        // 创建服务实例
+        const guestService = new GuestIdentityService();
+        
+        // 显示当前状态
+        function showCurrentState() {
+            const statusElement = document.getElementById('currentStatus');
+            
+            const authToken = localStorage.getItem('authToken');
+            const guestMode = localStorage.getItem('guestMode');
+            const userData = localStorage.getItem('userData');
+            const guestUsedMinutes = localStorage.getItem('guestUsedMinutes');
+            const visitorId = localStorage.getItem('visitor_id');
+            const guestIdentity = localStorage.getItem('guest_identity');
+            const guestSessions = localStorage.getItem('guest_sessions');
+            
+            statusElement.innerHTML = `
+                <strong>🔐 认证状态:</strong><br>
+                • authToken: ${authToken ? '✅ 存在' : '❌ 不存在'}<br>
+                • guestMode: ${guestMode || '❌ 未设置'}<br>
+                • userData: ${userData ? '✅ 存在' : '❌ 不存在'}<br><br>
+                
+                <strong>👤 访客身份:</strong><br>
+                • visitor_id: ${visitorId ? `✅ ${visitorId.substring(0, 8)}...` : '❌ 不存在'}<br>
+                • guest_identity: ${guestIdentity ? '✅ 存在' : '❌ 不存在'}<br><br>
+                
+                <strong>📊 使用统计:</strong><br>
+                • guestUsedMinutes: ${guestUsedMinutes || '0'} 分钟<br>
+                • 剩余时长: ${Math.max(0, 5 - Number(guestUsedMinutes || '0')).toFixed(1)} 分钟<br>
+                • guest_sessions: ${guestSessions ? JSON.parse(guestSessions).length : 0} 次<br><br>
+                
+                <strong>🚨 问题诊断:</strong><br>
+                • 是否为未登录用户: ${!authToken && !guestMode ? '✅ 是' : '❌ 否'}<br>
+                • 是否有访客身份: ${visitorId ? '✅ 是' : '❌ 否'}<br>
+                • 使用量是否正确: ${guestUsedMinutes !== null ? '✅ 是' : '❌ 否'}
+            `;
+            
+            log('当前状态已更新');
+        }
+        
+        // 清除所有数据
+        function clearAllData() {
+            if (confirm('确定要清除所有测试数据吗？')) {
+                localStorage.clear();
+                guestService.clearGuestData();
+                showCurrentState();
+                log('所有数据已清除', 'warn');
+            }
+        }
+        
+        // 模拟录音
+        async function simulateRecording() {
+            log('🎙️ 开始模拟录音过程...');
+            
+            // 步骤1: 检查当前状态
+            const validationBefore = await guestService.validateGuestAccess();
+            log(`录音前状态: 剩余${validationBefore.remainingMinutes.toFixed(1)}分钟`);
+            
+            // 步骤2: 模拟录音1分钟
+            const recordingDuration = 1.0;
+            guestService.updateUsage(recordingDuration);
+            
+            // 步骤3: 检查录音后状态
+            const validationAfter = await guestService.validateGuestAccess();
+            log(`录音后状态: 剩余${validationAfter.remainingMinutes.toFixed(1)}分钟`, 
+                validationAfter.isAllowed ? 'success' : 'warn');
+            
+            // 步骤4: 更新显示
+            showCurrentState();
+        }
+        
+        // 测试后端同步
+        async function testBackendSync() {
+            try {
+                log('🌐 开始测试后端同步...');
+                const identity = await guestService.getGuestIdentity();
+                await guestService.reportGuestIdentity(identity);
+                log('后端同步测试完成', 'success');
+            } catch (error) {
+                log(`后端同步失败: ${error.message}`, 'error');
+            }
+        }
+        
+        // 运行完整测试
+        async function runFullTest() {
+            log('🚀 开始运行完整测试流程...', 'success');
+            
+            try {
+                // 步骤1: 清除数据，模拟首次访问
+                log('步骤1: 清除数据，模拟首次访问');
+                localStorage.clear();
+                
+                // 步骤2: 检查初始状态（模拟未登录用户）
+                log('步骤2: 检查初始状态');
+                const hasAuth = !!localStorage.getItem('authToken');
+                const hasGuestMode = !!localStorage.getItem('guestMode');
+                const hasUserData = !!localStorage.getItem('userData');
+                
+                log(`初始状态: authToken=${hasAuth}, guestMode=${hasGuestMode}, userData=${hasUserData}`);
+                
+                // 步骤3: 初始化访客身份（模拟访问页面）
+                log('步骤3: 初始化访客身份');
+                guestService.recordSession();
+                const identity = await guestService.getGuestIdentity();
+                log(`访客身份创建: ID=${identity.visitorId.substring(0, 8)}..., 指纹=${identity.fingerprint.substring(0, 8)}...`);
+                
+                // 步骤4: 验证访问权限
+                log('步骤4: 验证访问权限');
+                const validation1 = await guestService.validateGuestAccess();
+                log(`访问权限: 允许=${validation1.isAllowed}, 剩余=${validation1.remainingMinutes.toFixed(1)}分钟`);
+                
+                // 步骤5: 模拟使用（录音转文字）
+                log('步骤5: 模拟使用（录音转文字）');
+                guestService.updateUsage(2.5);
+                const validation2 = await guestService.validateGuestAccess();
+                log(`使用后状态: 允许=${validation2.isAllowed}, 剩余=${validation2.remainingMinutes.toFixed(1)}分钟`);
+                
+                // 步骤6: 测试后端同步
+                log('步骤6: 测试后端同步');
+                try {
+                    await guestService.reportGuestIdentity(validation2.identity);
+                    log('后端同步成功', 'success');
+                } catch (error) {
+                    log(`后端同步失败: ${error.message}`, 'error');
+                }
+                
+                // 步骤7: 模拟超限使用
+                log('步骤7: 模拟超限使用');
+                guestService.updateUsage(3.0); // 总计5.5分钟
+                const validation3 = await guestService.validateGuestAccess();
+                log(`超限后状态: 允许=${validation3.isAllowed}, 剩余=${validation3.remainingMinutes.toFixed(1)}分钟`);
+                
+                // 步骤8: 诊断结果
+                log('步骤8: 生成诊断结果');
+                const diagnosis = document.getElementById('diagnosis');
+                diagnosis.innerHTML = `
+                    <h3>🔍 测试结果诊断</h3>
+                    <p><span class="status ${identity.visitorId ? 'ok' : 'fail'}">${identity.visitorId ? '✅' : '❌'}</span> 访客ID生成</p>
+                    <p><span class="status ${identity.fingerprint ? 'ok' : 'fail'}">${identity.fingerprint ? '✅' : '❌'}</span> 设备指纹生成</p>
+                    <p><span class="status ${validation2.identity.usageInfo.totalMinutesUsed === 2.5 ? 'ok' : 'fail'}">${validation2.identity.usageInfo.totalMinutesUsed === 2.5 ? '✅' : '❌'}</span> 使用量记录正确</p>
+                    <p><span class="status ${!validation3.isAllowed ? 'ok' : 'fail'}">${!validation3.isAllowed ? '✅' : '❌'}</span> 超限后正确阻止</p>
+                    <p><span class="status ${validation3.identity.usageInfo.sessionsCount > 0 ? 'ok' : 'fail'}">${validation3.identity.usageInfo.sessionsCount > 0 ? '✅' : '❌'}</span> 会话记录正确</p>
+                    
+                    <h4>📊 关键数据检查:</h4>
+                    <p>• 访客ID: ${identity.visitorId}</p>
+                    <p>• 设备指纹: ${identity.fingerprint}</p>
+                    <p>• 总使用时长: ${validation3.identity.usageInfo.totalMinutesUsed} 分钟</p>
+                    <p>• 剩余时长: ${validation3.remainingMinutes.toFixed(1)} 分钟</p>
+                    <p>• 会话次数: ${validation3.identity.usageInfo.sessionsCount}</p>
+                    <p>• 风险等级: ${validation3.riskLevel}</p>
+                `;
+                
+                showCurrentState();
+                log('🎉 完整测试流程完成！', 'success');
+                
+            } catch (error) {
+                log(`测试过程中发生错误: ${error.message}`, 'error');
+            }
+        }
+        
+        // 页面加载时显示状态
+        window.onload = function() {
+            log('🧪 测试页面已加载');
+            showCurrentState();
+        };
+    </script>
+</body>
+</html>

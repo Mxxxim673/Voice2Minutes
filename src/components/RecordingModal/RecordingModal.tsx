@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
-import { checkRecordingLimit } from '../../services/usageService';
 import './RecordingModal.css';
 
 interface RecordingModalProps {
@@ -12,7 +11,18 @@ interface RecordingModalProps {
 
 const RecordingModal: React.FC<RecordingModalProps> = ({ isOpen, onClose, onRecordingComplete }) => {
   const { t } = useTranslation();
-  const { user, isGuest } = useAuth();
+  const { user, isGuest, ensureGuestMode } = useAuth();
+  
+  // 安全的翻译函数，带有默认值
+  const safeT = (key: string, defaultValue: string, options?: any): string => {
+    try {
+      const result = t(key, options);
+      return typeof result === 'string' && result !== key ? result : defaultValue;
+    } catch (error) {
+      console.error(`Translation error for key: ${key}`, error);
+      return defaultValue;
+    }
+  };
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -35,31 +45,129 @@ const RecordingModal: React.FC<RecordingModalProps> = ({ isOpen, onClose, onReco
     };
   }, []);
 
+  // 确保在模态框打开时访客模式状态正确
+  useEffect(() => {
+    if (isOpen && !user && localStorage.getItem('guestMode') === 'true') {
+      console.log('🎙️ 录音模态框打开，已有访客模式标识，更新访客状态...');
+      ensureGuestMode().catch(error => {
+        console.error('❌ 访客模式更新失败:', error);
+      });
+    }
+  }, [isOpen, user, ensureGuestMode]);
+
   const cleanup = () => {
+    console.log('🧹 清理录音资源...');
+    
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
+      intervalRef.current = null;
     }
     if (visualizationIntervalRef.current) {
       clearInterval(visualizationIntervalRef.current);
+      visualizationIntervalRef.current = null;
     }
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current.getTracks().forEach(track => {
+        track.stop();
+        console.log('🛑 停止音频轨道:', track.kind);
+      });
+      streamRef.current = null;
     }
-    if (audioContextRef.current) {
-      audioContextRef.current.close();
+    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+      audioContextRef.current.close().catch(err => {
+        console.warn('⚠️ 音频上下文关闭失败:', err);
+      });
+      audioContextRef.current = null;
     }
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current = null;
+    }
+    if (analyserRef.current) {
+      analyserRef.current = null;
+    }
+    
+    console.log('✅ 录音资源清理完成');
+  };
+
+  // 统一的配额检查函数
+  const getUserQuotaInfo = () => {
+    let totalMinutes = 0;
+    let usedMinutes = 0;
+    
+    // 检查是否为游客用户（包括未登录用户）
+    const isGuestUser = isGuest || !user || user.userType === 'guest';
+    
+    if (isGuestUser) {
+      totalMinutes = 5; // 所有游客用户5分钟
+      // 统一从localStorage读取使用量（这个值由访客身份服务维护）
+      usedMinutes = Number(localStorage.getItem('guestUsedMinutes') || '0');
+    } else if (user) {
+      // 认证用户（试用或付费用户）
+      totalMinutes = user.quotaMinutes || 10;
+      usedMinutes = user.usedMinutes || 0;
+    }
+    
+    const remainingMinutes = Math.max(0, totalMinutes - usedMinutes);
+    
+    return { totalMinutes, usedMinutes, remainingMinutes };
+  };
+
+  // 获取用户类型显示文本
+  const getUserTypeText = () => {
+    // 优先检查是否为访客登录模式
+    if (isGuest && localStorage.getItem('guestMode') === 'true') {
+      return safeT('audioToText.guestUser', '访客用户');
+    }
+    
+    // 检查是否为认证用户
+    if (user && localStorage.getItem('authToken')) {
+      if (user.email === 'max.z.software@gmail.com') {
+        return safeT('audioToText.adminUser', '管理员');
+      } else if (user.userType === 'paid') {
+        return safeT('audioToText.paidUser', '付费用户');
+      } else if (user.userType === 'trial') {
+        return safeT('audioToText.trialUser', '试用用户');
+      }
+    }
+    
+    // 完全未登录的情况 - 显示"未登录"而不是"访客用户"
+    if (!localStorage.getItem('authToken') && !isGuest) {
+      return safeT('audioToText.unauthenticated', '未登录');
+    }
+    
+    // 兜底情况
+    return safeT('audioToText.guestUser', '访客用户');
   };
 
   const startRecording = async () => {
     try {
-      console.log('Starting recording...');
+      // 检查用户剩余配额
+      const { remainingMinutes } = getUserQuotaInfo();
+      if (remainingMinutes <= 0) {
+        const message = `⏰ ${safeT('audioToText.recordingQuotaExhausted', '您的配额已用完，无法开始录音')}`;
+        alert(message);
+        return;
+      }
+
+      // 检查浏览器是否支持媒体录制
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('您的浏览器不支持录音功能，请使用Chrome、Firefox或Safari浏览器');
+      }
+
+      if (!window.MediaRecorder) {
+        throw new Error('您的浏览器不支持MediaRecorder API，请更新您的浏览器');
+      }
+
+      console.log('🎤 开始请求麦克风权限...');
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
-          echoCancellation: false,
-          noiseSuppression: false,
-          autoGainControl: false
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: 44100
         } 
       });
+      console.log('✅ 麦克风权限获取成功');
       streamRef.current = stream;
 
       // Set up audio analysis for waveform visualization
@@ -74,14 +182,66 @@ const RecordingModal: React.FC<RecordingModalProps> = ({ isOpen, onClose, onReco
       
       source.connect(analyserRef.current);
 
+      // 检查MediaRecorder支持的格式，优先选择OpenAI API兼容的格式
+      const mimeTypes = [
+        // OpenAI API直接支持的格式（优先级最高）
+        'audio/wav',
+        'audio/mp4',
+        'audio/mpeg',
+        'audio/webm', // 虽然支持，但可能需要转换
+        'audio/ogg;codecs=opus', // 支持，但需要正确的扩展名
+        'audio/ogg',
+        'audio/webm;codecs=opus',
+        // 其他格式作为备选
+        'audio/mp3'
+      ];
+      
+      let selectedMimeType = '';
+      for (const mimeType of mimeTypes) {
+        if (MediaRecorder.isTypeSupported(mimeType)) {
+          selectedMimeType = mimeType;
+          console.log('✅ 找到支持的格式:', mimeType);
+          break;
+        }
+      }
+      
+      if (!selectedMimeType) {
+        throw new Error('您的浏览器不支持任何音频录制格式');
+      }
+      
+      console.log('🎵 选择的音频格式:', selectedMimeType);
+      
       // Set up MediaRecorder
-      mediaRecorderRef.current = new MediaRecorder(stream);
+      mediaRecorderRef.current = new MediaRecorder(stream, {
+        mimeType: selectedMimeType,
+        audioBitsPerSecond: 128000
+      });
       audioChunksRef.current = [];
+      
+      console.log('📱 MediaRecorder 初始化完成');
 
       mediaRecorderRef.current.ondataavailable = (event) => {
+        console.log('📊 收到录音数据:', event.data.size, 'bytes');
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data);
         }
+      };
+      
+      mediaRecorderRef.current.onerror = (event) => {
+        console.error('🚫 MediaRecorder 错误:', event);
+        alert('录制过程中发生错误，请重试');
+      };
+      
+      mediaRecorderRef.current.onstart = () => {
+        console.log('🎬 录制开始');
+      };
+      
+      mediaRecorderRef.current.onpause = () => {
+        console.log('⏸️ 录制暂停');
+      };
+      
+      mediaRecorderRef.current.onresume = () => {
+        console.log('▶️ 录制恢复');
       };
 
       mediaRecorderRef.current.onstop = () => {
@@ -93,7 +253,9 @@ const RecordingModal: React.FC<RecordingModalProps> = ({ isOpen, onClose, onReco
           return;
         }
         
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+        // 使用录制时的实际MIME类型
+        const mimeType = mediaRecorderRef.current?.mimeType || 'audio/webm';
+        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
         recordedAudioBlobRef.current = audioBlob;
         setHasRecording(true);
         
@@ -101,8 +263,10 @@ const RecordingModal: React.FC<RecordingModalProps> = ({ isOpen, onClose, onReco
         console.log('✅ hasRecording 状态已设置为 true');
       };
 
-      mediaRecorderRef.current.start();
+      // 开始录制，每秒收集一次数据
+      mediaRecorderRef.current.start(1000);
       setIsRecording(true);
+      console.log('🎙️ 录制已启动');
       setIsPaused(false);
       setRecordingTime(0);
 
@@ -112,15 +276,20 @@ const RecordingModal: React.FC<RecordingModalProps> = ({ isOpen, onClose, onReco
           const newTime = prev + 1;
           const newTimeMinutes = newTime / 60;
           
-          // 检查用户剩余配额
-          const userQuotaMinutes = user?.quotaMinutes || 10;
-          const userUsedMinutes = user?.usedMinutes || 0;
-          const remainingMinutes = userQuotaMinutes - userUsedMinutes;
+          // 获取用户配额信息
+          const { remainingMinutes } = getUserQuotaInfo();
           
-          // 如果录音时长超过剩余配额，自动停止录音
+          // 检查录制时长是否超过剩余配额
           if (newTimeMinutes >= remainingMinutes) {
             setLimitReached(true);
-            // Auto-stop recording when limit reached
+            setTimeout(stopRecording, 100);
+            return newTime;
+          }
+          
+          // 额外检查：防止单次录音超过10分钟（技术限制）
+          const MAX_SINGLE_RECORDING_MINUTES = 10;
+          if (newTimeMinutes >= MAX_SINGLE_RECORDING_MINUTES) {
+            setLimitReached(true);
             setTimeout(stopRecording, 100);
             return newTime;
           }
@@ -132,8 +301,26 @@ const RecordingModal: React.FC<RecordingModalProps> = ({ isOpen, onClose, onReco
       // Start audio visualization
       startAudioVisualization();
     } catch (error) {
-      console.error('Error starting recording:', error);
-      alert(t('audioToText.microphoneError'));
+      console.error('🚫 录音启动失败:', error);
+      
+      let errorMessage = '';
+      if (error instanceof Error) {
+        if (error.name === 'NotAllowedError' || error.message.includes('Permission denied')) {
+          errorMessage = '🚫 麦克风权限被拒绝。请在浏览器设置中允许麦克风访问权限，然后刷新页面重试。';
+        } else if (error.name === 'NotFoundError') {
+          errorMessage = '🎤 未找到麦克风设备。请检查您的麦克风是否已连接。';
+        } else if (error.name === 'NotSupportedError') {
+          errorMessage = '🌐 您的浏览器不支持录音功能。请使用Chrome、Firefox或Safari浏览器。';
+        } else if (error.message.includes('MediaRecorder')) {
+          errorMessage = '📱 您的浏览器版本过旧，不支持录音功能。请更新您的浏览器。';
+        } else {
+          errorMessage = `❌ 录音启动失败: ${error.message}`;
+        }
+      } else {
+        errorMessage = '❌ 未知错误，录音功能无法启动。';
+      }
+      
+      alert(errorMessage);
     }
   };
 
@@ -163,13 +350,19 @@ const RecordingModal: React.FC<RecordingModalProps> = ({ isOpen, onClose, onReco
           const newTime = prev + 1;
           const newTimeMinutes = newTime / 60;
           
-          // 检查用户剩余配额
-          const userQuotaMinutes = user?.quotaMinutes || 10;
-          const userUsedMinutes = user?.usedMinutes || 0;
-          const remainingMinutes = userQuotaMinutes - userUsedMinutes;
+          // 获取用户配额信息
+          const { remainingMinutes } = getUserQuotaInfo();
           
-          // 如果录音时长超过剩余配额，自动停止录音
+          // 检查录制时长是否超过剩余配额
           if (newTimeMinutes >= remainingMinutes) {
+            setLimitReached(true);
+            setTimeout(stopRecording, 100);
+            return newTime;
+          }
+          
+          // 额外检查：防止单次录音超过10分钟（技术限制）
+          const MAX_SINGLE_RECORDING_MINUTES = 10;
+          if (newTimeMinutes >= MAX_SINGLE_RECORDING_MINUTES) {
             setLimitReached(true);
             setTimeout(stopRecording, 100);
             return newTime;
@@ -252,20 +445,34 @@ const RecordingModal: React.FC<RecordingModalProps> = ({ isOpen, onClose, onReco
   };
 
   const handleStartTranscription = () => {
+    console.log('🚀 开始转文字处理...');
+    console.log('📊 hasRecording:', hasRecording);
+    console.log('📊 recordedAudioBlobRef 是否有数据:', !!recordedAudioBlobRef.current);
+    console.log('📊 audioChunks 数量:', audioChunksRef.current.length);
+    
+    // 优先使用已保存的录音 Blob
     if (hasRecording && recordedAudioBlobRef.current) {
-      console.log('🎤 开始转录录音，数据大小:', recordedAudioBlobRef.current.size, 'bytes');
+      console.log('✅ 使用已保存的录音数据，大小:', recordedAudioBlobRef.current.size, 'bytes');
       onRecordingComplete(recordedAudioBlobRef.current);
       handleClose();
-    } else if (hasRecording && audioChunksRef.current.length > 0) {
-      // 备用方案：如果 ref 中没有数据，从 chunks 重新创建
-      const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
-      console.log('🎤 备用方案：从chunks创建录音，数据大小:', audioBlob.size, 'bytes');
+      return;
+    }
+    
+    // 备用方案：从 chunks 重新创建
+    if (hasRecording && audioChunksRef.current.length > 0) {
+      console.log('🔄 从chunks重新创建音频数据');
+      // 使用录制时的实际MIME类型
+      const mimeType = mediaRecorderRef.current?.mimeType || 'audio/webm';
+      const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+      console.log('📦 重新创建的音频数据，大小:', audioBlob.size, 'bytes, 类型:', mimeType);
       onRecordingComplete(audioBlob);
       handleClose();
-    } else {
-      console.error('❌ 没有录音数据可以转录');
-      alert(t('audioToText.noRecordingData'));
+      return;
     }
+    
+    // 没有录音数据
+    console.error('❌ 没有找到录音数据');
+    alert(safeT('audioToText.noRecordingData', '没有录音数据，请先录制音频'));
   };
 
   const handleClose = () => {
@@ -293,7 +500,7 @@ const RecordingModal: React.FC<RecordingModalProps> = ({ isOpen, onClose, onReco
     <div className="modal-overlay" onClick={handleClose}>
       <div className="recording-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>{t('audioToText.liveRecording')}</h2>
+          <h2>{safeT('audioToText.liveRecording', '实时录制')}</h2>
           <button className="modal-close" onClick={handleClose}>×</button>
         </div>
         
@@ -321,23 +528,16 @@ const RecordingModal: React.FC<RecordingModalProps> = ({ isOpen, onClose, onReco
             {formatTime(recordingTime)}
           </div>
           
-          {/* Usage limit warning */}
-          {isGuest && (
-            <div className="usage-limit-info">
-              <p className="limit-text">
-                {t('auth.guestLimitations.timeLimit')} ({Math.max(0, 5 - Math.floor(recordingTime / 60))} {t('usage.minutes')} {t('usage.remainingTime').toLowerCase()})
-              </p>
-            </div>
-          )}
-          
-          {/* User quota limit info */}
-          {!isGuest && user && (
-            <div className="usage-limit-info">
-              <p className="limit-text">
-                剩余配额: {Math.max(0, ((user.quotaMinutes || 10) - (user.usedMinutes || 0) - Math.floor(recordingTime / 60))).toFixed(1)} 分钟
-              </p>
-            </div>
-          )}
+          {/* Universal quota display */}
+          <div className="usage-limit-info">
+            <p className="limit-text">
+              {safeT('audioToText.totalQuotaRemaining', '总配额剩余')}: {getUserQuotaInfo().remainingMinutes.toFixed(1)} {safeT('usage.minutes', '分钟')} | {safeT('audioToText.currentRecording', '本次录制')}: {Math.floor(recordingTime / 60)}:{(recordingTime % 60).toString().padStart(2, '0')}
+            </p>
+            <p className="user-type-info" style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+              {safeT('audioToText.userType', '用户类型')}: {getUserTypeText()} | 
+              {safeT('audioToText.totalQuota', '总配额')}: {getUserQuotaInfo().totalMinutes.toFixed(1)} {safeT('usage.minutes', '分钟')}
+            </p>
+          </div>
           
           {limitReached && (
             <div className="limit-reached-warning" style={{ 
@@ -347,10 +547,30 @@ const RecordingModal: React.FC<RecordingModalProps> = ({ isOpen, onClose, onReco
               borderRadius: '5px',
               marginTop: '10px'
             }}>
-              <p>⏰ 您的试用时长已结束! 录音已自动停止。</p>
-              <p style={{ fontSize: '14px', marginTop: '5px' }}>
-                💡 请购买更多时长继续使用录音功能。
-              </p>
+              {/* 根据用户状态显示不同的提示 */}
+              {!isGuest && !localStorage.getItem('authToken') ? (
+                // 未登录用户的提示
+                <div>
+                  <p>{safeT('audioToText.guestQuotaReachedTitle', '⏰ 已达到使用上限，录音已自动停止。')}</p>
+                  <p style={{ fontSize: '14px', marginTop: '5px' }}>
+                    {safeT('audioToText.guestTrialComplete', '🎉 访客体验已结束！注册账户可获得10分钟试用时长。')}
+                  </p>
+                </div>
+              ) : (
+                // 已登录用户的原有提示
+                <div>
+                  <p>⏰ {safeT('audioToText.recordingAutoStopped', '录音已自动停止')}</p>
+                  <p style={{ fontSize: '14px', marginTop: '5px' }}>
+                    {getUserQuotaInfo().remainingMinutes <= 0 
+                      ? `📢 ${safeT('audioToText.quotaExhaustedMessage', '您的配额已用完。录制时长: {{minutes}} 分钟', { minutes: (recordingTime / 60).toFixed(1) })}`
+                      : `📢 ${safeT('audioToText.singleRecordingLimitMessage', '单次录制已达到10分钟技术上限。录制时长: {{minutes}} 分钟', { minutes: (recordingTime / 60).toFixed(1) })}`
+                    }
+                  </p>
+                  <p style={{ fontSize: '14px', marginTop: '5px' }}>
+                    💡 {safeT('audioToText.transcriptionTip', '您可以转写此录音或重新开始录制。转写时会根据您的剩余配额进行处理。')}
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -359,17 +579,17 @@ const RecordingModal: React.FC<RecordingModalProps> = ({ isOpen, onClose, onReco
             {!isRecording && !hasRecording && (
               <button onClick={startRecording} className="button button-primary">
                 <span className="mic-icon">◉</span>
-                {t('common.start')}
+                {safeT('common.start', '开始')}
               </button>
             )}
             
             {isRecording && !isPaused && (
               <>
                 <button onClick={pauseRecording} className="button button-secondary">
-                  {t('common.stop')}
+                  {safeT('common.stop', '停止')}
                 </button>
                 <button onClick={stopRecording} className="button button-warning">
-                  完成录制
+                  {safeT('audioToText.completeRecording', '完成录制')}
                 </button>
               </>
             )}
@@ -377,10 +597,10 @@ const RecordingModal: React.FC<RecordingModalProps> = ({ isOpen, onClose, onReco
             {isRecording && isPaused && (
               <>
                 <button onClick={resumeRecording} className="button button-primary">
-                  继续录制
+                  {safeT('audioToText.continueRecording', '继续录制')}
                 </button>
                 <button onClick={stopRecording} className="button button-warning">
-                  完成录制
+                  {safeT('audioToText.completeRecording', '完成录制')}
                 </button>
               </>
             )}
@@ -388,13 +608,13 @@ const RecordingModal: React.FC<RecordingModalProps> = ({ isOpen, onClose, onReco
             {!isRecording && hasRecording && (
               <>
                 <button onClick={startRecording} className="button button-secondary">
-                  重新录制
+                  {safeT('audioToText.reRecord', '重新录制')}
                 </button>
                 <button 
                   onClick={handleStartTranscription} 
                   className="button button-primary button-highlighted"
                 >
-                  {t('audioToText.startTranscription')}
+                  {safeT('audioToText.startTranscription', '开始转写')}
                 </button>
               </>
             )}

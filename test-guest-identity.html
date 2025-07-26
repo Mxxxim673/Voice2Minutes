@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>访客身份防滥用功能测试</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        
+        .test-section {
+            background: white;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .test-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        button:hover {
+            background: #0056b3;
+        }
+        
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .danger {
+            background: #dc3545 !important;
+        }
+        
+        .danger:hover {
+            background: #c82333 !important;
+        }
+        
+        .results {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1>🛡️ 访客身份防滥用功能测试</h1>
+    
+    <div class="test-section">
+        <h2>📊 当前状态</h2>
+        <div id="currentStatus">点击"刷新状态"查看当前访客信息</div>
+        <div class="test-buttons">
+            <button onclick="refreshStatus()">刷新状态</button>
+            <button onclick="showBrowserInfo()">显示浏览器信息</button>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🔍 身份验证测试</h2>
+        <div id="identityResults">点击按钮开始测试</div>
+        <div class="test-buttons">
+            <button onclick="testGuestIdentity()">生成访客身份</button>
+            <button onclick="validateAccess()">验证访问权限</button>
+            <button onclick="reportToBackend()">上报后端</button>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>⚠️ 使用量模拟</h2>
+        <div id="usageResults">使用量变化将显示在这里</div>
+        <div class="test-buttons">
+            <button onclick="simulateUsage(0.5)">使用 0.5 分钟</button>
+            <button onclick="simulateUsage(1)">使用 1 分钟</button>
+            <button onclick="simulateUsage(2)">使用 2 分钟</button>
+            <button onclick="simulateUsage(5)">使用 5 分钟</button>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🚨 风险行为模拟</h2>
+        <div id="riskResults">风险检测结果将显示在这里</div>
+        <div class="test-buttons">
+            <button onclick="simulateFrequentAccess()">模拟频繁访问</button>
+            <button onclick="simulateExcessiveUsage()">模拟超限使用</button>
+            <button onclick="simulateMultipleSessions()">模拟多次会话</button>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🧹 数据管理</h2>
+        <div class="test-buttons">
+            <button onclick="clearAllData()" class="danger">清除所有数据</button>
+            <button onclick="resetToCleanState()">重置为干净状态</button>
+            <button onclick="exportData()">导出测试数据</button>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>📝 测试日志</h2>
+        <div id="testLogs" class="results">测试日志将显示在这里...</div>
+        <button onclick="clearLogs()">清除日志</button>
+    </div>
+
+    <script>
+        // 简化的访客身份服务（模拟前端实现）
+        class SimpleGuestIdentityService {
+            constructor() {
+                this.VISITOR_ID_KEY = 'visitor_id';
+                this.GUEST_USAGE_KEY = 'guestUsedMinutes';
+                this.GUEST_IDENTITY_KEY = 'guest_identity';
+                this.GUEST_SESSIONS_KEY = 'guest_sessions';
+                this.GUEST_LIMIT_MINUTES = 5;
+            }
+            
+            generateUUID() {
+                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                    const r = Math.random() * 16 | 0;
+                    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                    return v.toString(16);
+                });
+            }
+            
+            getOrCreateVisitorId() {
+                let visitorId = localStorage.getItem(this.VISITOR_ID_KEY);
+                if (!visitorId) {
+                    visitorId = this.generateUUID();
+                    localStorage.setItem(this.VISITOR_ID_KEY, visitorId);
+                    this.log(`生成新的访客ID: ${visitorId}`);
+                }
+                return visitorId;
+            }
+            
+            generateSimpleFingerprint() {
+                const components = [
+                    navigator.userAgent,
+                    navigator.language,
+                    screen.width + 'x' + screen.height,
+                    new Date().getTimezoneOffset(),
+                    navigator.hardwareConcurrency || 0
+                ];
+                
+                let hash = 0;
+                const str = components.join('|');
+                for (let i = 0; i < str.length; i++) {
+                    const char = str.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash;
+                }
+                return Math.abs(hash).toString(16);
+            }
+            
+            getGuestIdentity() {
+                const visitorId = this.getOrCreateVisitorId();
+                const fingerprint = this.generateSimpleFingerprint();
+                const totalMinutesUsed = Number(localStorage.getItem(this.GUEST_USAGE_KEY) || '0');
+                const sessions = JSON.parse(localStorage.getItem(this.GUEST_SESSIONS_KEY) || '[]');
+                
+                const identity = {
+                    visitorId,
+                    fingerprint,
+                    deviceInfo: {
+                        userAgent: navigator.userAgent,
+                        language: navigator.language,
+                        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                        screen: `${screen.width}x${screen.height}`
+                    },
+                    usageInfo: {
+                        totalMinutesUsed,
+                        sessionsCount: sessions.length,
+                        lastUsedAt: new Date().toISOString(),
+                        createdAt: new Date().toISOString()
+                    }
+                };
+                
+                localStorage.setItem(this.GUEST_IDENTITY_KEY, JSON.stringify(identity));
+                return identity;
+            }
+            
+            validateGuestAccess() {
+                const identity = this.getGuestIdentity();
+                const remainingMinutes = Math.max(0, this.GUEST_LIMIT_MINUTES - identity.usageInfo.totalMinutesUsed);
+                const isAllowed = remainingMinutes > 0;
+                
+                let riskLevel = 'low';
+                const warnings = [];
+                
+                if (identity.usageInfo.totalMinutesUsed >= this.GUEST_LIMIT_MINUTES) {
+                    riskLevel = 'high';
+                    warnings.push('已达到访客用户使用上限');
+                } else if (identity.usageInfo.totalMinutesUsed >= this.GUEST_LIMIT_MINUTES * 0.8) {
+                    riskLevel = 'medium';
+                    warnings.push('接近访客用户使用上限');
+                }
+                
+                if (identity.usageInfo.sessionsCount > 20) {
+                    riskLevel = 'high';
+                    warnings.push('访问频率异常');
+                }
+                
+                return {
+                    isAllowed,
+                    remainingMinutes,
+                    identity,
+                    riskLevel,
+                    warnings
+                };
+            }
+            
+            updateUsage(minutesUsed) {
+                const currentUsage = Number(localStorage.getItem(this.GUEST_USAGE_KEY) || '0');
+                const newUsage = currentUsage + minutesUsed;
+                localStorage.setItem(this.GUEST_USAGE_KEY, newUsage.toString());
+                this.log(`使用量更新: +${minutesUsed}分钟, 总计: ${newUsage}分钟`);
+            }
+            
+            recordSession() {
+                const sessions = JSON.parse(localStorage.getItem(this.GUEST_SESSIONS_KEY) || '[]');
+                sessions.push({
+                    timestamp: new Date().toISOString(),
+                    userAgent: navigator.userAgent
+                });
+                
+                if (sessions.length > 50) {
+                    sessions.splice(0, sessions.length - 50);
+                }
+                
+                localStorage.setItem(this.GUEST_SESSIONS_KEY, JSON.stringify(sessions));
+                this.log(`记录新会话, 总会话数: ${sessions.length}`);
+            }
+            
+            clearGuestData() {
+                localStorage.removeItem(this.VISITOR_ID_KEY);
+                localStorage.removeItem(this.GUEST_USAGE_KEY);
+                localStorage.removeItem(this.GUEST_IDENTITY_KEY);
+                localStorage.removeItem(this.GUEST_SESSIONS_KEY);
+                this.log('所有访客数据已清除');
+            }
+            
+            getGuestStats() {
+                const identity = localStorage.getItem(this.GUEST_IDENTITY_KEY);
+                if (!identity) return null;
+                
+                const data = JSON.parse(identity);
+                return {
+                    visitorId: data.visitorId,
+                    fingerprint: data.fingerprint,
+                    totalMinutesUsed: data.usageInfo.totalMinutesUsed,
+                    remainingMinutes: Math.max(0, this.GUEST_LIMIT_MINUTES - data.usageInfo.totalMinutesUsed),
+                    sessionsCount: data.usageInfo.sessionsCount,
+                    createdAt: data.usageInfo.createdAt,
+                    lastUsedAt: data.usageInfo.lastUsedAt,
+                    deviceInfo: data.deviceInfo
+                };
+            }
+            
+            async reportGuestIdentity(identity) {
+                try {
+                    const response = await fetch('http://localhost:3001/api/guest/identity', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            visitorId: identity.visitorId,
+                            fingerprint: identity.fingerprint,
+                            deviceInfo: identity.deviceInfo,
+                            usageInfo: identity.usageInfo
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        this.log(`后端上报成功: ${result.message}`);
+                        return result;
+                    } else {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                } catch (error) {
+                    this.log(`后端上报失败: ${error.message}`);
+                    throw error;
+                }
+            }
+            
+            log(message) {
+                const timestamp = new Date().toLocaleTimeString();
+                const logElement = document.getElementById('testLogs');
+                if (logElement) {
+                    logElement.textContent += `[${timestamp}] ${message}\n`;
+                    logElement.scrollTop = logElement.scrollHeight;
+                }
+            }
+        }
+        
+        // 创建服务实例
+        const guestService = new SimpleGuestIdentityService();
+        
+        // 测试函数
+        function refreshStatus() {
+            const stats = guestService.getGuestStats();
+            const statusElement = document.getElementById('currentStatus');
+            
+            if (stats) {
+                statusElement.innerHTML = `
+                    <div class="status success">
+                        <strong>访客ID:</strong> ${stats.visitorId.substring(0, 8)}...<br>
+                        <strong>设备指纹:</strong> ${stats.fingerprint}<br>
+                        <strong>已使用:</strong> ${stats.totalMinutesUsed.toFixed(2)} 分钟<br>
+                        <strong>剩余:</strong> ${stats.remainingMinutes.toFixed(2)} 分钟<br>
+                        <strong>会话数:</strong> ${stats.sessionsCount}<br>
+                        <strong>用户代理:</strong> ${stats.deviceInfo.userAgent.substring(0, 50)}...
+                    </div>
+                `;
+            } else {
+                statusElement.innerHTML = '<div class="status warning">暂无访客数据，请先生成身份</div>';
+            }
+        }
+        
+        function showBrowserInfo() {
+            const info = {
+                userAgent: navigator.userAgent,
+                language: navigator.language,
+                platform: navigator.platform,
+                cookieEnabled: navigator.cookieEnabled,
+                onLine: navigator.onLine,
+                screen: `${screen.width}x${screen.height}`,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                cores: navigator.hardwareConcurrency || 'unknown'
+            };
+            
+            document.getElementById('currentStatus').innerHTML = `
+                <div class="status">
+                    <strong>浏览器信息:</strong><br>
+                    ${Object.entries(info).map(([key, value]) => `<strong>${key}:</strong> ${value}`).join('<br>')}
+                </div>
+            `;
+        }
+        
+        function testGuestIdentity() {
+            try {
+                const identity = guestService.getGuestIdentity();
+                document.getElementById('identityResults').innerHTML = `
+                    <div class="status success">
+                        <strong>访客身份生成成功!</strong><br>
+                        <strong>ID:</strong> ${identity.visitorId}<br>
+                        <strong>指纹:</strong> ${identity.fingerprint}<br>
+                        <strong>使用量:</strong> ${identity.usageInfo.totalMinutesUsed} 分钟<br>
+                        <strong>会话数:</strong> ${identity.usageInfo.sessionsCount}
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('identityResults').innerHTML = `
+                    <div class="status error">身份生成失败: ${error.message}</div>
+                `;
+            }
+        }
+        
+        function validateAccess() {
+            try {
+                const result = guestService.validateGuestAccess();
+                const statusClass = result.isAllowed ? 'success' : 'error';
+                
+                document.getElementById('identityResults').innerHTML = `
+                    <div class="status ${statusClass}">
+                        <strong>访问验证结果:</strong><br>
+                        <strong>允许访问:</strong> ${result.isAllowed ? '✅ 是' : '❌ 否'}<br>
+                        <strong>剩余时长:</strong> ${result.remainingMinutes.toFixed(2)} 分钟<br>
+                        <strong>风险等级:</strong> ${result.riskLevel}<br>
+                        <strong>警告:</strong> ${result.warnings.join(', ') || '无'}
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('identityResults').innerHTML = `
+                    <div class="status error">验证失败: ${error.message}</div>
+                `;
+            }
+        }
+        
+        async function reportToBackend() {
+            try {
+                const identity = guestService.getGuestIdentity();
+                const result = await guestService.reportGuestIdentity(identity);
+                
+                document.getElementById('identityResults').innerHTML = `
+                    <div class="status success">
+                        <strong>后端上报成功!</strong><br>
+                        <strong>风险等级:</strong> ${result.riskLevel}<br>
+                        <strong>警告:</strong> ${result.warnings.join(', ') || '无'}<br>
+                        <strong>允许继续:</strong> ${result.allowContinue ? '是' : '否'}
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('identityResults').innerHTML = `
+                    <div class="status error">后端上报失败: ${error.message}</div>
+                `;
+            }
+        }
+        
+        function simulateUsage(minutes) {
+            guestService.updateUsage(minutes);
+            const result = guestService.validateGuestAccess();
+            
+            document.getElementById('usageResults').innerHTML = `
+                <div class="status ${result.isAllowed ? 'success' : 'warning'}">
+                    <strong>使用了 ${minutes} 分钟</strong><br>
+                    <strong>总使用量:</strong> ${result.identity.usageInfo.totalMinutesUsed} 分钟<br>
+                    <strong>剩余:</strong> ${result.remainingMinutes.toFixed(2)} 分钟<br>
+                    <strong>状态:</strong> ${result.isAllowed ? '正常' : '受限'}
+                </div>
+            `;
+        }
+        
+        function simulateFrequentAccess() {
+            for (let i = 0; i < 25; i++) {
+                guestService.recordSession();
+            }
+            
+            const result = guestService.validateGuestAccess();
+            document.getElementById('riskResults').innerHTML = `
+                <div class="status warning">
+                    <strong>模拟了 25 次频繁访问</strong><br>
+                    <strong>风险等级:</strong> ${result.riskLevel}<br>
+                    <strong>警告:</strong> ${result.warnings.join(', ')}<br>
+                    <strong>允许访问:</strong> ${result.isAllowed ? '是' : '否'}
+                </div>
+            `;
+        }
+        
+        function simulateExcessiveUsage() {
+            guestService.updateUsage(6); // 超过5分钟限制
+            const result = guestService.validateGuestAccess();
+            
+            document.getElementById('riskResults').innerHTML = `
+                <div class="status error">
+                    <strong>模拟超限使用 (6分钟)</strong><br>
+                    <strong>总使用量:</strong> ${result.identity.usageInfo.totalMinutesUsed} 分钟<br>
+                    <strong>风险等级:</strong> ${result.riskLevel}<br>
+                    <strong>警告:</strong> ${result.warnings.join(', ')}<br>
+                    <strong>允许访问:</strong> ${result.isAllowed ? '是' : '否'}
+                </div>
+            `;
+        }
+        
+        function simulateMultipleSessions() {
+            for (let i = 0; i < 10; i++) {
+                guestService.recordSession();
+            }
+            
+            const stats = guestService.getGuestStats();
+            document.getElementById('riskResults').innerHTML = `
+                <div class="status warning">
+                    <strong>模拟了 10 次额外会话</strong><br>
+                    <strong>总会话数:</strong> ${stats.sessionsCount}<br>
+                    <strong>状态:</strong> ${stats.sessionsCount > 20 ? '异常' : '正常'}
+                </div>
+            `;
+        }
+        
+        function clearAllData() {
+            if (confirm('确定要清除所有测试数据吗？')) {
+                guestService.clearGuestData();
+                document.getElementById('currentStatus').innerHTML = '<div class="status">数据已清除</div>';
+                document.getElementById('identityResults').innerHTML = '';
+                document.getElementById('usageResults').innerHTML = '';
+                document.getElementById('riskResults').innerHTML = '';
+            }
+        }
+        
+        function resetToCleanState() {
+            clearAllData();
+            setTimeout(() => {
+                testGuestIdentity();
+                refreshStatus();
+            }, 100);
+        }
+        
+        function exportData() {
+            const data = {
+                visitorId: localStorage.getItem('visitor_id'),
+                identity: localStorage.getItem('guest_identity'),
+                usage: localStorage.getItem('guestUsedMinutes'),
+                sessions: localStorage.getItem('guest_sessions'),
+                timestamp: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `guest-identity-test-${Date.now()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            guestService.log('测试数据已导出');
+        }
+        
+        function clearLogs() {
+            document.getElementById('testLogs').textContent = '';
+        }
+        
+        // 页面加载时初始化
+        window.onload = function() {
+            guestService.log('访客身份防滥用测试页面已加载');
+            refreshStatus();
+        };
+    </script>
+</body>
+</html>

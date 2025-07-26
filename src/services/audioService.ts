@@ -139,11 +139,28 @@ const transcribeFile = async (audioFile: File): Promise<string> => {
     throw new Error(`File size ${(audioFile.size / 1024 / 1024).toFixed(2)}MB exceeds maximum allowed size of ${MAX_FILE_SIZE / 1024 / 1024}MB`);
   }
   
-  // Validate file type
-  const validTypes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/m4a', 'audio/mp4', 'audio/flac', 'audio/ogg', 'audio/webm'];
-  if (!validTypes.some(type => audioFile.type.includes(type.split('/')[1]))) {
-    console.warn(`Unsupported file type: ${audioFile.type}, but proceeding anyway`);
+  // Validate file type - OpenAI API 支持的格式
+  const validTypes = [
+    'audio/flac', 'audio/m4a', 'audio/mp3', 'audio/mp4', 
+    'audio/mpeg', 'audio/mpga', 'audio/oga', 'audio/ogg', 
+    'audio/wav', 'audio/webm'
+  ];
+  
+  console.log(`🔍 验证文件格式: ${audioFile.type}`);
+  
+  // 检查文件类型是否被支持
+  const isSupported = validTypes.some(type => {
+    // 完全匹配或包含匹配（处理如 audio/webm;codecs=opus 的情况）
+    return audioFile.type === type || audioFile.type.startsWith(type);
+  });
+  
+  if (!isSupported) {
+    console.error(`❌ 不支持的文件格式: ${audioFile.type}`);
+    console.log('✅ 支持的格式:', validTypes.join(', '));
+    throw new Error(`文件格式 ${audioFile.type} 不被支持。支持的格式包括: flac, m4a, mp3, mp4, mpeg, mpga, oga, ogg, wav, webm`);
   }
+  
+  console.log(`✅ 文件格式验证通过: ${audioFile.type}`);
 
   const formData = new FormData();
   formData.append('file', audioFile);

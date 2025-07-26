@@ -16,7 +16,7 @@ interface TranscriptionData {
 
 const AudioToText: React.FC = () => {
   const { t } = useTranslation();
-  const { user, isGuest, isAuthenticated, updateUserQuota } = useAuth();
+  const { user, isGuest, isAuthenticated, updateUserQuota, ensureGuestMode } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
   const [transcriptionResult, setTranscriptionResult] = useState<TranscriptionData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -35,38 +35,57 @@ const AudioToText: React.FC = () => {
     }
   }, []);
 
+  // Only ensure guest mode if explicitly in guest mode
+  React.useEffect(() => {
+    if (!user && localStorage.getItem('guestMode') === 'true') {
+      console.log('📄 AudioToText页面加载，已有访客模式标识，更新访客状态...');
+      ensureGuestMode().catch(error => {
+        console.error('❌ 访客模式更新失败:', error);
+      });
+    }
+  }, [user, ensureGuestMode]);
+
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
     if (file) {
-      // Check if guests can upload files
-      if (isGuest) {
-        setError(t('auth.guestLimitations.noUpload'));
-        return;
-      }
-      
       try {
-        // Check usage limits
-        const limitCheck = await checkUsageLimit(file);
-        if (!limitCheck.allowed) {
-          setError(limitCheck.message || 'Usage limit exceeded');
-          setUsageLimitWarning(limitCheck.message || null);
-          return;
-        }
+        console.log('📁 上传文件:', file.name, '大小:', (file.size / 1024 / 1024).toFixed(2), 'MB');
         
-        // If file is too long for user's quota, truncate it
-        const userQuota = user?.quotaMinutes || 10;
-        const remainingMinutes = (user?.quotaMinutes || 10) - (user?.usedMinutes || 0);
-        const { file: processedFile, wasTruncated } = await truncateAudioForLimit(file, remainingMinutes);
-        
-        if (wasTruncated) {
-          setUsageLimitWarning(t('audioToText.fileTruncated', { minutes: remainingMinutes.toFixed(1) }));
-        }
-        
-        setUploadedFile(processedFile);
+        // 简化处理：直接接受文件，配额检查交给转录时处理
+        setUploadedFile(file);
         setError(null);
+        setUsageLimitWarning(null);
+        
+        // 预先检查并给出提示（但不阻止上传）
+        try {
+          const fileDuration = await getAudioDuration(file);
+          // 统一的配额计算逻辑
+          const isGuestUser = isGuest || !user || user?.userType === 'guest';
+          const totalQuota = isGuestUser ? 5 : (user?.quotaMinutes || 10);
+          const usedQuota = isGuestUser ? Number(localStorage.getItem('guestUsedMinutes') || '0') : (user?.usedMinutes || 0);
+          const remainingMinutes = Math.max(0, totalQuota - usedQuota);
+          
+          if (fileDuration > remainingMinutes && remainingMinutes > 0) {
+            setUsageLimitWarning(
+              t('audioToText.audioDurationWarning', {
+                duration: fileDuration.toFixed(1),
+                remaining: remainingMinutes.toFixed(1)
+              })
+            );
+          } else if (remainingMinutes <= 0) {
+            setUsageLimitWarning(
+              isGuestUser ? 
+              t('audioToText.guestQuotaExhausted') :
+              t('audioToText.quotaExhaustedGeneral')
+            );
+          }
+        } catch (error) {
+          console.warn('⚠️ 预检查失败，但文件已上传:', error);
+        }
+        
       } catch (error) {
         console.error('File processing error:', error);
-        setError(t('audioToText.fileProcessingError'));
+        setError('文件处理错误，请检查文件格式是否正确');
       }
     }
   }, [isGuest, user, t]);
@@ -86,53 +105,71 @@ const AudioToText: React.FC = () => {
     setUsageLimitWarning(null);
     
     try {
-      // Check usage limits before transcription
-      const limitCheck = await checkUsageLimit(audioFile);
-      if (!limitCheck.allowed) {
-        setError(limitCheck.message || '您的试用时长已结束!');
-        setIsProcessing(false);
-        return;
-      }
+      // 统一的用户类型和配额检查
+      const isGuestUser = isGuest || !user || user?.userType === 'guest';
+      const userType = isGuestUser ? 'guest' : (user?.userType || 'trial');
       
-      const userType = isGuest ? 'guest' : (user?.userType || 'trial');
-      const currentUsage = user?.usedMinutes || 0;
+      // 获取当前使用量
+      const currentUsage = isGuestUser ? Number(localStorage.getItem('guestUsedMinutes') || '0') : (user?.usedMinutes || 0);
       
-      // 获取音频时长并检查是否需要截断
+      // 获取音频时长
       const originalDuration = await getAudioDuration(audioFile);
-      const remainingMinutes = (user?.quotaMinutes || 10) - (user?.usedMinutes || 0);
+      
+      // 计算剩余配额
+      const totalQuota = isGuestUser ? 5 : (user?.quotaMinutes || 10);
+      const remainingMinutes = Math.max(0, totalQuota - currentUsage);
+      
+      console.log(`🎵 音频时长: ${originalDuration.toFixed(2)}分钟, 剩余配额: ${remainingMinutes.toFixed(2)}分钟`);
+      console.log(`👤 用户类型: ${userType}, 游客用户: ${isGuestUser}`);
       
       let actualAudioFile = audioFile;
       let actualDuration = originalDuration;
       let wasTruncated = false;
       
-      // 如果音频时长超过剩余配额，进行截断处理
+      // 智能处理：如果没有剩余配额，直接提示用户
+      if (remainingMinutes <= 0) {
+        setError(isGuestUser ? 
+          t('audioToText.guestQuotaExhausted') : 
+          t('audioToText.quotaExhaustedGeneral')
+        );
+        setIsProcessing(false);
+        return;
+      }
+      
+      // 如果音频时长超过剩余配额，进行截断处理（但仍然允许转写）
       if (originalDuration > remainingMinutes) {
+        console.log(`⚠️ 音频超出剩余配额，将截断处理: ${originalDuration.toFixed(2)} -> ${remainingMinutes.toFixed(2)}分钟`);
+        
         const truncateResult = await truncateAudioForLimit(audioFile, remainingMinutes);
         actualAudioFile = truncateResult.file;
         actualDuration = Math.min(originalDuration, remainingMinutes);
-        wasTruncated = truncateResult.wasTruncated;
+        wasTruncated = true;
         
-        if (wasTruncated) {
-          setUsageLimitWarning(`⚠️ 音频文件过长，仅转换前 ${remainingMinutes.toFixed(1)} 分钟内容`);
-        }
+        setUsageLimitWarning(
+          `⚠️ 音频时长 ${originalDuration.toFixed(1)} 分钟超出剩余配额 ${remainingMinutes.toFixed(1)} 分钟，仅转换前 ${actualDuration.toFixed(1)} 分钟内容`
+        );
       }
       
+      // 执行转录（无论是否截断都允许进行）
       const transcriptionText = await transcribeAudio(actualAudioFile, userType, currentUsage);
       
-      // 更新使用量 - 通过 AuthContext 同步状态
-      if (!isGuest && user) {
-        const newUsedMinutes = (user.usedMinutes || 0) + actualDuration;
-        updateUserQuota(newUsedMinutes);
-        
-        // 检查是否已经用完配额
-        if (newUsedMinutes >= (user.quotaMinutes || 10)) {
-          setUsageLimitWarning('您的试用时长已结束! 请购买更多时长继续使用。');
-        } else if ((user.quotaMinutes || 10) - newUsedMinutes <= 1) {
-          setUsageLimitWarning(t('audioToText.quotaLowWarning'));
-        }
+      // 更新使用量（统一处理游客和认证用户）
+      const newUsedMinutes = currentUsage + actualDuration;
+      await updateUserQuota(newUsedMinutes);
+      
+      // 检查配额状态并给出相应提示
+      const quotaLimit = isGuestUser ? 5 : (user?.quotaMinutes || 10);
+      if (newUsedMinutes >= quotaLimit) {
+        setUsageLimitWarning(
+          isGuestUser ? 
+          t('audioToText.guestTrialComplete') :
+          t('audioToText.trialComplete')
+        );
+      } else if (quotaLimit - newUsedMinutes <= 1) {
+        setUsageLimitWarning(`⏰ 注意：您还剩余 ${(quotaLimit - newUsedMinutes).toFixed(1)} 分钟配额`);
       }
       
-      // 同时记录到服务端（如果需要）
+      // 记录使用情况
       await recordUsage(actualAudioFile, transcriptionText);
       
       const result: TranscriptionData = {
@@ -141,14 +178,13 @@ const AudioToText: React.FC = () => {
       };
       
       setTranscriptionResult(result);
-      // Store transcription in localStorage
       localStorage.setItem('transcriptionResult', result.text);
       
-      console.log(`✅ 转录完成，实际使用时长: ${actualDuration.toFixed(2)} 分钟${wasTruncated ? ' (已截断)' : ''}`);
+      console.log(`✅ 转录完成，使用时长: ${actualDuration.toFixed(2)}分钟${wasTruncated ? ' (已截断)' : ''}`);
       
     } catch (error) {
-      console.error('Transcription error:', error);
-      setError(t('audioToText.error') || 'An error occurred during transcription');
+      console.error('❌ 转录失败:', error);
+      setError(error instanceof Error ? error.message : '转录过程中发生未知错误');
     } finally {
       setIsProcessing(false);
     }
@@ -160,7 +196,160 @@ const AudioToText: React.FC = () => {
     }
   };
 
-  const handleRecordingComplete = (audioBlob: Blob) => {
+  // 音频格式转换函数
+  const convertAudioToSupportedFormat = async (audioBlob: Blob): Promise<File> => {
+    const originalMimeType = audioBlob.type || 'audio/webm';
+    console.log('🎵 原始音频格式:', originalMimeType);
+    
+    // OpenAI API 支持的格式列表
+    const supportedFormats = [
+      'audio/flac', 'audio/m4a', 'audio/mp3', 'audio/mp4', 
+      'audio/mpeg', 'audio/mpga', 'audio/oga', 'audio/ogg', 
+      'audio/wav', 'audio/webm'
+    ];
+    
+    // 检查当前格式是否被支持
+    const isDirectlySupported = supportedFormats.some(format => 
+      originalMimeType.startsWith(format)
+    );
+    
+    if (isDirectlySupported) {
+      // 格式已支持，直接使用
+      const fileExtension = getFileExtension(originalMimeType);
+      const cleanMimeType = getCleanMimeType(originalMimeType);
+      console.log('✅ 格式已支持，直接使用:', cleanMimeType);
+      return new File([audioBlob], `recording.${fileExtension}`, { type: cleanMimeType });
+    }
+    
+    // 不支持的格式，转换为WAV（最兼容的格式）
+    console.log('🔄 格式不支持，转换为 WAV...');
+    try {
+      const wavFile = await convertToWav(audioBlob);
+      console.log('✅ 成功转换为 WAV 格式，大小:', wavFile.size, 'bytes');
+      return wavFile;
+    } catch (error) {
+      console.error('❌ 格式转换失败:', error);
+      // 转换失败，仍然尝试使用原始格式（可能API能处理）
+      const fileExtension = getFileExtension(originalMimeType);
+      return new File([audioBlob], `recording.${fileExtension}`, { type: 'audio/webm' });
+    }
+  };
+  
+  // 获取文件扩展名
+  const getFileExtension = (mimeType: string): string => {
+    if (mimeType.includes('wav')) return 'wav';
+    if (mimeType.includes('mp4')) return 'mp4';
+    if (mimeType.includes('mpeg')) return 'mpeg';
+    if (mimeType.includes('ogg')) return 'ogg';
+    if (mimeType.includes('webm')) return 'webm';
+    return 'webm'; // 默认
+  };
+  
+  // 获取干净的MIME类型（去除codec信息）
+  const getCleanMimeType = (mimeType: string): string => {
+    if (mimeType.includes('wav')) return 'audio/wav';
+    if (mimeType.includes('mp4')) return 'audio/mp4';
+    if (mimeType.includes('mpeg')) return 'audio/mpeg';
+    if (mimeType.includes('ogg')) return 'audio/ogg';
+    if (mimeType.includes('webm')) return 'audio/webm';
+    return 'audio/webm'; // 默认
+  };
+  
+  // 转换为WAV格式
+  const convertToWav = async (audioBlob: Blob): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const audio = new Audio();
+      const url = URL.createObjectURL(audioBlob);
+      
+      audio.onloadeddata = async () => {
+        try {
+          const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+          const arrayBuffer = await audioBlob.arrayBuffer();
+          const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+          
+          // 转换为WAV
+          const wavBlob = await audioBufferToWav(audioBuffer);
+          const wavFile = new File([wavBlob], 'recording.wav', { type: 'audio/wav' });
+          
+          audioContext.close();
+          URL.revokeObjectURL(url);
+          resolve(wavFile);
+        } catch (error) {
+          URL.revokeObjectURL(url);
+          reject(error);
+        }
+      };
+      
+      audio.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error('无法解码音频数据'));
+      };
+      
+      audio.src = url;
+    });
+  };
+  
+  // 将AudioBuffer转换为WAV Blob
+  const audioBufferToWav = (audioBuffer: AudioBuffer): Promise<Blob> => {
+    return new Promise((resolve) => {
+      const numberOfChannels = audioBuffer.numberOfChannels;
+      const sampleRate = audioBuffer.sampleRate;
+      const format = 1; // PCM
+      const bitDepth = 16;
+      
+      const bytesPerSample = bitDepth / 8;
+      const blockAlign = numberOfChannels * bytesPerSample;
+      const byteRate = sampleRate * blockAlign;
+      const dataSize = audioBuffer.length * blockAlign;
+      const bufferSize = 44 + dataSize;
+      
+      const arrayBuffer = new ArrayBuffer(bufferSize);
+      const dataView = new DataView(arrayBuffer);
+      
+      // WAV 文件头
+      let offset = 0;
+      
+      // RIFF chunk descriptor
+      writeString(dataView, offset, 'RIFF'); offset += 4;
+      dataView.setUint32(offset, 36 + dataSize, true); offset += 4;
+      writeString(dataView, offset, 'WAVE'); offset += 4;
+      
+      // FMT sub-chunk
+      writeString(dataView, offset, 'fmt '); offset += 4;
+      dataView.setUint32(offset, 16, true); offset += 4;
+      dataView.setUint16(offset, format, true); offset += 2;
+      dataView.setUint16(offset, numberOfChannels, true); offset += 2;
+      dataView.setUint32(offset, sampleRate, true); offset += 4;
+      dataView.setUint32(offset, byteRate, true); offset += 4;
+      dataView.setUint16(offset, blockAlign, true); offset += 2;
+      dataView.setUint16(offset, bitDepth, true); offset += 2;
+      
+      // Data sub-chunk
+      writeString(dataView, offset, 'data'); offset += 4;
+      dataView.setUint32(offset, dataSize, true); offset += 4;
+      
+      // Write PCM samples
+      for (let i = 0; i < audioBuffer.length; i++) {
+        for (let channel = 0; channel < numberOfChannels; channel++) {
+          const sample = Math.max(-1, Math.min(1, audioBuffer.getChannelData(channel)[i]));
+          const intSample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+          dataView.setInt16(offset, intSample, true);
+          offset += 2;
+        }
+      }
+      
+      resolve(new Blob([arrayBuffer], { type: 'audio/wav' }));
+    });
+  };
+  
+  // 写入字符串到DataView
+  const writeString = (dataView: DataView, offset: number, string: string): void => {
+    for (let i = 0; i < string.length; i++) {
+      dataView.setUint8(offset + i, string.charCodeAt(i));
+    }
+  };
+
+  const handleRecordingComplete = async (audioBlob: Blob) => {
     console.log('🎙️ handleRecordingComplete 被调用，音频数据大小:', audioBlob.size, 'bytes');
     
     if (audioBlob.size === 0) {
@@ -169,14 +358,53 @@ const AudioToText: React.FC = () => {
       return;
     }
     
-    const audioFile = new File([audioBlob], 'recording.wav', { type: 'audio/wav' });
-    console.log('📁 已创建音频文件:', audioFile.name, '大小:', audioFile.size, 'bytes');
+    try {
+      // 转换为API支持的格式
+      const audioFile = await convertAudioToSupportedFormat(audioBlob);
+      console.log('📁 最终音频文件:', audioFile.name, '大小:', audioFile.size, 'bytes', '格式:', audioFile.type);
+      
+      console.log('🚀 准备开始转录...');
+      handleTranscription(audioFile);
+    } catch (error) {
+      console.error('❌ 音频格式处理失败:', error);
+      setError('音频格式处理失败，请重新录制');
+    }
+  };
+
+  // 检查浏览器兼容性的函数
+  const checkBrowserCompatibility = () => {
+    const errors = [];
     
-    console.log('🚀 准备开始转录...');
-    handleTranscription(audioFile);
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      errors.push('❌ 您的浏览器不支持媒体设备访问 (getUserMedia)');
+    }
+    
+    if (!window.MediaRecorder) {
+      errors.push('❌ 您的浏览器不支持媒体录制 (MediaRecorder)');
+    }
+    
+    if (!window.AudioContext && !(window as any).webkitAudioContext) {
+      errors.push('❌ 您的浏览器不支持音频处理 (AudioContext)');
+    }
+    
+    return errors;
   };
 
   const handleOpenRecordingModal = () => {
+    // 在打开录音弹窗前检查浏览器兼容性
+    const compatibilityErrors = checkBrowserCompatibility();
+    if (compatibilityErrors.length > 0) {
+      const errorMessage = '🚫 录音功能不可用:\n\n' + 
+                          compatibilityErrors.join('\n') + 
+                          '\n\n💡 建议使用以下浏览器:\n' +
+                          '• Chrome 60+\n' +
+                          '• Firefox 55+\n' +
+                          '• Safari 14+\n' +
+                          '• Edge 79+';
+      alert(errorMessage);
+      return;
+    }
+    
     setIsRecordingModalOpen(true);
   };
 
@@ -213,12 +441,15 @@ const AudioToText: React.FC = () => {
         <div className="page-header">
           <h1 className="page-title">{t('audioToText.title')}</h1>
           <p className="page-subtitle">
-            {isGuest 
-              ? t('audioToText.guestModeSubtitle')
-              : t('audioToText.remainingTime', { 
-                  minutes: user ? Math.max(0, (user.quotaMinutes || 10) - (user.usedMinutes || 0)).toFixed(1) : 10 
-                })
-            }
+            {user ? (
+              (() => {
+                const isGuestUser = isGuest || user.userType === 'guest';
+                const totalQuota = isGuestUser ? 5 : (user.quotaMinutes || 10);
+                const usedQuota = isGuestUser ? Number(localStorage.getItem('guestUsedMinutes') || '0') : (user.usedMinutes || 0);
+                const remainingTime = Math.max(0, totalQuota - usedQuota);
+                return t('audioToText.remainingTime', { minutes: remainingTime.toFixed(1) });
+              })()
+            ) : t('audioToText.subtitle')}
           </p>
         </div>
 
@@ -312,29 +543,19 @@ const AudioToText: React.FC = () => {
                 </button>
                 <button
                   onClick={() => {
-                    if (isGuest) {
-                      alert(t('auth.guestLimitations.noCopy'));
-                      return;
-                    }
                     transcriptionResult && navigator.clipboard.writeText(transcriptionResult.text);
                   }}
-                  className={`button action-button button-secondary ${isGuest ? 'button-disabled' : ''}`}
-                  disabled={!transcriptionResult}
-                  title={isGuest ? t('auth.guestLimitations.noCopy') : ''}
+                  className="button action-button button-secondary"
+                  disabled={!transcriptionResult || isGuest}
                 >
                   {t('common.copy')}
                 </button>
                 <button
                   onClick={() => {
-                    if (isGuest) {
-                      alert(t('auth.guestLimitations.noExport'));
-                      return;
-                    }
                     handleExportToWord();
                   }}
-                  className={`button action-button button-secondary ${isGuest ? 'button-disabled' : ''}`}
+                  className="button action-button button-secondary"
                   disabled={!transcriptionResult}
-                  title={isGuest ? t('auth.guestLimitations.noExport') : ''}
                 >
                   {t('common.export')}
                 </button>

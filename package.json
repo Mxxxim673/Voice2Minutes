@@ -14,6 +14,7 @@
     "email:test": "node -e \"console.log('Testing SMTP connection...'); require('./server.js')\""
   },
   "dependencies": {
+    "@fingerprintjs/fingerprintjs": "^4.6.2",
     "@types/file-saver": "^2.0.7",
     "axios": "^1.11.0",
     "cors": "^2.8.5",

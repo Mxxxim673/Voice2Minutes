@@ -22,6 +22,9 @@ interface QuotaInfo {
 const Usage: React.FC = () => {
   const { t } = useTranslation();
   const { user, isGuest, updateUserQuota, setUser } = useAuth();
+  const [editingQuota, setEditingQuota] = useState(false);
+  const [tempQuotaMinutes, setTempQuotaMinutes] = useState(0);
+  const [tempUsedMinutes, setTempUsedMinutes] = useState(0);
   const [usageData, setUsageData] = useState<UsageData[]>([]);
   const [quotaInfo, setQuotaInfo] = useState<QuotaInfo | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState(7); // Default 7 days
@@ -134,7 +137,7 @@ const Usage: React.FC = () => {
   const handleClearUsage = async () => {
     // 管理员专用功能：重置所有时间数据到初始状态
     if (user?.email === 'max.z.software@gmail.com') {
-      if (confirm('确定要重置所有时间数据吗？这将清空使用量并重置配额为初始的10分钟试用状态。')) {
+      if (confirm('确定要重置所有时间数据吗？这将清空使用量并重置配额为初始的0分钟状态。')) {
         try {
           // 创建全新的初始状态用户数据
           const resetUser = {
@@ -142,9 +145,9 @@ const Usage: React.FC = () => {
             email: 'max.z.software@gmail.com',
             isEmailVerified: true,
             userType: 'trial' as const,
-            quotaMinutes: 10, // 重置为初始的10分钟
+            quotaMinutes: 0, // 重置为初始的0分钟
             usedMinutes: 0,   // 清空已使用时间
-            trialMinutes: 10,
+            trialMinutes: 0,
             createdAt: user.createdAt || new Date().toISOString()
           };
           
@@ -159,7 +162,7 @@ const Usage: React.FC = () => {
           await loadUsageData();
           
           // 显示成功消息
-          alert('✅ 所有时间数据已重置为初始状态！\n总配额：10分钟\n已使用：0分钟\n用户类型：试用用户');
+          alert('✅ 所有时间数据已重置为初始状态！\n总配额：0分钟\n已使用：0分钟\n用户类型：试用用户');
           
           console.log('🔄 管理员时间数据已完全重置:', resetUser);
         } catch (error) {
@@ -168,6 +171,52 @@ const Usage: React.FC = () => {
         }
       }
     }
+  };
+
+  const handleStartEditQuota = () => {
+    if (user?.email === 'max.z.software@gmail.com') {
+      setTempQuotaMinutes(quotaInfo?.totalMinutes || 0);
+      setTempUsedMinutes(quotaInfo?.usedMinutes || 0);
+      setEditingQuota(true);
+    }
+  };
+
+  const handleSaveQuota = async () => {
+    if (user?.email === 'max.z.software@gmail.com') {
+      try {
+        // 更新用户数据
+        const updatedUser = {
+          ...user,
+          quotaMinutes: tempQuotaMinutes,
+          usedMinutes: tempUsedMinutes
+        };
+        
+        // 通过 AuthContext 更新用户状态
+        setUser(updatedUser);
+        
+        // 同步更新所有 localStorage 数据
+        localStorage.setItem('userData', JSON.stringify(updatedUser));
+        localStorage.setItem('adminUserData', JSON.stringify(updatedUser));
+        
+        // 强制刷新页面数据
+        await loadUsageData();
+        
+        setEditingQuota(false);
+        console.log('📊 管理员配额已更新:', { 
+          quotaMinutes: tempQuotaMinutes, 
+          usedMinutes: tempUsedMinutes 
+        });
+      } catch (error) {
+        console.error('更新配额失败:', error);
+        alert('❌ 更新失败，请重试');
+      }
+    }
+  };
+
+  const handleCancelEditQuota = () => {
+    setEditingQuota(false);
+    setTempQuotaMinutes(0);
+    setTempUsedMinutes(0);
   };
 
   if (!user || isGuest) {
@@ -256,21 +305,35 @@ const Usage: React.FC = () => {
               )}
             </div>
           )}
-          {/* 管理员专用清空按钮 */}
+          {/* 管理员专用按钮 */}
           {user?.email === 'max.z.software@gmail.com' && (
-            <button 
-              onClick={handleClearUsage}
-              className="button button-warning"
-              style={{ 
-                marginLeft: '12px', 
-                padding: '6px 12px', 
-                fontSize: '12px',
-                backgroundColor: '#ff6b35',
-                color: 'white'
-              }}
-            >
-              🔄 重置所有时间
-            </button>
+            <div style={{ marginLeft: '12px', display: 'flex', gap: '8px' }}>
+              <button 
+                onClick={handleStartEditQuota}
+                className="button button-secondary"
+                style={{ 
+                  padding: '6px 12px', 
+                  fontSize: '12px',
+                  backgroundColor: '#007acc',
+                  color: 'white'
+                }}
+                disabled={editingQuota}
+              >
+                ✏️ 编辑配额
+              </button>
+              <button 
+                onClick={handleClearUsage}
+                className="button button-warning"
+                style={{ 
+                  padding: '6px 12px', 
+                  fontSize: '12px',
+                  backgroundColor: '#ff6b35',
+                  color: 'white'
+                }}
+              >
+                🔄 重置所有时间
+              </button>
+            </div>
           )}
         </div>
 
@@ -278,23 +341,98 @@ const Usage: React.FC = () => {
         <div className="usage-stats-grid">
           <div className="usage-card">
             <h3>{t('usage.totalQuota')}</h3>
-            <div className="usage-number">
-              {formatDuration(quotaInfo?.totalMinutes || 0)}
-            </div>
+            {editingQuota && user?.email === 'max.z.software@gmail.com' ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  value={tempQuotaMinutes}
+                  onChange={(e) => setTempQuotaMinutes(Number(e.target.value))}
+                  style={{
+                    width: '80px',
+                    padding: '4px 8px',
+                    fontSize: '14px',
+                    border: '1px solid #ccc',
+                    borderRadius: '4px'
+                  }}
+                />
+                <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>分钟</span>
+              </div>
+            ) : (
+              <div className="usage-number">
+                {formatDuration(quotaInfo?.totalMinutes || 0)}
+              </div>
+            )}
           </div>
           <div className="usage-card">
             <h3>{t('usage.usedTime')}</h3>
-            <div className="usage-number used">
-              {formatDuration(quotaInfo?.usedMinutes || 0)}
-            </div>
+            {editingQuota && user?.email === 'max.z.software@gmail.com' ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  value={tempUsedMinutes}
+                  onChange={(e) => setTempUsedMinutes(Number(e.target.value))}
+                  style={{
+                    width: '80px',
+                    padding: '4px 8px',
+                    fontSize: '14px',
+                    border: '1px solid #ccc',
+                    borderRadius: '4px'
+                  }}
+                />
+                <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>分钟</span>
+              </div>
+            ) : (
+              <div className="usage-number used">
+                {formatDuration(quotaInfo?.usedMinutes || 0)}
+              </div>
+            )}
           </div>
           <div className="usage-card">
             <h3>{t('usage.remainingTime')}</h3>
             <div className="usage-number remaining">
-              {formatDuration(quotaInfo?.remainingMinutes || 0)}
+              {editingQuota ? 
+                formatDuration(Math.max(0, tempQuotaMinutes - tempUsedMinutes)) :
+                formatDuration(quotaInfo?.remainingMinutes || 0)
+              }
             </div>
           </div>
         </div>
+
+        {/* 管理员编辑配额操作按钮 */}
+        {editingQuota && user?.email === 'max.z.software@gmail.com' && (
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            gap: '12px', 
+            marginTop: '12px',
+            marginBottom: '12px'
+          }}>
+            <button 
+              onClick={handleSaveQuota}
+              className="button button-primary"
+              style={{ 
+                padding: '8px 16px', 
+                fontSize: '14px'
+              }}
+            >
+              ✅ 保存
+            </button>
+            <button 
+              onClick={handleCancelEditQuota}
+              className="button button-secondary"
+              style={{ 
+                padding: '8px 16px', 
+                fontSize: '14px'
+              }}
+            >
+              ❌ 取消
+            </button>
+          </div>
+        )}
 
         {/* Usage Progress Bar */}
         <div className="usage-progress-container">

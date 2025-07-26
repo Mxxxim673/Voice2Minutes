@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
+import GuestIdentityTest from '../../components/GuestIdentityTest/GuestIdentityTest';
 import './AdminPanel.css';
 
 interface TestUser {
@@ -424,13 +425,15 @@ const AdminPanel: React.FC = () => {
 
     switch (selectedUser.userType) {
       case 'guest':
-        hasPermission = false;
-        reason = '游客用户权限有限，仅可使用实时录音功能';
+        hasPermission = feature === 'file-upload';
+        reason = hasPermission ? 
+          '访客用户可以上传文件，但不能复制文本和导出Word' : 
+          '访客用户仅支持实时录音和文件上传功能';
         break;
         
       case 'trial':
-        hasPermission = feature === 'copy-text' || feature === 'history-access';
-        reason = hasPermission ? '试用用户可以使用此功能' : '试用用户不支持文件上传和Word导出功能';
+        hasPermission = true; // 试用用户现在拥有所有功能权限
+        reason = '试用用户已解锁全部功能（复制、导出Word、文件上传、使用统计）';
         break;
         
       case 'paid':
@@ -755,6 +758,12 @@ const AdminPanel: React.FC = () => {
                 💰 价格页面
               </a>
             </div>
+          </div>
+
+          {/* 访客身份防滥用测试 */}
+          <div className="admin-section">
+            <h2>🛡️ 访客身份防滥用测试</h2>
+            <GuestIdentityTest />
           </div>
 
           {/* 系统信息 */}

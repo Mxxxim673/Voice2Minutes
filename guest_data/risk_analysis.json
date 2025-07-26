@@ -1,0 +1,35 @@
+{
+  "suspiciousFingerprints": [
+    {
+      "fingerprint": "fp-normal-001",
+      "visitorId": "risky-user-001",
+      "ip": "::1",
+      "timestamp": "2025-07-26T05:36:00.985Z",
+      "riskScore": 90,
+      "riskFactors": [
+        "重复设备指纹",
+        "高频访问",
+        "同一IP多个访客",
+        "接近使用上限"
+      ]
+    },
+    {
+      "fingerprint": "test-fp",
+      "visitorId": "test-123",
+      "ip": "::1",
+      "timestamp": "2025-07-26T05:51:04.372Z",
+      "riskScore": 75,
+      "riskFactors": [
+        "重复设备指纹",
+        "高频访问",
+        "同一IP多个访客"
+      ]
+    }
+  ],
+  "blockedVisitorIds": [],
+  "riskMetrics": {
+    "totalGuestSessions": 0,
+    "totalUsageMinutes": 0,
+    "suspiciousActivityCount": 2
+  }
+}

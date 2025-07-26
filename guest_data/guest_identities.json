@@ -1,0 +1,138 @@
+[
+  {
+    "visitorId": "test-123",
+    "fingerprint": "test-fp",
+    "ip": "::1",
+    "deviceInfo": {
+      "userAgent": "test-browser"
+    },
+    "usageInfo": {
+      "totalMinutesUsed": 0
+    },
+    "timestamp": "2025-07-26T05:51:04.372Z",
+    "userAgent": "curl/8.7.1",
+    "riskAnalysis": {
+      "riskScore": 75,
+      "riskLevel": "high",
+      "riskFactors": [
+        "重复设备指纹",
+        "高频访问",
+        "同一IP多个访客"
+      ],
+      "shouldBlock": true
+    }
+  },
+  {
+    "visitorId": "excessive-user",
+    "fingerprint": "excessive-fp",
+    "ip": "::1",
+    "deviceInfo": {
+      "userAgent": "test"
+    },
+    "usageInfo": {
+      "totalMinutesUsed": 6,
+      "sessionsCount": 30
+    },
+    "timestamp": "2025-07-26T05:32:00.969Z",
+    "userAgent": "curl/8.7.1",
+    "riskAnalysis": {
+      "riskScore": 15,
+      "riskLevel": "low",
+      "riskFactors": [
+        "接近使用上限"
+      ],
+      "shouldBlock": false
+    }
+  },
+  {
+    "visitorId": "risky-user-001",
+    "fingerprint": "fp-normal-001",
+    "ip": "::1",
+    "deviceInfo": {
+      "userAgent": "Mozilla/5.0 Test"
+    },
+    "usageInfo": {
+      "totalMinutesUsed": 5.5,
+      "sessionsCount": 30
+    },
+    "timestamp": "2025-07-26T05:36:00.985Z",
+    "userAgent": "curl/8.7.1",
+    "riskAnalysis": {
+      "riskScore": 90,
+      "riskLevel": "high",
+      "riskFactors": [
+        "重复设备指纹",
+        "高频访问",
+        "同一IP多个访客",
+        "接近使用上限"
+      ],
+      "shouldBlock": true
+    }
+  },
+  {
+    "visitorId": "frequent-user-001",
+    "fingerprint": "fp-frequent-001",
+    "ip": "::1",
+    "deviceInfo": {
+      "userAgent": "Mozilla/5.0 Test"
+    },
+    "usageInfo": {
+      "totalMinutesUsed": 3,
+      "sessionsCount": 25
+    },
+    "timestamp": "2025-07-26T05:36:00.948Z",
+    "userAgent": "curl/8.7.1",
+    "riskAnalysis": {
+      "riskScore": 0,
+      "riskLevel": "low",
+      "riskFactors": [],
+      "shouldBlock": false
+    }
+  },
+  {
+    "visitorId": "limit-user-001",
+    "fingerprint": "fp-limit-001",
+    "ip": "::1",
+    "deviceInfo": {
+      "userAgent": "Mozilla/5.0 Test"
+    },
+    "usageInfo": {
+      "totalMinutesUsed": 4.5,
+      "sessionsCount": 3
+    },
+    "timestamp": "2025-07-26T05:36:00.960Z",
+    "userAgent": "curl/8.7.1",
+    "riskAnalysis": {
+      "riskScore": 40,
+      "riskLevel": "medium",
+      "riskFactors": [
+        "同一IP多个访客",
+        "接近使用上限"
+      ],
+      "shouldBlock": false
+    }
+  },
+  {
+    "visitorId": "exceed-user-001",
+    "fingerprint": "fp-exceed-001",
+    "ip": "::1",
+    "deviceInfo": {
+      "userAgent": "Mozilla/5.0 Test"
+    },
+    "usageInfo": {
+      "totalMinutesUsed": 6,
+      "sessionsCount": 1
+    },
+    "timestamp": "2025-07-26T05:36:00.974Z",
+    "userAgent": "curl/8.7.1",
+    "riskAnalysis": {
+      "riskScore": 40,
+      "riskLevel": "medium",
+      "riskFactors": [
+        "同一IP多个访客",
+        "接近使用上限"
+      ],
+      "shouldBlock": false
+    }
+  }
+]
