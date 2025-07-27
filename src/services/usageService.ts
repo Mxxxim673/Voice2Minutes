@@ -1,4 +1,5 @@
 import { guestIdentityService } from './guestIdentityService';
+import { usageTracker } from './usageTracker';
 
 export interface UsageRecord {
   id: string;
@@ -448,62 +449,31 @@ export const checkRecordingLimit = async (recordingDurationMinutes: number): Pro
 };
 
 export const getUsageStats = async (days: number = 7): Promise<UsageStats[]> => {
-  const token = localStorage.getItem('authToken');
-  const isGuest = localStorage.getItem('guestMode') === 'true';
-  
-  if (isGuest) {
-    // Return empty stats for guests
-    return [];
-  }
-  
-  if (!token) {
-    throw new Error('Authentication required');
-  }
-  
-  // Check if user is admin
-  if (isAdminUser()) {
-    try {
-      const response = await fetch(`/api/usage/stats?days=${days}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (!response.ok) {
-        // For admin users, return real stats starting from 0 instead of mock data
-        return generateAdminUsageStats(days);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Failed to get admin usage stats:', error);
-      // Return real empty stats for admin users, not mock data
-      return generateAdminUsageStats(days);
-    }
-  }
+  console.log('📊 获取使用统计，天数:', days);
   
   try {
-    const response = await fetch(`/api/usage/stats?days=${days}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+    // 使用新的 usageTracker 获取真实数据
+    const dailyStats = await usageTracker.getUserUsageStats(days);
+    
+    // 转换为原有接口格式
+    const result: UsageStats[] = dailyStats.map(day => ({
+      date: day.date,
+      duration: day.duration,
+      files: day.files
+    }));
+    
+    console.log('✅ 使用统计获取成功:', {
+      天数: days,
+      记录数: result.length,
+      总时长: result.reduce((sum, day) => sum + day.duration, 0).toFixed(2) + '分钟'
     });
     
-    if (!response.ok) {
-      throw new Error('Failed to fetch usage stats');
-    }
+    return result;
     
-    return await response.json();
   } catch (error) {
-    console.error('Failed to get usage stats:', error);
-    
-    // Check if this is admin user - if so, return real empty stats from 0
-    if (isAdminUser()) {
-      return generateAdminUsageStats(days);
-    }
-    
-    // Return mock data for development (non-admin users only)
-    return generateMockUsageStats(days);
+    console.error('❌ 获取使用统计失败:', error);
+    // 发生错误时返回空数组，不再使用模拟数据
+    return [];
   }
 };
 
@@ -511,12 +481,16 @@ export const getUserQuota = async (): Promise<UserQuota> => {
   const token = localStorage.getItem('authToken');
   const isGuest = localStorage.getItem('guestMode') === 'true';
   
+  console.log('💰 获取用户配额信息, 是否访客:', isGuest);
+  
+  // 获取真实使用量
+  const realUsedMinutes = await usageTracker.getCurrentUserTotalUsage();
+  
   if (isGuest) {
-    const usedMinutes = Number(localStorage.getItem('guestUsedMinutes') || '0');
     return {
       totalMinutes: GUEST_LIMIT_MINUTES,
-      usedMinutes,
-      remainingMinutes: GUEST_LIMIT_MINUTES - usedMinutes,
+      usedMinutes: realUsedMinutes,
+      remainingMinutes: Math.max(0, GUEST_LIMIT_MINUTES - realUsedMinutes),
       status: 'guest'
     };
   }
@@ -540,52 +514,45 @@ export const getUserQuota = async (): Promise<UserQuota> => {
   } catch (error) {
     console.error('Failed to get user quota:', error);
     
-    // Check if this is admin user - if so, return real data from localStorage
-    if (isAdminUser()) {
-      const userData = localStorage.getItem('userData');
-      if (userData) {
-        const user = JSON.parse(userData);
-        
-        // 验证数据合理性，防止显示异常时长
-        let totalMinutes = user.quotaMinutes || 10;
-        let usedMinutes = user.usedMinutes || 0;
-        
-        // 如果发现异常的配额数据（可能是旧的无限制数据），重置为默认值
-        if (totalMinutes > 100000 || usedMinutes > 100000 || totalMinutes < 0 || usedMinutes < 0) {
-          console.warn('⚠️ 检测到异常的配额数据，重置为默认值');
-          totalMinutes = 10;
-          usedMinutes = 0;
-          
-          // 更新 localStorage 中的数据
-          const correctedUser = {
-            ...user,
-            quotaMinutes: 10,
-            usedMinutes: 0,
-            userType: 'trial'
-          };
-          localStorage.setItem('userData', JSON.stringify(correctedUser));
-          localStorage.setItem('adminUserData', JSON.stringify(correctedUser));
-        }
-        
-        return {
-          totalMinutes,
-          usedMinutes,
-          remainingMinutes: totalMinutes - usedMinutes,
-          status: user.userType || 'trial',
-          planType: user.planType,
-          trialUsed: usedMinutes,
-          paidMinutesUsed: user.userType === 'paid' ? usedMinutes : 0
-        };
+    // 对于所有登录用户，使用真实使用量数据
+    const userData = localStorage.getItem('userData');
+    if (userData) {
+      const user = JSON.parse(userData);
+      
+      // 获取用户配额，默认试用用户为10分钟
+      let totalMinutes = user.quotaMinutes || TRIAL_LIMIT_MINUTES;
+      const userType = user.userType || 'trial';
+      
+      // 管理员账户有无限制使用量，但显示为一个合理的数值
+      if (isAdminUser()) {
+        totalMinutes = 9999; // 显示为9999分钟，实际无限制
       }
+      
+      console.log('💰 登录用户配额信息:', {
+        邮箱: user.email,
+        用户类型: userType,
+        总配额: totalMinutes,
+        真实使用量: realUsedMinutes
+      });
+      
+      return {
+        totalMinutes,
+        usedMinutes: realUsedMinutes,
+        remainingMinutes: Math.max(0, totalMinutes - realUsedMinutes),
+        status: userType,
+        planType: user.planType,
+        trialUsed: userType === 'trial' ? realUsedMinutes : 0,
+        paidMinutesUsed: userType === 'paid' ? realUsedMinutes : 0
+      };
     }
     
-    // Return mock data for development (non-admin users)
+    // 回退情况：返回基于真实使用量的默认配额
     return {
       totalMinutes: TRIAL_LIMIT_MINUTES,
-      usedMinutes: 2.5,
-      remainingMinutes: TRIAL_LIMIT_MINUTES - 2.5,
+      usedMinutes: realUsedMinutes,
+      remainingMinutes: Math.max(0, TRIAL_LIMIT_MINUTES - realUsedMinutes),
       status: 'trial',
-      trialUsed: 2.5,
+      trialUsed: realUsedMinutes,
       paidMinutesUsed: 0
     };
   }
@@ -623,46 +590,4 @@ export const truncateAudioForLimit = async (
   }
 };
 
-// Generate real empty usage stats for admin users (starting from 0)
-const generateAdminUsageStats = (days: number): UsageStats[] => {
-  const stats: UsageStats[] = [];
-  const today = new Date();
-  
-  for (let i = days - 1; i >= 0; i--) {
-    const date = new Date(today);
-    date.setDate(date.getDate() - i);
-    
-    stats.push({
-      date: date.toISOString().split('T')[0],
-      duration: 0, // Start from 0 for admin users
-      files: [] // No files initially
-    });
-  }
-  
-  return stats;
-};
-
-// Mock data generation for development (non-admin users only)
-const generateMockUsageStats = (days: number): UsageStats[] => {
-  const stats: UsageStats[] = [];
-  const today = new Date();
-  
-  for (let i = days - 1; i >= 0; i--) {
-    const date = new Date(today);
-    date.setDate(date.getDate() - i);
-    
-    const usage = Math.random() * 15; // Random usage up to 15 minutes
-    const fileCount = Math.floor(Math.random() * 4) + 1;
-    const files = Array.from({ length: fileCount }, (_, j) => 
-      `recording_${date.getDate()}_${j + 1}.mp3`
-    );
-    
-    stats.push({
-      date: date.toISOString().split('T')[0],
-      duration: usage,
-      files: usage > 0 ? files : []
-    });
-  }
-  
-  return stats;
-};
+// 这些函数已被 usageTracker 替代，不再需要模拟数据

@@ -134,5 +134,35 @@
       ],
       "shouldBlock": false
     }
+  },
+  {
+    "visitorId": "f28e89f4-f90b-468b-9104-4a2b1b0d0020",
+    "fingerprint": "de83bca84febd38f512c62b16cabdfd5",
+    "ip": "::1",
+    "deviceInfo": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+      "language": "zh-CN",
+      "timezone": "Asia/Tokyo",
+      "screen": "1920x1080"
+    },
+    "usageInfo": {
+      "totalMinutesUsed": 0.22540327135416666,
+      "sessionsCount": 3,
+      "lastUsedAt": "2025-07-27T01:39:09.695Z",
+      "createdAt": "2025-07-26T06:36:29.495Z"
+    },
+    "timestamp": "2025-07-27T01:39:09.695Z",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+    "referer": "http://localhost:5173/",
+    "riskAnalysis": {
+      "riskScore": 25,
+      "riskLevel": "medium",
+      "riskFactors": [
+        "同一IP多个访客"
+      ],
+      "shouldBlock": false
+    },
+    "firstSeen": "2025-07-27T01:17:05.625Z",
+    "lastSeen": "2025-07-27T01:39:09.695Z"
   }
 ]

@@ -6,6 +6,7 @@ import RecordingModal from '../../components/RecordingModal/RecordingModal';
 import { transcribeAudio } from '../../services/audioService';
 import { exportToWord } from '../../utils/exportUtils';
 import { recordUsage, getAudioDuration, truncateAudioForLimit } from '../../services/usageService';
+import { usageTracker } from '../../services/usageTracker';
 import './AudioToText.css';
 
 interface TranscriptionData {
@@ -152,7 +153,15 @@ const AudioToText: React.FC = () => {
       // 执行转录（无论是否截断都允许进行）
       const transcriptionText = await transcribeAudio(actualAudioFile, userType, currentUsage);
       
-      // 更新使用量（统一处理游客和认证用户）
+      // 使用新的使用量追踪系统记录真实使用量
+      await usageTracker.recordUsage(
+        actualDuration, 
+        actualAudioFile.name, 
+        actualAudioFile.size, 
+        transcriptionText.length
+      );
+      
+      // 更新使用量（统一处理游客和认证用户，保持兼容性）
       const newUsedMinutes = currentUsage + actualDuration;
       await updateUserQuota(newUsedMinutes);
       

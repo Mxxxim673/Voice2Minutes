@@ -322,7 +322,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         localStorage.setItem('authToken', 'admin_token');
         localStorage.setItem('userData', JSON.stringify(adminUser));
         localStorage.removeItem('guestMode');
-        localStorage.removeItem('guestUsedMinutes');
+        // 保留访客使用记录，用于身份识别和配额管理
+        // localStorage.removeItem('guestUsedMinutes'); // 不删除，保持使用量记录
         
         setUser(adminUser);
         setIsGuest(false);
@@ -356,7 +357,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem('authToken', 'supabase_session');
       localStorage.setItem('userData', JSON.stringify(userData));
       localStorage.removeItem('guestMode');
-      localStorage.removeItem('guestUsedMinutes');
+      // 保留访客使用记录，用于身份识别和配额管理
+      // localStorage.removeItem('guestUsedMinutes'); // 不删除，保持使用量记录
       
       setUser(userData);
       setIsGuest(false);
@@ -482,10 +484,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem('userData');
     localStorage.removeItem('adminUserData');
     
-    // 初始化访客模式（会读取现有使用量）
+    // 保留现有的访客使用量记录
+    const existingGuestUsage = localStorage.getItem('guestUsedMinutes');
+    const existingVisitorId = localStorage.getItem('visitor_id');
+    
+    console.log('👤 用户选择以访客身份继续，现有使用量:', existingGuestUsage || '0', '分钟');
+    console.log('👤 现有访客ID:', existingVisitorId ? existingVisitorId.substring(0, 8) + '...' : '无');
+    
+    // 初始化访客模式（会读取现有使用量，不会重置）
     await initializeGuestMode();
     
-    console.log('👤 用户选择以访客身份继续');
+    console.log('👤 访客模式初始化完成，使用量得到保留');
   };
 
   const verifyEmail = async (): Promise<boolean> => {
