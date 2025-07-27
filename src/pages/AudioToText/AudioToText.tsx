@@ -5,8 +5,9 @@ import { useAuth } from '../../hooks/useAuth';
 import RecordingModal from '../../components/RecordingModal/RecordingModal';
 import { transcribeAudio } from '../../services/audioService';
 import { exportToWord } from '../../utils/exportUtils';
-import { recordUsage, getAudioDuration, truncateAudioForLimit } from '../../services/usageService';
+import { getAudioDuration, truncateAudioForLimit } from '../../services/usageService';
 import { usageTracker } from '../../services/usageTracker';
+import { formatRemainingTime, formatDuration } from '../../utils/timeFormat';
 import './AudioToText.css';
 
 interface TranscriptionData {
@@ -23,6 +24,24 @@ const AudioToText: React.FC = () => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isRecordingModalOpen, setIsRecordingModalOpen] = useState(false);
   const [usageLimitWarning, setUsageLimitWarning] = useState<string | null>(null);
+  const [currentUsedMinutes, setCurrentUsedMinutes] = useState(0);
+  const [fileDetectedDuration, setFileDetectedDuration] = useState<number | null>(null);
+  const [fileUploadError, setFileUploadError] = useState<string | null>(null);
+
+  // 更新使用量数据
+  const updateUsageData = async () => {
+    try {
+      const realUsedMinutes = await usageTracker.getCurrentUserTotalUsage();
+      setCurrentUsedMinutes(realUsedMinutes);
+      console.log('🔄 AudioToText页面使用量数据已更新:', realUsedMinutes.toFixed(2), '分钟');
+    } catch (error) {
+      console.error('❌ 更新使用量数据失败:', error);
+      // 回退到原有数据获取方式
+      const isGuestUser = isGuest || !user || user?.userType === 'guest';
+      const fallbackUsage = isGuestUser ? Number(localStorage.getItem('guestUsedMinutes') || '0') : (user?.usedMinutes || 0);
+      setCurrentUsedMinutes(fallbackUsage);
+    }
+  };
 
   // Restore transcription result on page load
   React.useEffect(() => {
@@ -34,6 +53,11 @@ const AudioToText: React.FC = () => {
       });
     }
   }, []);
+
+  // 更新使用量数据
+  React.useEffect(() => {
+    updateUsageData();
+  }, [user, isGuest]);
 
   // Only ensure guest mode if explicitly in guest mode
   React.useEffect(() => {
@@ -51,36 +75,49 @@ const AudioToText: React.FC = () => {
       try {
         console.log('📁 上传文件:', file.name, '大小:', (file.size / 1024 / 1024).toFixed(2), 'MB');
         
-        // 简化处理：直接接受文件，配额检查交给转录时处理
-        setUploadedFile(file);
+        // 清除之前的状态
         setError(null);
         setUsageLimitWarning(null);
+        setFileUploadError(null);
+        setFileDetectedDuration(null);
         
-        // 预先检查并给出提示（但不阻止上传）
+        // 检测音频时长
         try {
           const fileDuration = await getAudioDuration(file);
+          setFileDetectedDuration(fileDuration);
+          
           // 统一的配额计算逻辑
           const isGuestUser = isGuest || !user || user?.userType === 'guest';
           const totalQuota = isGuestUser ? 5 : (user?.quotaMinutes || 10);
-          const usedQuota = isGuestUser ? Number(localStorage.getItem('guestUsedMinutes') || '0') : (user?.usedMinutes || 0);
-          const remainingMinutes = Math.max(0, totalQuota - usedQuota);
+          const remainingMinutes = Math.max(0, totalQuota - currentUsedMinutes);
           
-          if (fileDuration > remainingMinutes && remainingMinutes > 0) {
-            setUsageLimitWarning(
-              t('audioToText.audioDurationWarning', {
-                duration: fileDuration.toFixed(1),
-                remaining: remainingMinutes.toFixed(1)
-              })
+          console.log('📋 文件检测完成:', {
+            文件: file.name,
+            检测时长: formatDuration(fileDuration),
+            剩余配额: formatRemainingTime(remainingMinutes)
+          });
+          
+          // 检查是否超出剩余时长
+          if (fileDuration > remainingMinutes) {
+            setFileUploadError(
+              `文件时长 ${formatDuration(fileDuration)} 超出剩余时长 ${formatRemainingTime(remainingMinutes)}，无法上传此文件。`
             );
-          } else if (remainingMinutes <= 0) {
-            setUsageLimitWarning(
-              isGuestUser ? 
-              t('audioToText.guestQuotaExhausted') :
-              t('audioToText.quotaExhaustedGeneral')
-            );
+            // 不设置 uploadedFile，阻止后续处理
+            return;
+          } else {
+            // 时长合适，可以上传
+            setUploadedFile(file);
+            
+            if (fileDuration > remainingMinutes * 0.8) {
+              // 如果使用了80%以上的剩余时长，给出提醒
+              setUsageLimitWarning(
+                `注意：此文件将消耗 ${formatDuration(fileDuration)}，接近您的剩余时长限制。`
+              );
+            }
           }
         } catch (error) {
-          console.warn('⚠️ 预检查失败，但文件已上传:', error);
+          console.error('❌ 文件时长检测失败:', error);
+          setFileUploadError('无法检测音频文件时长，请检查文件格式是否正确。');
         }
         
       } catch (error) {
@@ -109,17 +146,25 @@ const AudioToText: React.FC = () => {
       const isGuestUser = isGuest || !user || user?.userType === 'guest';
       const userType = isGuestUser ? 'guest' : (user?.userType || 'trial');
       
-      // 获取当前使用量
-      const currentUsage = isGuestUser ? Number(localStorage.getItem('guestUsedMinutes') || '0') : (user?.usedMinutes || 0);
+      // 获取当前使用量 - 使用真实数据
+      const currentUsage = currentUsedMinutes;
       
       // 获取音频时长
-      const originalDuration = await getAudioDuration(audioFile);
+      let originalDuration: number;
+      try {
+        originalDuration = await getAudioDuration(audioFile);
+      } catch (error) {
+        console.error('❌ 音频时长检测完全失败:', error);
+        setError('无法获取音频时长，请检查文件格式是否正确');
+        setIsProcessing(false);
+        return;
+      }
       
       // 计算剩余配额
       const totalQuota = isGuestUser ? 5 : (user?.quotaMinutes || 10);
       const remainingMinutes = Math.max(0, totalQuota - currentUsage);
       
-      console.log(`🎵 音频时长: ${originalDuration.toFixed(2)}分钟, 剩余配额: ${remainingMinutes.toFixed(2)}分钟`);
+      console.log(`🎵 音频时长: ${formatDuration(originalDuration)}, 剩余配额: ${formatRemainingTime(remainingMinutes)}`);
       console.log(`👤 用户类型: ${userType}, 游客用户: ${isGuestUser}`);
       
       let actualAudioFile = audioFile;
@@ -138,7 +183,7 @@ const AudioToText: React.FC = () => {
       
       // 如果音频时长超过剩余配额，进行截断处理（但仍然允许转写）
       if (originalDuration > remainingMinutes) {
-        console.log(`⚠️ 音频超出剩余配额，将截断处理: ${originalDuration.toFixed(2)} -> ${remainingMinutes.toFixed(2)}分钟`);
+        console.log(`⚠️ 音频超出剩余配额，将截断处理: ${formatDuration(originalDuration)} -> ${formatRemainingTime(remainingMinutes)}`);
         
         const truncateResult = await truncateAudioForLimit(audioFile, remainingMinutes);
         actualAudioFile = truncateResult.file;
@@ -146,39 +191,37 @@ const AudioToText: React.FC = () => {
         wasTruncated = true;
         
         setUsageLimitWarning(
-          `⚠️ 音频时长 ${originalDuration.toFixed(1)} 分钟超出剩余配额 ${remainingMinutes.toFixed(1)} 分钟，仅转换前 ${actualDuration.toFixed(1)} 分钟内容`
+          `⚠️ 音频時長 ${formatDuration(originalDuration)} が残り利用枠 ${formatRemainingTime(remainingMinutes)} を超過しているため、最初の ${formatDuration(actualDuration)} 分のみ変換します`
         );
       }
       
       // 执行转录（无论是否截断都允许进行）
       const transcriptionText = await transcribeAudio(actualAudioFile, userType, currentUsage);
       
-      // 使用新的使用量追踪系统记录真实使用量
+      // 使用新的使用量追踪系统记录真实使用量（转换为秒）
+      const actualDurationSeconds = actualDuration * 60;
       await usageTracker.recordUsage(
-        actualDuration, 
+        actualDurationSeconds, 
         actualAudioFile.name, 
         actualAudioFile.size, 
         transcriptionText.length
       );
       
-      // 更新使用量（统一处理游客和认证用户，保持兼容性）
-      const newUsedMinutes = currentUsage + actualDuration;
-      await updateUserQuota(newUsedMinutes);
-      
       // 检查配额状态并给出相应提示
       const quotaLimit = isGuestUser ? 5 : (user?.quotaMinutes || 10);
+      const newUsedMinutes = currentUsage + actualDuration;
       if (newUsedMinutes >= quotaLimit) {
         setUsageLimitWarning(
           isGuestUser ? 
-          t('audioToText.guestTrialComplete') :
-          t('audioToText.trialComplete')
+          '🎉 ゲスト体験が完了しました！アカウント登録で10分のトライアル時間を取得できます。' :
+          '🎉 トライアルが完了しました！'
         );
       } else if (quotaLimit - newUsedMinutes <= 1) {
-        setUsageLimitWarning(`⏰ 注意：您还剩余 ${(quotaLimit - newUsedMinutes).toFixed(1)} 分钟配额`);
+        setUsageLimitWarning(`⏰ 注意：残り利用枠 ${formatRemainingTime(quotaLimit - newUsedMinutes)}`);
       }
       
-      // 记录使用情况
-      await recordUsage(actualAudioFile, transcriptionText);
+      // 更新页面显示的使用量数据
+      await updateUsageData();
       
       const result: TranscriptionData = {
         text: transcriptionText,
@@ -188,7 +231,7 @@ const AudioToText: React.FC = () => {
       setTranscriptionResult(result);
       localStorage.setItem('transcriptionResult', result.text);
       
-      console.log(`✅ 转录完成，使用时长: ${actualDuration.toFixed(2)}分钟${wasTruncated ? ' (已截断)' : ''}`);
+      console.log(`✅ 転写完了、使用時間: ${formatDuration(actualDuration)}${wasTruncated ? ' (截断済み)' : ''}`);
       
     } catch (error) {
       console.error('❌ 转录失败:', error);
@@ -426,6 +469,9 @@ const AudioToText: React.FC = () => {
     setTranscriptionResult(null);
     setUploadedFile(null);
     setError(null);
+    setUsageLimitWarning(null);
+    setFileUploadError(null);
+    setFileDetectedDuration(null);
     setIsProcessing(false);
     localStorage.removeItem('transcriptionResult');
   };
@@ -447,9 +493,8 @@ const AudioToText: React.FC = () => {
               (() => {
                 const isGuestUser = isGuest || user.userType === 'guest';
                 const totalQuota = isGuestUser ? 5 : (user.quotaMinutes || 10);
-                const usedQuota = isGuestUser ? Number(localStorage.getItem('guestUsedMinutes') || '0') : (user.usedMinutes || 0);
-                const remainingTime = Math.max(0, totalQuota - usedQuota);
-                return t('audioToText.remainingTime', { minutes: remainingTime.toFixed(1) });
+                const remainingTime = Math.max(0, totalQuota - currentUsedMinutes);
+                return `残り時間: ${formatRemainingTime(remainingTime)}`;
               })()
             ) : t('audioToText.subtitle')}
           </p>
@@ -481,6 +526,11 @@ const AudioToText: React.FC = () => {
                         <div className="file-size">
                           {(uploadedFile.size / (1024 * 1024)).toFixed(2)} MB
                         </div>
+                        {fileDetectedDuration !== null && (
+                          <div className="file-duration" style={{ color: 'var(--primary-blue)', fontSize: 'var(--font-size-footnote)', marginTop: 'var(--spacing-xs)' }}>
+                            音频时长: {formatDuration(fileDetectedDuration)}
+                          </div>
+                        )}
                         <div className="file-status" style={{ color: 'var(--success-green)', fontSize: 'var(--font-size-footnote)', marginTop: 'var(--spacing-xs)' }}>
                           {t('audioToText.fileUploaded')}
                         </div>
@@ -584,6 +634,12 @@ const AudioToText: React.FC = () => {
                 大文件正在分段处理，这可能需要几分钟时间...
               </p>
             )}
+          </div>
+        )}
+
+        {fileUploadError && (
+          <div className="error-message card" style={{ backgroundColor: 'var(--error-red)', color: 'white' }}>
+            <p>⚠️ {fileUploadError}</p>
           </div>
         )}
 

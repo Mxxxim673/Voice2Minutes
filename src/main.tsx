@@ -3,6 +3,9 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
 
+// 导入测试帮助器（开发环境）
+import './utils/testHelper'
+
 // 添加全局错误处理
 window.addEventListener('error', (event) => {
   console.error('🚨 全局错误:', event.error);

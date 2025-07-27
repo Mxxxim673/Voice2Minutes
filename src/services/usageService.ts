@@ -59,48 +59,103 @@ export const isAdminUser = (): boolean => {
 };
 
 export const getAudioDuration = (file: File): Promise<number> => {
-  return new Promise((resolve) => {
-    // 对于录音生成的文件，使用更智能的检测方式
-    if (file.name.includes('recording') || file.type.includes('webm') || file.type.includes('ogg')) {
-      // 录音文件通常是实时生成的，可以通过文件大小和比特率估算
-      const estimatedDurationMinutes = estimateRecordingDuration(file);
-      console.log('🎙️ 录音文件时长估算:', estimatedDurationMinutes.toFixed(2), '分钟');
-      resolve(estimatedDurationMinutes);
-      return;
-    }
+  return new Promise((resolve, reject) => {
+    console.log('🎵 开始计算真实音频时长:', {
+      文件名: file.name,
+      文件大小: file.size + ' bytes',
+      文件类型: file.type
+    });
     
     const audio = new Audio();
     const url = URL.createObjectURL(file);
     
-    // 缩短超时时间，快速回退到估算
-    const timeoutId = setTimeout(() => {
+    const timeoutId = setTimeout(async () => {
       URL.revokeObjectURL(url);
-      console.warn('⚠️ 音频时长检测超时，使用估算方式');
-      const estimatedDurationMinutes = estimateAudioDuration(file);
-      resolve(estimatedDurationMinutes);
-    }, 2000); // 减少到2秒
+      console.warn('⚠️ Audio元素加载超时 (5秒)，尝试Web Audio API');
+      
+      // 超时时也尝试Web Audio API
+      try {
+        const durationMinutes = await getAudioDurationWithWebAudio(file);
+        resolve(durationMinutes);
+      } catch (webAudioError) {
+        console.error('❌ Web Audio API也超时/失败，最终使用估算:', webAudioError);
+        const estimatedDurationMinutes = estimateAudioDuration(file);
+        console.log('📊 最终回退到估算时长:', estimatedDurationMinutes.toFixed(4) + 'min');
+        resolve(estimatedDurationMinutes);
+      }
+    }, 5000); // 增加超时时间到5秒
     
     audio.addEventListener('loadedmetadata', () => {
       clearTimeout(timeoutId);
       URL.revokeObjectURL(url);
-      const durationMinutes = audio.duration / 60;
-      console.log('🎵 音频时长检测成功:', durationMinutes.toFixed(2), '分钟');
+      
+      const durationSeconds = audio.duration;
+      const durationMinutes = durationSeconds / 60;
+      
+      console.log('✅ 真实音频时长检测成功:', {
+        文件: file.name,
+        时长秒: durationSeconds.toFixed(3) + 's',
+        时长分钟: durationMinutes.toFixed(4) + 'min',
+        文件大小: file.size + ' bytes'
+      });
+      
       resolve(durationMinutes);
     });
     
-    audio.addEventListener('error', (e) => {
+    audio.addEventListener('error', async (e) => {
       clearTimeout(timeoutId);
       URL.revokeObjectURL(url);
-      console.warn('⚠️ 音频时长检测失败，使用估算方式. Error:', e);
-      const estimatedDurationMinutes = estimateAudioDuration(file);
-      resolve(estimatedDurationMinutes);
+      console.warn('⚠️ Audio元素加载失败，尝试Web Audio API:', {
+        文件: file.name,
+        错误: e,
+        文件大小: file.size + ' bytes'
+      });
+      
+      // 使用Web Audio API作为备选方案
+      try {
+        const durationMinutes = await getAudioDurationWithWebAudio(file);
+        resolve(durationMinutes);
+      } catch (webAudioError) {
+        console.error('❌ Web Audio API也失败，最终使用估算:', webAudioError);
+        const estimatedDurationMinutes = estimateAudioDuration(file);
+        console.log('📊 回退到估算时长:', estimatedDurationMinutes.toFixed(4) + 'min');
+        resolve(estimatedDurationMinutes);
+      }
     });
     
     audio.src = url;
   });
 };
 
-// 专门用于录音文件的时长估算
+// 使用Web Audio API获取音频时长的备选方案
+const getAudioDurationWithWebAudio = async (file: File): Promise<number> => {
+  console.log('🎛️ 使用Web Audio API检测时长:', file.name);
+  
+  try {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const arrayBuffer = await file.arrayBuffer();
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    
+    const durationSeconds = audioBuffer.duration;
+    const durationMinutes = durationSeconds / 60;
+    
+    console.log('✅ Web Audio API时长检测成功:', {
+      文件: file.name,
+      时长秒: durationSeconds.toFixed(3) + 's',
+      时长分钟: durationMinutes.toFixed(4) + 'min',
+      采样率: audioBuffer.sampleRate + 'Hz',
+      声道数: audioBuffer.numberOfChannels
+    });
+    
+    audioContext.close();
+    return durationMinutes;
+  } catch (error) {
+    console.error('❌ Web Audio API解码失败:', error);
+    throw error;
+  }
+};
+
+// 专门用于录音文件的时长估算（仅作备选方案）
 const estimateRecordingDuration = (file: File): number => {
   // 录音文件通常使用比较标准的比特率
   // WebM/OGG 格式通常在 32-128 kbps
@@ -121,26 +176,47 @@ const estimateRecordingDuration = (file: File): number => {
   const durationSeconds = fileSizeBytes / bytesPerSecond;
   const durationMinutes = durationSeconds / 60;
   
+  console.log('📊 基于文件大小的时长估算:', {
+    文件: file.name,
+    文件大小: fileSizeBytes + ' bytes',
+    估算比特率: estimatedBitrate + ' kbps',
+    估算时长秒: durationSeconds.toFixed(3) + 's',
+    估算时长分钟: durationMinutes.toFixed(4) + 'min'
+  });
+  
   // 为录音文件设置合理的上限（一般不会超过10分钟）
   return Math.min(durationMinutes, 10);
 };
 
-// 通用音频文件时长估算
+// 通用音频文件时长估算（仅作备选方案）
 const estimateAudioDuration = (file: File): number => {
   // 更保守的估算方式
   let estimatedBytesPerSecond = 16000; // 约128kbps
+  let formatInfo = 'MP3 128kbps';
   
   // 根据文件类型调整
   if (file.type.includes('wav')) {
     estimatedBytesPerSecond = 176400; // WAV 44.1kHz 16bit stereo
+    formatInfo = 'WAV 44.1kHz 16bit stereo';
   } else if (file.type.includes('flac')) {
     estimatedBytesPerSecond = 88200; // FLAC 压缩率约50%
+    formatInfo = 'FLAC compressed';
   } else if (file.type.includes('mp3')) {
     estimatedBytesPerSecond = 16000; // MP3 128kbps
+    formatInfo = 'MP3 128kbps';
   }
   
   const durationSeconds = file.size / estimatedBytesPerSecond;
   const durationMinutes = durationSeconds / 60;
+  
+  console.log('📊 通用音频文件时长估算:', {
+    文件: file.name,
+    文件类型: file.type,
+    格式假设: formatInfo,
+    文件大小: file.size + ' bytes',
+    估算时长秒: durationSeconds.toFixed(3) + 's',
+    估算时长分钟: durationMinutes.toFixed(4) + 'min'
+  });
   
   // 设置合理上限
   return Math.min(durationMinutes, 60); // 最多60分钟
@@ -455,10 +531,10 @@ export const getUsageStats = async (days: number = 7): Promise<UsageStats[]> => 
     // 使用新的 usageTracker 获取真实数据
     const dailyStats = await usageTracker.getUserUsageStats(days);
     
-    // 转换为原有接口格式
+    // 转换为原有接口格式（将秒转换为分钟）
     const result: UsageStats[] = dailyStats.map(day => ({
       date: day.date,
-      duration: day.duration,
+      duration: day.duration / 60, // 转换为分钟
       files: day.files
     }));
     

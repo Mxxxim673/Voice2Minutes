@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../hooks/useAuth';
+import { usageTracker } from '../../services/usageTracker';
+import { formatRemainingTime, formatRecordingTime } from '../../utils/timeFormat';
 import './RecordingModal.css';
 
 interface RecordingModalProps {
@@ -29,6 +31,7 @@ const RecordingModal: React.FC<RecordingModalProps> = ({ isOpen, onClose, onReco
   const [audioData, setAudioData] = useState<number[]>(Array(32).fill(0));
   const [hasRecording, setHasRecording] = useState(false);
   const [limitReached, setLimitReached] = useState(false);
+  const [currentUsedMinutes, setCurrentUsedMinutes] = useState(0);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -39,19 +42,39 @@ const RecordingModal: React.FC<RecordingModalProps> = ({ isOpen, onClose, onReco
   const audioChunksRef = useRef<Blob[]>([]);
   const recordedAudioBlobRef = useRef<Blob | null>(null);
 
+  // 更新使用量数据
+  const updateUsageData = async () => {
+    try {
+      const realUsedMinutes = await usageTracker.getCurrentUserTotalUsage();
+      setCurrentUsedMinutes(realUsedMinutes);
+      console.log('🔄 录音弹窗使用量数据已更新:', realUsedMinutes.toFixed(2), '分钟');
+    } catch (error) {
+      console.error('❌ 更新使用量数据失败:', error);
+      // 回退到localStorage数据
+      const fallbackUsage = Number(localStorage.getItem('guestUsedMinutes') || '0');
+      setCurrentUsedMinutes(fallbackUsage);
+    }
+  };
+
   useEffect(() => {
     return () => {
       cleanup();
     };
   }, []);
 
-  // 确保在模态框打开时访客模式状态正确
+  // 确保在模态框打开时访客模式状态正确，并更新使用量数据
   useEffect(() => {
-    if (isOpen && !user && localStorage.getItem('guestMode') === 'true') {
-      console.log('🎙️ 录音模态框打开，已有访客模式标识，更新访客状态...');
-      ensureGuestMode().catch(error => {
-        console.error('❌ 访客模式更新失败:', error);
-      });
+    if (isOpen) {
+      // 更新使用量数据
+      updateUsageData();
+      
+      // 确保访客模式状态正确
+      if (!user && localStorage.getItem('guestMode') === 'true') {
+        console.log('🎙️ 录音模态框打开，已有访客模式标识，更新访客状态...');
+        ensureGuestMode().catch(error => {
+          console.error('❌ 访客模式更新失败:', error);
+        });
+      }
     }
   }, [isOpen, user, ensureGuestMode]);
 
@@ -99,12 +122,13 @@ const RecordingModal: React.FC<RecordingModalProps> = ({ isOpen, onClose, onReco
     
     if (isGuestUser) {
       totalMinutes = 5; // 所有游客用户5分钟
-      // 统一从localStorage读取使用量（这个值由访客身份服务维护）
-      usedMinutes = Number(localStorage.getItem('guestUsedMinutes') || '0');
+      // 使用真实使用量数据
+      usedMinutes = currentUsedMinutes;
     } else if (user) {
       // 认证用户（试用或付费用户）
       totalMinutes = user.quotaMinutes || 10;
-      usedMinutes = user.usedMinutes || 0;
+      // 使用真实使用量数据
+      usedMinutes = currentUsedMinutes;
     }
     
     const remainingMinutes = Math.max(0, totalMinutes - usedMinutes);
@@ -525,17 +549,17 @@ const RecordingModal: React.FC<RecordingModalProps> = ({ isOpen, onClose, onReco
 
           {/* Recording time and limit info */}
           <div className="recording-time">
-            {formatTime(recordingTime)}
+            {formatRecordingTime(recordingTime)}
           </div>
           
           {/* Universal quota display */}
           <div className="usage-limit-info">
             <p className="limit-text">
-              {safeT('audioToText.totalQuotaRemaining', '总配额剩余')}: {getUserQuotaInfo().remainingMinutes.toFixed(1)} {safeT('usage.minutes', '分钟')} | {safeT('audioToText.currentRecording', '本次录制')}: {Math.floor(recordingTime / 60)}:{(recordingTime % 60).toString().padStart(2, '0')}
+              総利用可能残り: {formatRemainingTime(getUserQuotaInfo().remainingMinutes)} | 現在の録音: {formatRecordingTime(recordingTime)}
             </p>
             <p className="user-type-info" style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-              {safeT('audioToText.userType', '用户类型')}: {getUserTypeText()} | 
-              {safeT('audioToText.totalQuota', '总配额')}: {getUserQuotaInfo().totalMinutes.toFixed(1)} {safeT('usage.minutes', '分钟')}
+              ユーザータイプ: {getUserTypeText()} | 
+              総利用枠: {formatRemainingTime(getUserQuotaInfo().totalMinutes)}
             </p>
           </div>
           
@@ -559,15 +583,15 @@ const RecordingModal: React.FC<RecordingModalProps> = ({ isOpen, onClose, onReco
               ) : (
                 // 已登录用户的原有提示
                 <div>
-                  <p>⏰ {safeT('audioToText.recordingAutoStopped', '录音已自动停止')}</p>
+                  <p>⏰ 録音が自動停止されました</p>
                   <p style={{ fontSize: '14px', marginTop: '5px' }}>
                     {getUserQuotaInfo().remainingMinutes <= 0 
-                      ? `📢 ${safeT('audioToText.quotaExhaustedMessage', '您的配额已用完。录制时长: {{minutes}} 分钟', { minutes: (recordingTime / 60).toFixed(1) })}`
-                      : `📢 ${safeT('audioToText.singleRecordingLimitMessage', '单次录制已达到10分钟技术上限。录制时长: {{minutes}} 分钟', { minutes: (recordingTime / 60).toFixed(1) })}`
+                      ? `📢 利用枠を使い切りました。録音時間: ${formatRecordingTime(recordingTime)}`
+                      : `📢 単回録音が10分の技術上限に達しました。録音時間: ${formatRecordingTime(recordingTime)}`
                     }
                   </p>
                   <p style={{ fontSize: '14px', marginTop: '5px' }}>
-                    💡 {safeT('audioToText.transcriptionTip', '您可以转写此录音或重新开始录制。转写时会根据您的剩余配额进行处理。')}
+                    💡 この録音を文字起こしするか、新しく録音を開始できます。文字起こし時は残り利用枠に応じて処理されます。
                   </p>
                 </div>
               )}

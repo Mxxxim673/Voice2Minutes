@@ -6,7 +6,7 @@ export interface UsageRecord {
   userType: 'guest' | 'trial' | 'paid' | 'admin';
   date: string; // YYYY-MM-DD
   timestamp: string; // ISO string
-  duration: number; // in minutes
+  duration: number; // in seconds (changed from minutes)
   fileName: string;
   audioFileSize?: number;
   transcriptionLength?: number;
@@ -14,7 +14,7 @@ export interface UsageRecord {
 
 export interface DailyUsageStats {
   date: string;
-  duration: number;
+  duration: number; // in seconds (changed from minutes)
   files: string[];
   records: UsageRecord[];
 }
@@ -73,6 +73,7 @@ class UsageTracker {
 
   /**
    * 记录使用量
+   * @param duration 音频时长（秒）
    */
   async recordUsage(duration: number, fileName: string, audioFileSize?: number, transcriptionLength?: number): Promise<void> {
     try {
@@ -106,9 +107,15 @@ class UsageTracker {
       console.log('📊 使用量记录已保存:', {
         用户ID: userId.substring(0, 8) + '...',
         用户类型: userType,
-        时长: duration.toFixed(2) + '分钟',
-        文件: fileName
+        时长秒: duration.toFixed(3) + 's',
+        时长分钟: (duration / 60).toFixed(4) + 'min',
+        文件: fileName,
+        时间戳: now.toISOString(),
+        记录ID: record.id
       });
+      
+      // 添加调用堆栈以便调试
+      console.trace('📍 使用量记录调用堆栈:');
 
     } catch (error) {
       console.error('❌ 记录使用量失败:', error);
@@ -116,20 +123,31 @@ class UsageTracker {
   }
 
   /**
-   * 更新用户总使用量
+   * 更新用户总使用量 - 从实际记录重新计算并同步
    */
   private async updateTotalUsage(userId: string, additionalMinutes: number): Promise<void> {
-    const totalUsageData = this.getTotalUsageData();
-    const currentTotal = totalUsageData[userId] || 0;
-    const newTotal = currentTotal + additionalMinutes;
+    // 从实际记录重新计算总使用量，而不是简单累加
+    const allRecords = this.getAllUsageRecords();
+    const userRecords = allRecords.filter(record => record.userId === userId);
+    const actualTotal = userRecords.reduce((sum, record) => sum + record.duration, 0);
     
-    totalUsageData[userId] = newTotal;
+    // 更新缓存的总使用量数据
+    const totalUsageData = this.getTotalUsageData();
+    totalUsageData[userId] = actualTotal;
     localStorage.setItem(this.USER_TOTAL_USAGE_KEY, JSON.stringify(totalUsageData));
 
     // 同步更新相关的使用量存储
     if (this.getCurrentUserType() === 'guest') {
-      localStorage.setItem('guestUsedMinutes', newTotal.toString());
+      const totalMinutes = actualTotal / 60; // 转换为分钟存储
+      localStorage.setItem('guestUsedMinutes', totalMinutes.toString());
     }
+    
+    console.log('🔄 总使用量已同步:', {
+      用户ID: userId.substring(0, 8) + '...',
+      实际总量秒: actualTotal.toFixed(3) + 's',
+      实际总量分钟: (actualTotal / 60).toFixed(4) + 'min',
+      记录数: userRecords.length
+    });
   }
 
   /**
@@ -201,11 +219,13 @@ class UsageTracker {
       // 转换为数组并排序
       const result = Object.values(dailyStats).sort((a, b) => a.date.localeCompare(b.date));
       
+      const totalSeconds = result.reduce((sum, day) => sum + day.duration, 0);
       console.log('📈 用户使用统计已生成:', {
         用户ID: userId.substring(0, 8) + '...',
         天数: days,
         记录数: userRecords.length,
-        总时长: result.reduce((sum, day) => sum + day.duration, 0).toFixed(2) + '分钟'
+        总时长秒: totalSeconds.toFixed(3) + 's',
+        总时长分钟: (totalSeconds / 60).toFixed(4) + 'min'
       });
 
       return result;
@@ -217,13 +237,25 @@ class UsageTracker {
   }
 
   /**
-   * 获取当前用户总使用量
+   * 获取当前用户总使用量 - 从实际记录重新计算
    */
   async getCurrentUserTotalUsage(): Promise<number> {
     try {
       const userId = await this.getCurrentUserId();
-      const totalUsageData = this.getTotalUsageData();
-      return totalUsageData[userId] || 0;
+      const allRecords = this.getAllUsageRecords();
+      
+      // 筛选当前用户的记录并计算总使用量
+      const userRecords = allRecords.filter(record => record.userId === userId);
+      const totalUsage = userRecords.reduce((sum, record) => sum + record.duration, 0);
+      
+      console.log('📊 重新计算用户总使用量:', {
+        用户ID: userId.substring(0, 8) + '...',
+        记录数: userRecords.length,
+        总使用量秒: totalUsage.toFixed(3) + 's',
+        总使用量分钟: (totalUsage / 60).toFixed(4) + 'min'
+      });
+      
+      return totalUsage / 60; // 返回分钟单位供现有代码兼容
     } catch (error) {
       console.error('❌ 获取用户总使用量失败:', error);
       return 0;
@@ -245,10 +277,47 @@ class UsageTracker {
       delete totalUsageData[userId];
       localStorage.setItem(this.USER_TOTAL_USAGE_KEY, JSON.stringify(totalUsageData));
 
+      // 清除相关的localStorage数据
+      if (this.getCurrentUserType() === 'guest') {
+        localStorage.setItem('guestUsedMinutes', '0');
+      }
+
       console.log('🗑️ 用户使用记录已清除:', userId.substring(0, 8) + '...');
     } catch (error) {
       console.error('❌ 清除使用记录失败:', error);
     }
+  }
+
+  /**
+   * 清除所有使用记录（仅供测试）
+   */
+  clearAllUsageRecords(): void {
+    localStorage.removeItem(this.USAGE_RECORDS_KEY);
+    localStorage.removeItem(this.USER_TOTAL_USAGE_KEY);
+    localStorage.removeItem('guestUsedMinutes');
+    console.log('🗑️ 所有使用记录已清除');
+  }
+
+  /**
+   * 获取详细的使用量统计（测试用）
+   */
+  async getDetailedUsageStats(): Promise<{
+    totalRecords: number;
+    totalSeconds: number;
+    totalMinutes: number;
+    records: UsageRecord[];
+  }> {
+    const userId = await this.getCurrentUserId();
+    const allRecords = this.getAllUsageRecords();
+    const userRecords = allRecords.filter(record => record.userId === userId);
+    const totalSeconds = userRecords.reduce((sum, record) => sum + record.duration, 0);
+    
+    return {
+      totalRecords: userRecords.length,
+      totalSeconds,
+      totalMinutes: totalSeconds / 60,
+      records: userRecords
+    };
   }
 }
 

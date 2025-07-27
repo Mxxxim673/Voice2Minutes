@@ -227,24 +227,10 @@ export const recordApiUsage = async (
   }
 };
 
-// Helper function to get audio duration
+// Helper function to get audio duration - 简化为直接返回0，因为我们已经移除了使用量记录
 const getAudioDurationMinutes = (file: File): Promise<number> => {
-  return new Promise((resolve, reject) => {
-    const audio = new Audio();
-    const url = URL.createObjectURL(file);
-    
-    audio.addEventListener('loadedmetadata', () => {
-      URL.revokeObjectURL(url);
-      resolve(audio.duration / 60); // Convert to minutes
-    });
-    
-    audio.addEventListener('error', () => {
-      URL.revokeObjectURL(url);
-      reject(new Error('Failed to load audio file'));
-    });
-    
-    audio.src = url;
-  });
+  console.log('⚠️ API服务时长计算已停用，返回0避免重复计算:', file.name);
+  return Promise.resolve(0);
 };
 
 // API configuration

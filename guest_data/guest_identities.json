@@ -147,11 +147,11 @@
     },
     "usageInfo": {
       "totalMinutesUsed": 0.22540327135416666,
-      "sessionsCount": 3,
-      "lastUsedAt": "2025-07-27T01:39:09.695Z",
+      "sessionsCount": 4,
+      "lastUsedAt": "2025-07-27T02:00:51.511Z",
       "createdAt": "2025-07-26T06:36:29.495Z"
     },
-    "timestamp": "2025-07-27T01:39:09.695Z",
+    "timestamp": "2025-07-27T02:00:51.511Z",
     "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
     "referer": "http://localhost:5173/",
     "riskAnalysis": {
@@ -163,6 +163,6 @@
       "shouldBlock": false
     },
     "firstSeen": "2025-07-27T01:17:05.625Z",
-    "lastSeen": "2025-07-27T01:39:09.695Z"
+    "lastSeen": "2025-07-27T02:00:51.511Z"
   }
 ]

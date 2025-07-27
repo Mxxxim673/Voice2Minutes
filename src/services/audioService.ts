@@ -1,4 +1,4 @@
-import { recordApiUsage, preprocessAudioForLimits } from './apiService';
+import { preprocessAudioForLimits } from './apiService';
 
 const API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 const WHISPER_API_ENDPOINT = 'https://api.openai.com/v1/audio/transcriptions';
@@ -116,8 +116,8 @@ export const transcribeAudio = async (
       transcriptionResult = await transcribeFile(processedFile);
     }
 
-    // Record usage after successful transcription
-    await recordApiUsage(processedFile, transcriptionResult, userType);
+    // 注意：使用量记录已移至调用方 (AudioToText.tsx) 处理，使用 usageTracker 系统
+    // 避免重复记录使用量
 
     // Add truncation notice if applicable
     if (wasTruncated) {
