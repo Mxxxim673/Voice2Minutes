@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../hooks/useAuth';
 import { getUsageStats, getUserQuota } from '../../services/usageService';
@@ -35,11 +35,8 @@ const Usage: React.FC = () => {
     y: number;
   } | null>(null);
 
-  useEffect(() => {
-    loadUsageData();
-  }, [selectedPeriod, user, loadUsageData]);
-
-  const loadUsageData = useCallback(async () => {
+  // 使用函数声明确保可以在useEffect中调用（函数提升）
+  async function loadUsageData() {
     setLoading(true);
     try {
       if (isGuest) {
@@ -69,7 +66,11 @@ const Usage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [isGuest, selectedPeriod, user]);
+  }
+
+  useEffect(() => {
+    loadUsageData();
+  }, [selectedPeriod, user]);
 
   const formatDuration = (minutes: number): string => {
     const hours = Math.floor(minutes / 60);
