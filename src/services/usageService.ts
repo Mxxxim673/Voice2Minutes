@@ -58,7 +58,7 @@ export const isAdminUser = (): boolean => {
 };
 
 export const getAudioDuration = (file: File): Promise<number> => {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     // 对于录音生成的文件，使用更智能的检测方式
     if (file.name.includes('recording') || file.type.includes('webm') || file.type.includes('ogg')) {
       // 录音文件通常是实时生成的，可以通过文件大小和比特率估算
@@ -232,7 +232,7 @@ export const checkUsageLimit = async (audioFile: File): Promise<{
   remainingMinutes: number;
   message?: string;
   messageKey?: string; // 添加消息键用于多语言
-  messageParams?: any; // 添加消息参数
+  messageParams?: Record<string, string | number>; // 添加消息参数
 }> => {
   try {
     const duration = await getAudioDuration(audioFile);
@@ -334,7 +334,7 @@ export const checkUsageLimit = async (audioFile: File): Promise<{
         if (response.ok) {
           return await response.json();
         }
-      } catch (apiError) {
+      } catch {
         console.warn('API call failed, using localStorage fallback');
       }
       
@@ -376,7 +376,7 @@ export const checkRecordingLimit = async (recordingDurationMinutes: number): Pro
   remainingMinutes: number;
   message?: string;
   messageKey?: string;
-  messageParams?: any;
+  messageParams?: Record<string, string | number>;
 }> => {
   const token = localStorage.getItem('authToken');
   const isGuest = localStorage.getItem('guestMode') === 'true';

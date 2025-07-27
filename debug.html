@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug React App</title>
+</head>
+<body>
+    <div id="root"></div>
+    <script>
+        console.log('Loading React app...');
+        
+        // 捕获所有错误
+        window.addEventListener('error', function(e) {
+            console.error('JavaScript Error:', e.error);
+            document.body.innerHTML += '<p style="color: red;">Error: ' + e.message + '</p>';
+        });
+        
+        window.addEventListener('unhandledrejection', function(e) {
+            console.error('Promise Rejection:', e.reason);
+            document.body.innerHTML += '<p style="color: red;">Promise Error: ' + e.reason + '</p>';
+        });
+    </script>
+    <script type="module">
+        try {
+            console.log('Importing main...');
+            import('./src/main.tsx').then(() => {
+                console.log('Main imported successfully');
+            }).catch(err => {
+                console.error('Import error:', err);
+                document.body.innerHTML += '<p style="color: red;">Import Error: ' + err.message + '</p>';
+            });
+        } catch (e) {
+            console.error('Script error:', e);
+            document.body.innerHTML += '<p style="color: red;">Script Error: ' + e.message + '</p>';
+        }
+    </script>
+</body>
+</html>

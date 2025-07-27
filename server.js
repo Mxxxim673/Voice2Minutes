@@ -7,11 +7,28 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
+import { createClient } from '@supabase/supabase-js';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Supabase 配置
+const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://your-project.supabase.co';
+const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'your-service-key';
+
+// 普通客户端（匿名权限）
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// 管理客户端（service role权限）
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false
+  }
+});
 
 // 中间件配置
 app.use(helmet()); // 安全头
@@ -194,7 +211,7 @@ const analyzeGuestRisk = (guestData, existingData) => {
 
 // Gmail SMTP 配置
 const createTransporter = () => {
-  return nodemailer.createTransporter({
+  return nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
     port: parseInt(process.env.SMTP_PORT || '587'),
     secure: false, // 使用 STARTTLS
@@ -207,6 +224,451 @@ const createTransporter = () => {
     }
   });
 };
+
+// ========== Supabase 认证相关API端点 ==========
+
+// 用户注册端点
+app.post('/api/auth/register', emailLimiter, async (req, res) => {
+  try {
+    const { email, password, language = 'ja' } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).json({ 
+        error: '缺少必要参数',
+        required: ['email', 'password']
+      });
+    }
+
+    // 验证邮箱格式
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: '邮箱格式不正确' });
+    }
+
+    // 密码强度检查
+    if (password.length < 6) {
+      return res.status(400).json({ error: '密码至少需要6个字符' });
+    }
+
+    // 1. 使用Supabase Auth注册用户
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${req.protocol}://${req.get('host')}/auth/callback`,
+        data: {
+          lang: language,
+          timezone: 'Asia/Tokyo'
+        }
+      }
+    });
+
+    if (error) {
+      console.error('Supabase注册失败:', error);
+      return res.status(400).json({ error: error.message });
+    }
+
+    const user = data.user;
+    if (!user) {
+      return res.status(400).json({ error: '注册失败，未返回用户信息' });
+    }
+
+    // 2. 使用管理客户端调用RPC初始化用户数据
+    const { error: initError } = await supabaseAdmin.rpc('init_user', {
+      p_user_id: user.id,
+      p_lang: language,
+      p_timezone: 'Asia/Tokyo',
+      p_free_minutes: 10
+    });
+
+    if (initError) {
+      console.error('用户数据初始化失败:', initError);
+      // 注册成功但初始化失败，返回警告但不阻止注册
+      return res.status(201).json({
+        success: true,
+        warning: '注册成功，但用户数据初始化失败，请联系支持',
+        user: {
+          id: user.id,
+          email: user.email,
+          email_confirmed_at: user.email_confirmed_at
+        }
+      });
+    }
+
+    console.log('✅ 用户注册和初始化成功:', email);
+    
+    res.json({
+      success: true,
+      message: '注册成功，请检查邮箱验证邮件',
+      user: {
+        id: user.id,
+        email: user.email,
+        email_confirmed_at: user.email_confirmed_at
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ 注册失败:', error);
+    res.status(500).json({
+      error: '注册失败',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// 确保用户数据完整性端点（用于邮箱验证后）
+app.post('/api/auth/ensure-user-data', async (req, res) => {
+  try {
+    const { userId, email } = req.body;
+    
+    if (!userId || !email) {
+      return res.status(400).json({ error: '缺少必要参数' });
+    }
+
+    // 检查用户配置是否存在
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from('users_profile')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    // 检查用量数据是否存在
+    const { data: usage, error: usageError } = await supabaseAdmin
+      .from('usage_minutes')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    let needsInit = false;
+    
+    if (profileError?.code === 'PGRST116' || usageError?.code === 'PGRST116') {
+      needsInit = true;
+      console.log('🔧 检测到用户数据缺失，执行初始化:', email);
+      
+      // 执行用户数据初始化
+      const { error: initError } = await supabaseAdmin.rpc('init_user', {
+        p_user_id: userId,
+        p_lang: 'ja',
+        p_timezone: 'Asia/Tokyo',
+        p_free_minutes: 10
+      });
+
+      if (initError) {
+        console.error('用户数据初始化失败:', initError);
+        return res.status(500).json({ 
+          error: '用户数据初始化失败',
+          details: initError.message 
+        });
+      }
+      
+      console.log('✅ 用户数据初始化完成:', email);
+    }
+
+    res.json({
+      success: true,
+      message: needsInit ? '用户数据已初始化' : '用户数据完整',
+      initialized: needsInit
+    });
+
+  } catch (error) {
+    console.error('❌ 检查用户数据失败:', error);
+    res.status(500).json({
+      error: '检查用户数据失败',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// 用户登录端点
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).json({ 
+        error: '缺少必要参数',
+        required: ['email', 'password']
+      });
+    }
+
+    // 使用Supabase Auth登录
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) {
+      console.error('Supabase登录失败:', error);
+      return res.status(401).json({ error: '邮箱或密码错误' });
+    }
+
+    if (!data.user) {
+      return res.status(401).json({ error: '登录失败' });
+    }
+
+    // 获取用户完整信息
+    const userWithProfile = await getUserWithProfile(data.user.id);
+    
+    console.log('✅ 用户登录成功:', email);
+    
+    res.json({
+      success: true,
+      message: '登录成功',
+      user: userWithProfile,
+      session: data.session
+    });
+
+  } catch (error) {
+    console.error('❌ 登录失败:', error);
+    res.status(500).json({
+      error: '登录失败',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// 获取用户信息端点
+app.get('/api/auth/me', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: '未提供访问令牌' });
+    }
+
+    const token = authHeader.substring(7);
+    
+    // 验证JWT token
+    const { data, error } = await supabase.auth.getUser(token);
+    if (error || !data.user) {
+      return res.status(401).json({ error: '无效的访问令牌' });
+    }
+
+    const userWithProfile = await getUserWithProfile(data.user.id);
+    
+    res.json({
+      success: true,
+      user: userWithProfile
+    });
+
+  } catch (error) {
+    console.error('❌ 获取用户信息失败:', error);
+    res.status(500).json({ error: '获取用户信息失败' });
+  }
+});
+
+// 用户登出端点
+app.post('/api/auth/logout', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: '未提供访问令牌' });
+    }
+
+    const token = authHeader.substring(7);
+    
+    // Supabase登出
+    const { error } = await supabase.auth.admin.signOut(token);
+    if (error) {
+      console.error('Supabase登出失败:', error);
+    }
+
+    res.json({
+      success: true,
+      message: '登出成功'
+    });
+
+  } catch (error) {
+    console.error('❌ 登出失败:', error);
+    res.status(500).json({ error: '登出失败' });
+  }
+});
+
+// 获取用量信息端点
+app.get('/api/usage/quota', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: '未提供访问令牌' });
+    }
+
+    const token = authHeader.substring(7);
+    
+    // 验证用户
+    const { data, error } = await supabase.auth.getUser(token);
+    if (error || !data.user) {
+      return res.status(401).json({ error: '无效的访问令牌' });
+    }
+
+    // 获取用量信息
+    const { data: usage, error: usageError } = await supabaseAdmin
+      .from('usage_minutes')
+      .select('*')
+      .eq('user_id', data.user.id)
+      .single();
+
+    if (usageError) {
+      console.error('获取用量信息失败:', usageError);
+      return res.status(500).json({ error: '获取用量信息失败' });
+    }
+
+    res.json({
+      success: true,
+      quota: {
+        totalMinutes: usage.total_minutes,
+        usedMinutes: usage.used_minutes,
+        remainingMinutes: Math.max(0, usage.total_minutes - usage.used_minutes),
+        resetAt: usage.reset_at
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ 获取用量信息失败:', error);
+    res.status(500).json({ error: '获取用量信息失败' });
+  }
+});
+
+// 消费用量端点
+app.post('/api/usage/consume', async (req, res) => {
+  try {
+    const { minutes } = req.body;
+    
+    if (!minutes || minutes <= 0) {
+      return res.status(400).json({ error: '无效的使用时长' });
+    }
+
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: '未提供访问令牌' });
+    }
+
+    const token = authHeader.substring(7);
+    
+    // 验证用户
+    const { data, error } = await supabase.auth.getUser(token);
+    if (error || !data.user) {
+      return res.status(401).json({ error: '无效的访问令牌' });
+    }
+
+    // 获取当前用量
+    const { data: currentUsage, error: usageError } = await supabaseAdmin
+      .from('usage_minutes')
+      .select('*')
+      .eq('user_id', data.user.id)
+      .single();
+
+    if (usageError) {
+      console.error('获取用量信息失败:', usageError);
+      return res.status(500).json({ error: '获取用量信息失败' });
+    }
+
+    const newUsedMinutes = currentUsage.used_minutes + minutes;
+    
+    // 检查是否超过配额
+    if (newUsedMinutes > currentUsage.total_minutes) {
+      return res.status(400).json({ 
+        error: '用量超出配额',
+        remainingMinutes: Math.max(0, currentUsage.total_minutes - currentUsage.used_minutes)
+      });
+    }
+
+    // 更新用量
+    const { error: updateError } = await supabaseAdmin
+      .from('usage_minutes')
+      .update({ 
+        used_minutes: newUsedMinutes,
+        updated_at: new Date().toISOString()
+      })
+      .eq('user_id', data.user.id);
+
+    if (updateError) {
+      console.error('更新用量失败:', updateError);
+      return res.status(500).json({ error: '更新用量失败' });
+    }
+
+    console.log(`✅ 用户 ${data.user.email} 消费了 ${minutes} 分钟，剩余 ${currentUsage.total_minutes - newUsedMinutes} 分钟`);
+
+    res.json({
+      success: true,
+      message: '用量更新成功',
+      quota: {
+        totalMinutes: currentUsage.total_minutes,
+        usedMinutes: newUsedMinutes,
+        remainingMinutes: currentUsage.total_minutes - newUsedMinutes,
+        consumedMinutes: minutes
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ 消费用量失败:', error);
+    res.status(500).json({ error: '消费用量失败' });
+  }
+});
+
+// ========== 辅助函数 ==========
+
+// 获取用户完整信息（包含配置和用量）
+async function getUserWithProfile(userId) {
+  try {
+    // 获取用户配置
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from('users_profile')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    // 获取用量信息
+    const { data: usage, error: usageError } = await supabaseAdmin
+      .from('usage_minutes')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (profileError || usageError) {
+      console.error('获取用户配置或用量失败:', { profileError, usageError });
+      return null;
+    }
+
+    // 确定用户类型
+    const userType = determineUserType(usage, profile);
+
+    return {
+      id: userId,
+      email: profile?.display_name || '',
+      userType,
+      planType: profile?.plan_id,
+      quotaMinutes: usage.total_minutes,
+      usedMinutes: usage.used_minutes,
+      remainingMinutes: Math.max(0, usage.total_minutes - usage.used_minutes),
+      trialMinutes: usage.total_minutes <= 10 ? usage.total_minutes : undefined,
+      language: profile?.lang || 'ja',
+      timezone: profile?.timezone || 'Asia/Tokyo',
+      createdAt: profile?.created_at
+    };
+  } catch (error) {
+    console.error('获取用户完整信息失败:', error);
+    return null;
+  }
+}
+
+// 确定用户类型
+function determineUserType(usage, profile) {
+  if (!usage || !profile) return 'guest';
+  
+  // 如果有付费套餐，则为付费用户
+  if (profile.plan_id && !profile.plan_id.includes('trial')) {
+    return 'paid';
+  }
+  
+  // 如果总时长大于10分钟，说明是付费用户
+  if (usage.total_minutes > 10) {
+    return 'paid';
+  }
+  
+  // 默认为试用用户
+  return 'trial';
+}
+
+// ========== 访客相关API端点 ==========
 
 // 访客身份记录端点
 app.post('/api/guest/identity', guestIdentityLimiter, async (req, res) => {
@@ -606,9 +1068,133 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date().toISOString(),
     services: {
       smtp: 'configured',
-      rateLimit: 'active'
+      rateLimit: 'active',
+      supabase: 'connected'
     }
   });
+});
+
+// 测试注册流程端点
+app.post('/api/test/register-flow', async (req, res) => {
+  try {
+    const { email, password, language = 'ja' } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).json({ 
+        error: '缺少必要参数',
+        required: ['email', 'password']
+      });
+    }
+
+    console.log('🧪 开始测试注册流程:', email);
+
+    // 1. 注册用户
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          lang: language,
+          timezone: 'Asia/Tokyo'
+        }
+      }
+    });
+
+    if (error) {
+      return res.status(400).json({ 
+        step: '注册失败',
+        error: error.message 
+      });
+    }
+
+    const user = data.user;
+    if (!user) {
+      return res.status(400).json({ 
+        step: '注册失败',
+        error: '未返回用户信息' 
+      });
+    }
+
+    console.log('✅ 步骤1: 用户注册成功，ID:', user.id);
+
+    // 2. 调用RPC初始化用户
+    const { error: initError } = await supabaseAdmin.rpc('init_user', {
+      p_user_id: user.id,
+      p_lang: language,
+      p_timezone: 'Asia/Tokyo',
+      p_free_minutes: 10
+    });
+
+    if (initError) {
+      return res.status(500).json({ 
+        step: 'RPC调用失败',
+        error: initError.message,
+        user_id: user.id 
+      });
+    }
+
+    console.log('✅ 步骤2: RPC初始化成功');
+
+    // 3. 验证用户配置表
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from('users_profile')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    if (profileError) {
+      return res.status(500).json({ 
+        step: '验证用户配置失败',
+        error: profileError.message,
+        user_id: user.id 
+      });
+    }
+
+    console.log('✅ 步骤3: 用户配置验证成功:', profile);
+
+    // 4. 验证用量表
+    const { data: usage, error: usageError } = await supabaseAdmin
+      .from('usage_minutes')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    if (usageError) {
+      return res.status(500).json({ 
+        step: '验证用量信息失败',
+        error: usageError.message,
+        user_id: user.id 
+      });
+    }
+
+    console.log('✅ 步骤4: 用量信息验证成功:', usage);
+
+    // 测试成功
+    res.json({
+      success: true,
+      message: '注册流程测试完成',
+      user: {
+        id: user.id,
+        email: user.email,
+        email_confirmed_at: user.email_confirmed_at
+      },
+      profile: profile,
+      usage: usage,
+      steps_completed: [
+        '✅ 用户注册',
+        '✅ RPC初始化',
+        '✅ 配置表验证',
+        '✅ 用量表验证'
+      ]
+    });
+
+  } catch (error) {
+    console.error('❌ 注册流程测试失败:', error);
+    res.status(500).json({
+      step: '系统错误',
+      error: error.message
+    });
+  }
 });
 
 // SMTP连接测试端点
@@ -654,11 +1240,18 @@ app.get('/', (req, res) => {
     version: '1.0.0',
     status: 'running',
     endpoints: [
+      'POST /api/auth/register',
+      'POST /api/auth/login',
+      'GET /api/auth/me',
+      'POST /api/auth/logout',
+      'GET /api/usage/quota',
+      'POST /api/usage/consume',
       'POST /api/email/send-verification',
       'POST /api/email/send-welcome',
       'POST /api/guest/identity',
       'POST /api/guest/verify',
-      'GET /api/guest/stats'
+      'GET /api/guest/stats',
+      'POST /api/test/register-flow'
     ]
   });
 });

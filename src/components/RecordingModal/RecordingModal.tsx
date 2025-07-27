@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import './RecordingModal.css';
 
 interface RecordingModalProps {
@@ -14,7 +14,7 @@ const RecordingModal: React.FC<RecordingModalProps> = ({ isOpen, onClose, onReco
   const { user, isGuest, ensureGuestMode } = useAuth();
   
   // 安全的翻译函数，带有默认值
-  const safeT = (key: string, defaultValue: string, options?: any): string => {
+  const safeT = (key: string, defaultValue: string, options?: Record<string, unknown>): string => {
     try {
       const result = t(key, options);
       return typeof result === 'string' && result !== key ? result : defaultValue;
@@ -171,7 +171,7 @@ const RecordingModal: React.FC<RecordingModalProps> = ({ isOpen, onClose, onReco
       streamRef.current = stream;
 
       // Set up audio analysis for waveform visualization
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      audioContextRef.current = new (window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
       const source = audioContextRef.current.createMediaStreamSource(stream);
       analyserRef.current = audioContextRef.current.createAnalyser();
       

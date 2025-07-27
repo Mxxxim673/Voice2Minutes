@@ -1,9 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { guestIdentityService, type GuestValidationResult } from '../../services/guestIdentityService';
 import './GuestIdentityTest.css';
 
 const GuestIdentityTest: React.FC = () => {
-  const [guestStats, setGuestStats] = useState<any>(null);
+  const [guestStats, setGuestStats] = useState<{
+    visitorId: string;
+    totalMinutesUsed: number;
+    remainingMinutes: number;
+    sessionsCount: number;
+    createdAt: string;
+    lastUsedAt: string;
+  } | null>(null);
   const [validationResult, setValidationResult] = useState<GuestValidationResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [testLogs, setTestLogs] = useState<string[]>([]);
@@ -13,11 +20,11 @@ const GuestIdentityTest: React.FC = () => {
     setTestLogs(prev => [...prev, `[${timestamp}] ${message}`]);
   };
 
-  const refreshStats = () => {
+  const refreshStats = useCallback(() => {
     const stats = guestIdentityService.getGuestStats();
     setGuestStats(stats);
     addLog('刷新访客统计信息');
-  };
+  }, []);
 
   const validateAccess = async () => {
     setIsLoading(true);
@@ -73,7 +80,7 @@ const GuestIdentityTest: React.FC = () => {
   useEffect(() => {
     refreshStats();
     addLog('访客身份测试工具已加载');
-  }, []);
+  }, [refreshStats]);
 
   return (
     <div className="guest-identity-test">

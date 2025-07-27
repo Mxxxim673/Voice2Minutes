@@ -1,4 +1,4 @@
-import { enforceApiQuotaLimits, recordApiUsage, preprocessAudioForLimits } from './apiService';
+import { recordApiUsage, preprocessAudioForLimits } from './apiService';
 
 const API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 const WHISPER_API_ENDPOINT = 'https://api.openai.com/v1/audio/transcriptions';
@@ -9,7 +9,7 @@ if (!API_KEY) {
 }
 
 // Function to format transcription with timestamps only
-const formatTranscriptionWithSpeakers = (data: any): string => {
+const formatTranscriptionWithSpeakers = (data: { text: string; segments?: Array<{ start: number; text: string }> }): string => {
   if (!data.segments || !Array.isArray(data.segments)) {
     return data.text || '';
   }
@@ -215,7 +215,7 @@ const transcribeWithWebAudioAPI = async (audioFile: File): Promise<string> => {
     console.log('Starting Web Audio API processing...');
     
     // Create audio context
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
     
     // Convert file to array buffer
     const arrayBuffer = await audioFile.arrayBuffer();

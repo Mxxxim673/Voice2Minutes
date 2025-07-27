@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import './Auth.css';
 
 type AuthMode = 'login' | 'register' | 'verify';
 
 const Auth: React.FC = () => {
+  const navigate = useNavigate();
   const { t } = useTranslation();
   const { login, register, continueAsGuest, verifyEmail, resendVerificationEmail } = useAuth();
   
@@ -36,7 +38,7 @@ const Auth: React.FC = () => {
     try {
       if (mode === 'login') {
         await login(formData.email, formData.password);
-        window.location.href = '/audio-to-text';
+        navigate('/', { replace: true });
       } else if (mode === 'register') {
         if (formData.password !== formData.confirmPassword) {
           throw new Error(t('auth.passwordMismatch'));
@@ -53,7 +55,7 @@ const Auth: React.FC = () => {
         if (success) {
           setSuccess(t('auth.verifySuccess'));
           setTimeout(() => {
-            window.location.href = '/audio-to-text';
+            navigate('/', { replace: true });
           }, 2000);
         } else {
           throw new Error(t('auth.verifyFailed'));
@@ -75,7 +77,7 @@ const Auth: React.FC = () => {
       } else {
         setError(t('auth.resendFailed'));
       }
-    } catch (error) {
+    } catch {
       setError(t('auth.resendFailed'));
     } finally {
       setLoading(false);
@@ -84,7 +86,7 @@ const Auth: React.FC = () => {
 
   const handleGuestMode = () => {
     continueAsGuest();
-    window.location.href = '/audio-to-text';
+    navigate('/', { replace: true });
   };
 
   const renderLoginForm = () => (
@@ -186,16 +188,25 @@ const Auth: React.FC = () => {
       
       <div className="form-group">
         <label htmlFor="confirmPassword">{t('auth.confirmPassword')}</label>
-        <input
-          type={showPassword ? 'text' : 'password'}
-          id="confirmPassword"
-          name="confirmPassword"
-          value={formData.confirmPassword}
-          onChange={handleInputChange}
-          required
-          className="form-input"
-          placeholder={t('auth.confirmPasswordPlaceholder')}
-        />
+        <div className="password-input-container">
+          <input
+            type={showPassword ? 'text' : 'password'}
+            id="confirmPassword"
+            name="confirmPassword"
+            value={formData.confirmPassword}
+            onChange={handleInputChange}
+            required
+            className="form-input"
+            placeholder={t('auth.confirmPasswordPlaceholder')}
+          />
+          <button
+            type="button"
+            className="password-toggle"
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            {showPassword ? '👁️' : '👁️‍🗨️'}
+          </button>
+        </div>
       </div>
       
       <button type="submit" className="button button-primary auth-submit" disabled={loading}>

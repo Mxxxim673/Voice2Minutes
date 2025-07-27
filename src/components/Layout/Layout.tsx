@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import LanguageSelector from '../LanguageSelector/LanguageSelector';
 
 interface LayoutProps {
@@ -10,7 +10,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { t } = useTranslation();
-  const { user, isGuest, logout } = useAuth();
+  const { user, logout } = useAuth();
   const location = useLocation();
   const currentYear = new Date().getFullYear();
 

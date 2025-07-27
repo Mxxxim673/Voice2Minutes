@@ -173,7 +173,7 @@
     "hasAccount": "Already have an account?",
     "passwordMismatch": "Passwords do not match",
     "passwordTooShort": "Password must be at least 6 characters",
-    "registerSuccess": "Registration successful! Please check your email for verification.",
+    "registerSuccess": "Verification code has been sent to your email, please check your inbox.",
     "verifySuccess": "Email verified successfully! Redirecting...",
     "verifyFailed": "Email verification failed. Please try again.",
     "genericError": "An error occurred. Please try again.",

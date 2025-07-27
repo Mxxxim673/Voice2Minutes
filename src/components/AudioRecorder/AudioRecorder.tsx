@@ -22,12 +22,13 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete }) =>
   const audioChunksRef = useRef<Blob[]>([]);
 
   useEffect(() => {
+    const currentAnimationRef = animationRef.current;
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
+      if (currentAnimationRef) {
+        cancelAnimationFrame(currentAnimationRef);
       }
       if (visualizationIntervalRef.current) {
         clearInterval(visualizationIntervalRef.current);
@@ -52,7 +53,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete }) =>
       console.log('Microphone access granted');
 
       // Set up audio analysis for waveform visualization
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      audioContextRef.current = new (window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
       const source = audioContextRef.current.createMediaStreamSource(stream);
       analyserRef.current = audioContextRef.current.createAnalyser();
       

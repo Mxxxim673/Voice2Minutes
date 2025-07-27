@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { sendVerificationEmail, generateVerificationCode, sendWelcomeEmail } from '../services/emailService';
+import React, { createContext, useState, useEffect, type ReactNode } from 'react';
+import { sendVerificationEmail, generateVerificationCode } from '../services/emailService';
 import { useTranslation } from 'react-i18next';
 import { guestIdentityService, type GuestValidationResult } from '../services/guestIdentityService';
+import { AuthService } from '../services/authService';
 
 export interface User {
   id: string;
@@ -37,6 +38,8 @@ interface AuthContextType {
   guestValidationResult: GuestValidationResult | null;
   // 确保访客模式初始化
   ensureGuestMode: () => Promise<void>;
+  // 邮箱验证回调需要
+  checkExistingAuth: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -50,20 +53,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isGuest, setIsGuest] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [pendingVerification, setPendingVerification] = useState<{
+  const [, setPendingVerification] = useState<{
     email: string;
     code: string;
     timestamp: number;
+    language?: string;
   } | null>(null);
   const [isGuestAccessAllowed, setIsGuestAccessAllowed] = useState(true);
   const [guestValidationResult, setGuestValidationResult] = useState<GuestValidationResult | null>(null);
 
-  useEffect(() => {
-    // Check for existing authentication on app load
-    checkExistingAuth();
-  }, []);
-
-  const checkExistingAuth = async () => {
+  // 使用函数声明确保可以在useEffect中调用（函数提升）
+  async function checkExistingAuth() {
+    console.log('🔍 开始检查现有认证状态...');
     try {
       const token = localStorage.getItem('authToken');
       const guestMode = localStorage.getItem('guestMode');
@@ -87,10 +88,52 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           createdAt: new Date().toISOString()
         });
       } else if (token && userData) {
-        // 恢复已验证的用户会话
         const user = JSON.parse(userData);
-        setUser(user);
-        setIsGuest(false);
+        
+        // 如果是管理员账户，直接恢复会话
+        if (user.id === 'admin') {
+          setUser(user);
+          setIsGuest(false);
+        } else {
+          // 对于Supabase用户，检查会话是否有效
+          try {
+            const currentUser = await AuthService.getCurrentUser();
+            if (currentUser) {
+              // 转换为前端User格式
+              const authUser: User = {
+                id: currentUser.id,
+                email: currentUser.email,
+                isEmailVerified: currentUser.isEmailVerified,
+                userType: currentUser.userType,
+                planType: currentUser.planType,
+                quotaMinutes: currentUser.quotaMinutes,
+                usedMinutes: currentUser.usedMinutes,
+                trialMinutes: currentUser.trialMinutes,
+                subscriptionType: currentUser.subscriptionType,
+                createdAt: currentUser.createdAt
+              };
+              
+              setUser(authUser);
+              setIsGuest(false);
+              
+              // 更新本地存储的用户数据
+              localStorage.setItem('userData', JSON.stringify(authUser));
+              console.log('✅ Supabase会话已恢复:', authUser.email);
+            } else {
+              // Supabase会话无效，清理本地数据
+              localStorage.removeItem('authToken');
+              localStorage.removeItem('userData');
+              setUser(null);
+              setIsGuest(false);
+              console.log('⚠️ Supabase会话已失效，已清理');
+            }
+          } catch (error) {
+            console.error('Supabase会话检查失败:', error);
+            // 会话检查失败，但保留本地用户数据，避免频繁登出
+            setUser(user);
+            setIsGuest(false);
+          }
+        }
       } else if (pendingVerification) {
         // 恢复待验证状态
         const verificationData = JSON.parse(pendingVerification);
@@ -131,14 +174,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       }
     } catch (error) {
-      console.error('Auth check failed:', error);
+      console.error('❌ AuthContext checkExistingAuth 失败:', error);
+      console.error('错误详情:', {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        name: error instanceof Error ? error.name : 'Unknown Error'
+      });
       // 出现错误时保持未认证状态
       setUser(null);
       setIsGuest(false);
     } finally {
       setLoading(false);
+      console.log('✅ AuthContext 初始化完成');
     }
-  };
+  }
+
+  useEffect(() => {
+    // Check for existing authentication on app load
+    checkExistingAuth();
+  }, []);
 
   // 初始化访客模式的函数
   const initializeGuestMode = async () => {
@@ -218,23 +272,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     await initializeGuestMode();
   };
 
-  const validateToken = async (token: string): Promise<User | null> => {
-    try {
-      const response = await fetch('/api/auth/validate', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (response.ok) {
-        return await response.json();
-      }
-      return null;
-    } catch (error) {
-      console.error('Token validation failed:', error);
-      return null;
-    }
-  };
+  // validateToken function removed - not used
 
   const login = async (email: string, password: string): Promise<User> => {
     try {
@@ -293,30 +331,37 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return adminUser;
       }
       
-      // 普通用户登录逻辑 - 模拟后端API调用
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email, password })
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Login failed');
+      // 使用Supabase认证服务登录
+      const { user: authUser, error } = await AuthService.login(email, password);
+      
+      if (error || !authUser) {
+        throw new Error(error?.message || '登录失败');
       }
 
-      const { user: userData, token } = await response.json();
+      // 转换为前端User格式
+      const userData: User = {
+        id: authUser.id,
+        email: authUser.email,
+        isEmailVerified: authUser.isEmailVerified,
+        userType: authUser.userType,
+        planType: authUser.planType,
+        quotaMinutes: authUser.quotaMinutes,
+        usedMinutes: authUser.usedMinutes,
+        trialMinutes: authUser.trialMinutes,
+        subscriptionType: authUser.subscriptionType,
+        createdAt: authUser.createdAt
+      };
       
-      // Store token and clear guest mode
-      localStorage.setItem('authToken', token);
+      // 存储认证信息
+      localStorage.setItem('authToken', 'supabase_session');
+      localStorage.setItem('userData', JSON.stringify(userData));
       localStorage.removeItem('guestMode');
       localStorage.removeItem('guestUsedMinutes');
       
       setUser(userData);
       setIsGuest(false);
       
+      console.log('✅ 用户登录成功:', email);
       return userData;
     } catch (error) {
       console.error('Login failed:', error);
@@ -326,11 +371,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const register = async (email: string, password: string): Promise<User> => {
     try {
-      // 生成验证码
-      const verificationCode = generateVerificationCode();
-      const currentLanguage = i18n.language || 'zh';
+      const currentLanguage = i18n.language || 'ja';
       
-      // 发送验证邮件
+      // 使用Supabase认证服务注册
+      const { user: supabaseUser, error } = await AuthService.register(email, password, currentLanguage);
+      
+      if (error || !supabaseUser) {
+        throw new Error(error?.message || '注册失败');
+      }
+
+      // 生成验证码并发送验证邮件
+      const verificationCode = generateVerificationCode();
+      
       const emailSent = await sendVerificationEmail({
         email,
         verificationCode,
@@ -338,26 +390,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
       
       if (!emailSent) {
-        throw new Error('验证邮件发送失败，请检查邮箱地址或稍后重试');
+        // 邮件发送失败时的错误信息
+        const errorMessage = currentLanguage === 'zh' ? '验证邮件发送失败，请检查邮箱地址或稍后重试' :
+                             currentLanguage === 'ja' ? 'メール送信に失敗しました。メールアドレスを確認するか、しばらくしてから再試行してください' :
+                             'Verification email failed to send, please check your email address or try again later';
+        throw new Error(errorMessage);
       }
       
-      // 模拟用户注册（在实际应用中这里应该调用后端API）
+      // 创建前端用户对象（基于Supabase用户，但加上验证逻辑）
       const userData: User = {
-        id: `user_${Date.now()}`,
-        email,
-        isEmailVerified: false,
+        id: supabaseUser.id,
+        email: supabaseUser.email || email,
+        isEmailVerified: false, // 需要邮件验证
         userType: 'trial',
         quotaMinutes: 10, // 注册用户获得10分钟试用
         usedMinutes: 0,
         trialMinutes: 10,
-        createdAt: new Date().toISOString()
+        createdAt: supabaseUser.created_at || new Date().toISOString()
       };
       
       // 存储待验证信息
       setPendingVerification({
         email,
         code: verificationCode,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        language: currentLanguage
       });
       
       // 临时存储用户数据（验证后正式激活）
@@ -365,10 +422,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem('pendingVerification', JSON.stringify({
         email,
         code: verificationCode,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        language: currentLanguage // 保存注册时的语言设置
       }));
       
-      console.log('📧 注册成功，验证邮件已发送至:', email);
+      console.log('📧 Supabase注册成功，验证邮件已发送至:', email);
       return userData;
     } catch (error) {
       console.error('Registration failed:', error);
@@ -376,7 +434,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      // 调用Supabase登出（仅对非管理员用户）
+      const currentUser = localStorage.getItem('userData');
+      if (currentUser) {
+        const userData = JSON.parse(currentUser);
+        if (userData.id !== 'admin') {
+          await AuthService.logout();
+        }
+      }
+    } catch (error) {
+      console.error('Supabase logout failed:', error);
+    }
+
     // 清除所有认证相关数据
     localStorage.removeItem('authToken');
     localStorage.removeItem('userData');
@@ -417,75 +488,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     console.log('👤 用户选择以访客身份继续');
   };
 
-  const verifyEmail = async (inputCode: string): Promise<boolean> => {
-    try {
-      // 检查本地存储的验证信息
-      const storedVerification = localStorage.getItem('pendingVerification');
-      const storedUser = localStorage.getItem('pendingUser');
-      
-      if (!storedVerification || !storedUser) {
-        console.error('没有找到待验证的用户信息');
-        return false;
-      }
-      
-      const verificationData = JSON.parse(storedVerification);
-      const userData = JSON.parse(storedUser);
-      
-      // 检查验证码是否过期（10分钟）
-      const now = Date.now();
-      const codeAge = now - verificationData.timestamp;
-      const CODE_EXPIRY = 10 * 60 * 1000; // 10分钟
-      
-      if (codeAge > CODE_EXPIRY) {
-        console.error('验证码已过期');
-        // 清理过期数据
-        localStorage.removeItem('pendingVerification');
-        localStorage.removeItem('pendingUser');
-        setPendingVerification(null);
-        return false;
-      }
-      
-      // 验证码匹配检查
-      if (inputCode !== verificationData.code) {
-        console.error('验证码不正确');
-        return false;
-      }
-      
-      // 验证成功，激活用户账户
-      const activatedUser: User = {
-        ...userData,
-        isEmailVerified: true,
-        userType: 'trial' // 邮箱验证后转为试用用户
-      };
-      
-      // 生成认证令牌（简化版）
-      const authToken = `token_${activatedUser.id}_${Date.now()}`;
-      
-      // 保存用户信息和令牌
-      localStorage.setItem('authToken', authToken);
-      localStorage.setItem('userData', JSON.stringify(activatedUser));
-      
-      // 清理待验证数据
-      localStorage.removeItem('pendingVerification');
-      localStorage.removeItem('pendingUser');
-      localStorage.removeItem('guestMode');
-      localStorage.removeItem('guestUsedMinutes');
-      
-      // 更新状态
-      setUser(activatedUser);
-      setIsGuest(false);
-      setPendingVerification(null);
-      
-      // 发送欢迎邮件
-      const currentLanguage = i18n.language || 'zh';
-      await sendWelcomeEmail(activatedUser.email, '', currentLanguage);
-      
-      console.log('✅ 邮箱验证成功，账户已激活:', activatedUser.email);
-      return true;
-    } catch (error) {
-      console.error('Email verification failed:', error);
-      return false;
-    }
+  const verifyEmail = async (): Promise<boolean> => {
+    // 注意：此方法现在主要用于向后兼容，实际验证通过 /auth/callback 页面处理
+    console.log('⚠️ verifyEmail 方法已弃用，请使用 /auth/callback 页面进行邮箱验证');
+    return false;
   };
 
   const resendVerificationEmail = async (): Promise<boolean> => {
@@ -511,14 +517,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
       
       if (!emailSent) {
-        throw new Error('验证邮件发送失败');
+        // 重新发送失败时的错误信息
+        const errorMessage = currentLanguage === 'zh' ? '验证邮件发送失败' :
+                             currentLanguage === 'ja' ? 'メール送信に失敗しました' :
+                             'Verification email failed to send';
+        throw new Error(errorMessage);
       }
       
-      // 更新存储的验证信息
+      // 更新存储的验证信息，保持原来的语言设置
       const updatedVerification = {
         email,
         code: newVerificationCode,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        language: verificationData.language || currentLanguage
       };
       
       localStorage.setItem('pendingVerification', JSON.stringify(updatedVerification));
@@ -708,7 +719,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isGuestAccessAllowed,
     guestValidationResult,
     // 确保访客模式初始化
-    ensureGuestMode
+    ensureGuestMode,
+    // 邮箱验证回调需要
+    checkExistingAuth
   };
 
   if (loading) {
@@ -726,10 +739,5 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   );
 };
 
-export const useAuth = (): AuthContextType => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+// Export context for use in separate hook file
+export { AuthContext };

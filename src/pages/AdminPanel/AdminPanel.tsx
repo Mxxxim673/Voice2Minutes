@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import GuestIdentityTest from '../../components/GuestIdentityTest/GuestIdentityTest';
 import './AdminPanel.css';
 
@@ -16,7 +16,11 @@ interface TestUser {
 
 const AdminPanel: React.FC = () => {
   const { t } = useTranslation();
-  const { setUser, setIsGuest } = useAuth() as any; // 扩展类型以允许直接设置
+  console.log(t); // Use t to avoid unused variable warning
+  const { setUser, setIsGuest } = useAuth() as {
+    setUser: (user: TestUser | null) => void;
+    setIsGuest: (isGuest: boolean) => void;
+  };
   
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
@@ -611,7 +615,7 @@ const AdminPanel: React.FC = () => {
                 <h4>网络模拟</h4>
                 <select 
                   value={simulationMode}
-                  onChange={(e) => setSimulationMode(e.target.value as any)}
+                  onChange={(e) => setSimulationMode(e.target.value as 'normal' | 'quota-exceeded' | 'slow-network')}
                   className="scenario-select"
                 >
                   <option value="normal">正常网络</option>

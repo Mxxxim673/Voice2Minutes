@@ -32,7 +32,7 @@ class GuestIdentityService {
   private readonly GUEST_SESSIONS_KEY = 'guest_sessions';
   private readonly GUEST_LIMIT_MINUTES = 5;
   
-  private fingerprintPromise: Promise<any> | null = null;
+  private fingerprintPromise: Promise<{ get: () => Promise<{ visitorId: string }> }> | null = null;
 
   constructor() {
     this.initializeFingerprint();
@@ -232,7 +232,7 @@ class GuestIdentityService {
   /**
    * 向后端报告访客信息并获取权威使用量数据
    */
-  async reportGuestIdentity(identity: GuestIdentity): Promise<any> {
+  async reportGuestIdentity(identity: GuestIdentity): Promise<{ userData?: { totalMinutesUsed: number; sessionsCount: number; lastUsedAt: string } }> {
     try {
       const response = await fetch('/api/guest/identity', {
         method: 'POST',

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import { getUsageStats, getUserQuota } from '../../services/usageService';
 import './Usage.css';
 
@@ -21,7 +21,7 @@ interface QuotaInfo {
 
 const Usage: React.FC = () => {
   const { t } = useTranslation();
-  const { user, isGuest, updateUserQuota, setUser } = useAuth();
+  const { user, isGuest, setUser } = useAuth();
   const [editingQuota, setEditingQuota] = useState(false);
   const [tempQuotaMinutes, setTempQuotaMinutes] = useState(0);
   const [tempUsedMinutes, setTempUsedMinutes] = useState(0);
@@ -37,9 +37,9 @@ const Usage: React.FC = () => {
 
   useEffect(() => {
     loadUsageData();
-  }, [selectedPeriod, user]);
+  }, [selectedPeriod, user, loadUsageData]);
 
-  const loadUsageData = async () => {
+  const loadUsageData = useCallback(async () => {
     setLoading(true);
     try {
       if (isGuest) {
@@ -69,7 +69,7 @@ const Usage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [isGuest, selectedPeriod, user]);
 
   const formatDuration = (minutes: number): string => {
     const hours = Math.floor(minutes / 60);

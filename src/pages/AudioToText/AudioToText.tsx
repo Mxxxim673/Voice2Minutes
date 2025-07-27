@@ -1,12 +1,11 @@
 import React, { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDropzone } from 'react-dropzone';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import RecordingModal from '../../components/RecordingModal/RecordingModal';
-import TranscriptionResult from '../../components/TranscriptionResult/TranscriptionResult';
 import { transcribeAudio } from '../../services/audioService';
 import { exportToWord } from '../../utils/exportUtils';
-import { checkUsageLimit, recordUsage, truncateAudioForLimit, getAudioDuration } from '../../services/usageService';
+import { recordUsage, getAudioDuration, truncateAudioForLimit } from '../../services/usageService';
 import './AudioToText.css';
 
 interface TranscriptionData {
@@ -16,7 +15,7 @@ interface TranscriptionData {
 
 const AudioToText: React.FC = () => {
   const { t } = useTranslation();
-  const { user, isGuest, isAuthenticated, updateUserQuota, ensureGuestMode } = useAuth();
+  const { user, isGuest, updateUserQuota, ensureGuestMode } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
   const [transcriptionResult, setTranscriptionResult] = useState<TranscriptionData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -263,7 +262,7 @@ const AudioToText: React.FC = () => {
       
       audio.onloadeddata = async () => {
         try {
-          const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+          const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
           const arrayBuffer = await audioBlob.arrayBuffer();
           const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
           
@@ -383,7 +382,7 @@ const AudioToText: React.FC = () => {
       errors.push('❌ 您的浏览器不支持媒体录制 (MediaRecorder)');
     }
     
-    if (!window.AudioContext && !(window as any).webkitAudioContext) {
+    if (!window.AudioContext && !(window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext) {
       errors.push('❌ 您的浏览器不支持音频处理 (AudioContext)');
     }
     
@@ -412,12 +411,6 @@ const AudioToText: React.FC = () => {
     setIsRecordingModalOpen(false);
   };
 
-  const handleClearRecord = () => {
-    setTranscriptionResult(null);
-    setUploadedFile(null);
-    setError(null);
-    localStorage.removeItem('transcriptionResult');
-  };
 
   const handleClearAll = () => {
     // Clear all content including uploaded file and transcription results
@@ -543,7 +536,9 @@ const AudioToText: React.FC = () => {
                 </button>
                 <button
                   onClick={() => {
-                    transcriptionResult && navigator.clipboard.writeText(transcriptionResult.text);
+                    if (transcriptionResult) {
+                      navigator.clipboard.writeText(transcriptionResult.text);
+                    }
                   }}
                   className="button action-button button-secondary"
                   disabled={!transcriptionResult || isGuest}

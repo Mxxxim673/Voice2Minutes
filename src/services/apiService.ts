@@ -177,7 +177,7 @@ export const preprocessAudioForLimits = async (
         processedDuration: duration
       }
     };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       error: 'Failed to process audio file'
@@ -219,7 +219,7 @@ export const recordApiUsage = async (
       success: true,
       data: { usageRecorded: true }
     };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       error: 'Failed to record usage'
@@ -258,7 +258,7 @@ export const getApiLimits = (): ApiQuotaLimits => {
 
 // Real-time quota monitoring (would be WebSocket in production)
 export const startQuotaMonitoring = (
-  userId: string,
+  _userId: string,
   onQuotaUpdate: (remainingMinutes: number) => void
 ) => {
   // Mock implementation - in production this would use WebSocket

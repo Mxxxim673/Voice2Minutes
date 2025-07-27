@@ -32,6 +32,13 @@ A modern web application that converts audio recordings to text transcriptions a
 - Responsive design for desktop, tablet, and mobile
 - Smooth animations and transitions
 
+### 👤 User Authentication & Management
+- Secure user registration and login with Supabase Auth
+- Email verification with multi-language support
+- PostgreSQL database for user profiles and usage tracking
+- Guest mode with 5-minute trial without registration
+- Usage quota management and tracking
+
 ### 💰 Pricing Page
 - One-time purchases: 5, 10, 30, 100 hours
 - Subscriptions: Monthly (30h), Annual (360h)  
@@ -41,12 +48,15 @@ A modern web application that converts audio recordings to text transcriptions a
 ## Technology Stack
 
 - **Frontend**: React 18 + TypeScript + Vite
+- **Backend**: Node.js + Express + Supabase
+- **Database**: PostgreSQL (via Supabase)
+- **Authentication**: Supabase Auth + Email verification
 - **Styling**: CSS Custom Properties + iOS-native design system
 - **Routing**: React Router DOM
 - **Internationalization**: react-i18next
 - **File Handling**: react-dropzone
 - **Document Export**: docx + file-saver
-- **APIs**: OpenAI Whisper + GPT-3.5
+- **APIs**: OpenAI Whisper + GPT-3.5 + Supabase REST API
 
 ## Setup Instructions
 
@@ -54,6 +64,7 @@ A modern web application that converts audio recordings to text transcriptions a
 - Node.js 18+ 
 - npm or yarn
 - OpenAI API key
+- Supabase account and project
 
 ### Installation
 
@@ -68,16 +79,44 @@ A modern web application that converts audio recordings to text transcriptions a
    # Copy environment template
    cp .env.example .env
    
-   # Add your OpenAI API key to .env
+   # Configure your .env file with:
    VITE_OPENAI_API_KEY=your_openai_api_key_here
+   VITE_SUPABASE_URL=https://your-project-id.supabase.co
+   VITE_SUPABASE_ANON_KEY=your-anon-key
+   SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+   SMTP_HOST=smtp.gmail.com
+   SMTP_PORT=587
+   SMTP_USER=your-email@gmail.com
+   SMTP_PASS=your-app-password
    ```
 
-3. **Start development server**
+3. **Database Setup**
    ```bash
+   # Run database migrations in your Supabase project
+   # Execute the SQL files in database/migrations/ in your Supabase SQL editor
+   # Run database/seed/001_plans.sql to populate plans
+   ```
+
+4. **Start development servers**
+   
+   **Option A: Start both servers at once**
+   ```bash
+   npm run start:full
+   ```
+   
+   **Option B: Start servers separately**
+   ```bash
+   # Terminal 1: Start backend API server
+   npm run server
+   
+   # Terminal 2: Start frontend development server
    npm run dev
    ```
+   
+   - Backend API: http://localhost:3001
+   - Frontend: http://localhost:5173
 
-4. **Open your browser**
+5. **Open your browser**
    Navigate to http://localhost:5173
 
 ### Production Build
@@ -114,6 +153,13 @@ npm run preview
 - Used for meeting minutes generation
 - Template-based content extraction
 - Maintains original transcription accuracy
+
+### Supabase API Endpoints
+- **Authentication**: `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`
+- **User Management**: `GET /api/auth/me`
+- **Usage Tracking**: `GET /api/usage/quota`, `POST /api/usage/consume`
+- **Email Services**: `POST /api/email/send-verification`, `POST /api/email/send-welcome`
+- **Guest Management**: `POST /api/guest/identity`, `POST /api/guest/verify`
 
 ## Security Features
 
