@@ -91,6 +91,8 @@
     "selectPlan": "プランを選択",
     "paymentNotice": "お支払いについて",
     "mostPopular": "人気プラン",
+    "bestDeal": "お得",
+    "bestValue": "コスパ最強",
     "perHour": "時間あたり",
     "paymentInfo": {
       "currency": "価格は日本円（¥）で表示されています",

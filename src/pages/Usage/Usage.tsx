@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../hooks/useAuth';
 import { getUsageStats, getUserQuota } from '../../services/usageService';
+import { calculateGlobalMaxUsage, getEmptyStateText } from '../../utils/chartUtils';
+import UsageChart from '../../components/UsageChart/UsageChart';
 import './Usage.css';
 
 interface UsageData {
@@ -20,7 +22,7 @@ interface QuotaInfo {
 }
 
 const Usage: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user, isGuest, setUser } = useAuth();
   const [editingQuota, setEditingQuota] = useState(false);
   const [tempQuotaMinutes, setTempQuotaMinutes] = useState(0);
@@ -29,11 +31,32 @@ const Usage: React.FC = () => {
   const [quotaInfo, setQuotaInfo] = useState<QuotaInfo | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState(7); // Default 7 days
   const [loading, setLoading] = useState(true);
-  const [hoveredBar, setHoveredBar] = useState<{
-    data: UsageData;
-    x: number;
-    y: number;
-  } | null>(null);
+  const [allPeriodsData, setAllPeriodsData] = useState<{
+    week: UsageData[];
+    month: UsageData[];
+    quarter: UsageData[];
+  }>({ week: [], month: [], quarter: [] });
+
+  // 加载所有时间段的数据用于计算全局最大值
+  async function loadAllPeriodsData() {
+    if (isGuest) return;
+    
+    try {
+      const [weekData, monthData, quarterData] = await Promise.all([
+        getUsageStats(7),
+        getUsageStats(30),
+        getUsageStats(90)
+      ]);
+      
+      setAllPeriodsData({
+        week: weekData,
+        month: monthData,
+        quarter: quarterData
+      });
+    } catch (error) {
+      console.error('Failed to load all periods data:', error);
+    }
+  }
 
   // 使用函数声明确保可以在useEffect中调用（函数提升）
   async function loadUsageData() {
@@ -71,6 +94,14 @@ const Usage: React.FC = () => {
   useEffect(() => {
     loadUsageData();
   }, [selectedPeriod, user]);
+
+  // 初始加载所有时间段数据
+  useEffect(() => {
+    if (user && !isGuest) {
+      loadAllPeriodsData();
+    }
+  }, [user, isGuest]);
+
 
   const formatDuration = (minutes: number): string => {
     const hours = Math.floor(minutes / 60);
@@ -117,19 +148,8 @@ const Usage: React.FC = () => {
     }
   };
 
-  const maxUsage = Math.max(...usageData.map(d => d.duration), 1);
-
-  const handleBarHover = (data: UsageData, event: React.MouseEvent) => {
-    setHoveredBar({
-      data,
-      x: event.clientX,
-      y: event.clientY
-    });
-  };
-
-  const handleBarLeave = () => {
-    setHoveredBar(null);
-  };
+  // 计算全局最大使用量
+  const globalMaxUsage = calculateGlobalMaxUsage(allPeriodsData);
 
   const navigateToPricing = () => {
     window.location.href = '/pricing';
@@ -474,62 +494,14 @@ const Usage: React.FC = () => {
             </div>
           </div>
           
-          <div className="chart-container">
-            {usageData.length > 0 ? (
-              <div className="bar-chart">
-                {usageData.map((data, index) => (
-                  <div key={index} className="bar-item">
-                    <div 
-                      className="bar"
-                      style={{ 
-                        height: `${(data.duration / maxUsage) * 200}px`,
-                        backgroundColor: data.duration > 0 ? 'var(--primary-blue)' : 'var(--light-gray)'
-                      }}
-                      onMouseEnter={(e) => handleBarHover(data, e)}
-                      onMouseLeave={handleBarLeave}
-                    />
-                    <div className="bar-label">
-                      {new Date(data.date).toLocaleDateString('zh-CN', { 
-                        month: 'short', 
-                        day: 'numeric' 
-                      })}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="no-data">
-                <p>{t('usage.noData')}</p>
-              </div>
-            )}
-          </div>
+          <UsageChart 
+            data={usageData}
+            selectedPeriod={selectedPeriod}
+            globalMaxUsage={globalMaxUsage}
+            emptyStateText={getEmptyStateText(i18n.language)}
+          />
         </div>
 
-        {/* Hover Tooltip */}
-        {hoveredBar && (
-          <div 
-            className="usage-tooltip"
-            style={{
-              left: hoveredBar.x + 10,
-              top: hoveredBar.y - 10,
-            }}
-          >
-            <div className="tooltip-date">
-              {new Date(hoveredBar.data.date).toLocaleDateString()}
-            </div>
-            <div className="tooltip-duration">
-              {t('usage.duration')}: {formatDuration(hoveredBar.data.duration)}
-            </div>
-            {hoveredBar.data.files.length > 0 && (
-              <div className="tooltip-files">
-                <strong>{t('usage.files')}:</strong>
-                {hoveredBar.data.files.map((file, i) => (
-                  <div key={i} className="tooltip-file">{file}</div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Purchase CTA */}
         <div className="purchase-cta">

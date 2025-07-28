@@ -68,6 +68,8 @@
     "selectPlan": "Выбрать план",
     "paymentNotice": "Уведомление о платеже",
     "mostPopular": "Самый Популярный",
+    "bestDeal": "Лучшее Предложение",
+    "bestValue": "Лучшая Цена",
     "perHour": "в час",
     "paymentInfo": {
       "currency": "Цены отображаются в японских иенах (¥)",

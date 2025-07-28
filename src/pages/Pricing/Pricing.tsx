@@ -11,6 +11,7 @@ interface PricingPlan {
   currency: string;
   period?: string;
   popular?: boolean;
+  badge?: 'mostPopular' | 'bestDeal' | 'bestValue';
 }
 
 const Pricing: React.FC = () => {
@@ -31,21 +32,22 @@ const Pricing: React.FC = () => {
       type: 'oneTime',
       hours: 10,
       price: 950,
-      currency: '¥'
+      currency: '¥',
+      popular: true,
+      badge: 'mostPopular'
     },
     {
       id: '30hours',
       type: 'oneTime',
       hours: 30,
-      price: 2400,
-      currency: '¥',
-      popular: true
+      price: 2490,
+      currency: '¥'
     },
     {
       id: '100hours',
       type: 'oneTime',
       hours: 100,
-      price: 6900,
+      price: 7550,
       currency: '¥'
     },
     // Subscriptions
@@ -53,18 +55,20 @@ const Pricing: React.FC = () => {
       id: 'monthly30',
       type: 'subscription',
       hours: 30,
-      price: 2200,
+      price: 2300,
       currency: '¥',
       period: 'monthly',
-      popular: true
+      popular: true,
+      badge: 'bestDeal'
     },
     {
-      id: 'annual360',
+      id: 'annual330',
       type: 'subscription',
-      hours: 360,
-      price: 24900,
+      hours: 330,
+      price: 23200,
       currency: '¥',
-      period: 'annual'
+      period: 'annual',
+      badge: 'bestValue'
     }
   ];
 
@@ -157,8 +161,14 @@ const Pricing: React.FC = () => {
                 key={plan.id} 
                 className={`pricing-card ${plan.popular ? 'popular' : ''}`}
               >
-                {plan.popular && (
+                {plan.badge === 'mostPopular' && (
                   <div className="popular-badge">{t('pricing.mostPopular')}</div>
+                )}
+                {plan.badge === 'bestDeal' && (
+                  <div className="popular-badge">{t('pricing.bestDeal')}</div>
+                )}
+                {plan.badge === 'bestValue' && (
+                  <div className="popular-badge best-value">{t('pricing.bestValue')}</div>
                 )}
                 
                 <div className="plan-header">
@@ -194,8 +204,14 @@ const Pricing: React.FC = () => {
                 key={plan.id} 
                 className={`pricing-card subscription-card ${plan.popular ? 'popular' : ''}`}
               >
-                {plan.popular && (
+                {plan.badge === 'mostPopular' && (
                   <div className="popular-badge">{t('pricing.mostPopular')}</div>
+                )}
+                {plan.badge === 'bestDeal' && (
+                  <div className="popular-badge">{t('pricing.bestDeal')}</div>
+                )}
+                {plan.badge === 'bestValue' && (
+                  <div className="popular-badge best-value">{t('pricing.bestValue')}</div>
                 )}
                 <div className="plan-header">
                   <div className="plan-type">
@@ -207,9 +223,6 @@ const Pricing: React.FC = () => {
                   <div className="plan-price">
                     {formatPrice(plan.price, plan.currency)}
                     <span className="price-period">/{plan.period === 'monthly' ? 'month' : 'year'}</span>
-                  </div>
-                  <div className="price-per-hour">
-                    {formatPrice(getPricePerHour(plan), plan.currency)} {t('pricing.perHour')}
                   </div>
                 </div>
 

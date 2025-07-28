@@ -68,6 +68,8 @@
     "selectPlan": "Sélectionner le plan",
     "paymentNotice": "Avis de paiement",
     "mostPopular": "Le Plus Populaire",
+    "bestDeal": "Meilleure Offre",
+    "bestValue": "Meilleur Rapport Qualité-Prix",
     "perHour": "par heure",
     "paymentInfo": {
       "currency": "Les prix sont affichés en yen japonais (¥)",

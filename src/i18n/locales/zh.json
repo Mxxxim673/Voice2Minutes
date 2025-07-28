@@ -98,6 +98,8 @@
     "selectPlan": "选择计划",
     "paymentNotice": "付费须知",
     "mostPopular": "最受欢迎",
+    "bestDeal": "实惠",
+    "bestValue": "性价比最高",
     "perHour": "每小时",
     "paymentInfo": {
       "currency": "价格以日元（¥）显示",

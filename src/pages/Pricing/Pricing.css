@@ -69,9 +69,64 @@
   font-weight: var(--font-weight-semibold);
 }
 
+.subscription-card .popular-badge {
+  background: #F97316;
+}
+
+.subscription-card .popular-badge.best-value {
+  background: #EA580C;
+}
+
 .subscription-card {
-  background: linear-gradient(135deg, var(--primary-blue-light) 0%, var(--background-primary) 100%);
-  border-color: var(--primary-blue);
+  background: var(--background-primary);
+  border: 2px solid var(--border-color) !important;
+}
+
+.subscription-card.popular {
+  border-color: var(--border-color) !important;
+  transform: scale(1.05);
+  box-shadow: var(--shadow-md);
+}
+
+.subscription-card:hover {
+  border-color: #F97316 !important;
+  box-shadow: 0 20px 40px rgba(249, 115, 22, 0.2);
+}
+
+.subscription-card.popular:hover {
+  border-color: #F97316 !important;
+  box-shadow: 0 20px 40px rgba(249, 115, 22, 0.2);
+  transform: scale(1.05) translateY(-4px);
+}
+
+.subscription-card .plan-type {
+  color: #8B5CF6;
+  font-weight: var(--font-weight-bold);
+}
+
+.subscription-card .plan-hours {
+  color: #7C3AED;
+}
+
+.subscription-card .hours-label {
+  color: #A855F7;
+}
+
+.subscription-card .plan-price {
+  color: #7C3AED;
+  font-weight: var(--font-weight-bold);
+}
+
+.subscription-card .price-period {
+  color: #A855F7;
+}
+
+.subscription-card .price-per-hour {
+  color: #A855F7;
+}
+
+.subscription-card .plan-header {
+  border-bottom-color: rgba(139, 92, 246, 0.2);
 }
 
 .plan-header {
@@ -185,6 +240,21 @@
   font-weight: var(--font-weight-bold);
   position: absolute;
   left: 0;
+}
+
+.subscription-card .plan-button {
+  background: linear-gradient(135deg, #8B5CF6, #7C3AED);
+  border: 2px solid #7C3AED;
+  color: white;
+  font-weight: var(--font-weight-bold);
+  transition: all 0.3s ease;
+}
+
+.subscription-card .plan-button:hover {
+  background: linear-gradient(135deg, #7C3AED, #6D28D9);
+  border-color: #6D28D9;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(124, 58, 237, 0.3);
 }
 
 /* Mobile responsiveness */

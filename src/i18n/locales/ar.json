@@ -68,6 +68,8 @@
     "selectPlan": "اختر خطة",
     "paymentNotice": "إشعار الدفع",
     "mostPopular": "الأكثر شعبية",
+    "bestDeal": "أفضل عرض",
+    "bestValue": "أفضل قيمة",
     "perHour": "في الساعة",
     "paymentInfo": {
       "currency": "الأسعار معروضة بالين الياباني (¥)",

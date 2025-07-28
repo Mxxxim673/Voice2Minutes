@@ -192,50 +192,6 @@
   font-size: var(--font-size-footnote);
 }
 
-.chart-container {
-  min-height: 250px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.bar-chart {
-  display: flex;
-  align-items: end;
-  gap: var(--spacing-sm);
-  height: 200px;
-  width: 100%;
-  padding: 0 var(--spacing-md);
-}
-
-.bar-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-sm);
-}
-
-.bar {
-  width: 100%;
-  max-width: 40px;
-  min-height: 4px;
-  border-radius: 2px 2px 0 0;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-
-.bar:hover {
-  opacity: 0.8;
-  transform: scaleY(1.05);
-}
-
-.bar-label {
-  font-size: var(--font-size-caption);
-  color: var(--text-secondary);
-  text-align: center;
-  white-space: nowrap;
-}
 
 .mock-chart {
   display: flex;
@@ -253,46 +209,6 @@
   opacity: 0.3;
 }
 
-.no-data {
-  text-align: center;
-  color: var(--text-secondary);
-  padding: var(--spacing-xl);
-}
-
-.usage-tooltip {
-  position: fixed;
-  background-color: var(--background-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-md);
-  box-shadow: var(--shadow-md);
-  z-index: 1000;
-  pointer-events: none;
-  max-width: 250px;
-}
-
-.tooltip-date {
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-primary);
-  margin-bottom: var(--spacing-xs);
-}
-
-.tooltip-duration {
-  color: var(--text-secondary);
-  font-size: var(--font-size-footnote);
-  margin-bottom: var(--spacing-xs);
-}
-
-.tooltip-files {
-  font-size: var(--font-size-caption);
-  color: var(--text-secondary);
-}
-
-.tooltip-file {
-  padding-left: var(--spacing-sm);
-  margin-top: var(--spacing-xs);
-  font-family: var(--font-family-mono);
-}
 
 .purchase-cta {
   text-align: center;
@@ -346,13 +262,6 @@
     align-items: stretch;
   }
   
-  .bar-chart {
-    padding: 0 var(--spacing-sm);
-  }
-  
-  .bar {
-    max-width: 20px;
-  }
   
   .purchase-button {
     min-width: auto;

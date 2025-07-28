@@ -97,6 +97,8 @@
     "selectPlan": "Select Plan",
     "paymentNotice": "Payment Notice",
     "mostPopular": "Most Popular",
+    "bestDeal": "Best Deal",
+    "bestValue": "Best Value",
     "perHour": "per hour",
     "paymentInfo": {
       "currency": "Prices are displayed in Japanese Yen (¥)",
