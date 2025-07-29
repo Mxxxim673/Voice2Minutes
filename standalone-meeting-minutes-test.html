@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>会议纪要页面测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #007bff 0%, #6610f2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border: 1px solid #e0e0e0;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: 600;
+            font-size: 1.5rem;
+        }
+        .debug-info {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .success {
+            background: #e8f5e8;
+            border-color: #4caf50;
+            color: #2e7d32;
+        }
+        .error {
+            background: #ffebee;
+            border-color: #f44336;
+            color: #c62828;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <h1 class="page-title">会议纪要生成</h1>
+    </div>
+
+    <div class="main-content">
+        <div class="card">
+            <h2>原文内容</h2>
+            <p>这是左侧的原文展示区域</p>
+            <div class="debug-info">
+                <h3>🔍 左侧区域测试</h3>
+                <p>如果您能看到这个区域，说明：</p>
+                <ul>
+                    <li>✅ CSS网格布局正常</li>
+                    <li>✅ 卡片样式正常</li>
+                    <li>✅ 左侧区域渲染正常</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>生成的会议纪要</h2>
+            <p>这是右侧的纪要展示区域</p>
+            <div class="debug-info success">
+                <h3>✅ 右侧区域测试</h3>
+                <p>如果您能看到这个区域，说明：</p>
+                <ul>
+                    <li>✅ 双栏布局正常</li>
+                    <li>✅ 卡片组件正常</li>
+                    <li>✅ 整体页面结构正常</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="debug-info">
+        <h3>🎯 核心问题诊断</h3>
+        <p><strong>如果您看到了上面的标题"会议纪要生成"，那么问题可能在于：</strong></p>
+        <ol>
+            <li><strong>React组件问题</strong> - MeetingMinutes.tsx组件有语法错误或导入错误</li>
+            <li><strong>多语言配置问题</strong> - i18n翻译文件中的key配置错误</li>
+            <li><strong>CSS冲突</strong> - 某些CSS规则隐藏了标题</li>
+            <li><strong>JavaScript错误</strong> - 控制台有错误阻止了组件渲染</li>
+        </ol>
+        
+        <p><strong>如果您看不到标题，问题可能在于：</strong></p>
+        <ol>
+            <li><strong>字体加载问题</strong> - 渐变色文字在某些浏览器中不显示</li>
+            <li><strong>CSS变量问题</strong> - var(--color)变量未定义</li>
+            <li><strong>样式覆盖问题</strong> - 其他CSS规则覆盖了标题样式</li>
+        </ol>
+
+        <h3>🔧 解决方案</h3>
+        <p><strong>请尝试以下步骤：</strong></p>
+        <ol>
+            <li>在浏览器中打开 <code>http://localhost:5173/meeting-minutes</code></li>
+            <li>按F12打开开发者工具</li>
+            <li>查看Console标签页是否有JavaScript错误</li>
+            <li>查看Elements标签页，检查标题元素是否存在</li>
+            <li>查看Network标签页，检查CSS文件是否加载成功</li>
+        </ol>
+    </div>
+
+    <script>
+        // 模拟检查页面加载情况
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('✅ 静态HTML页面加载成功');
+            console.log('✅ 页面标题已显示：', document.querySelector('.page-title').textContent);
+            console.log('如果React应用中看不到标题，问题在于React组件或配置');
+        });
+    </script>
+</body>
+</html>

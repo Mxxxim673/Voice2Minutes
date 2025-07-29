@@ -1,0 +1,1049 @@
+/* 现代化会议纪要页面样式 */
+
+/* 危险按钮样式 */
+.btn-danger {
+  color: #dc3545;
+  border-color: #dc3545;
+}
+
+.btn-danger:hover {
+  background-color: #dc3545;
+  color: white;
+  border-color: #dc3545;
+}
+
+.btn-danger:focus {
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+/* 清空项目列表样式 */
+.clear-items-list {
+  margin: 1rem 0;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #ffc107;
+}
+
+.clear-items-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.clear-items-list li {
+  padding: 0.5rem 0;
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+.clear-items-list li:not(:last-child) {
+  border-bottom: 1px solid #e9ecef;
+}
+
+/* 优化模板区域布局，减少空隙 */
+.outline-section {
+  margin-top: 0;
+}
+
+.template-list-section {
+  margin-top: 0;
+}
+
+.template-list-header {
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* 禁用按钮样式 */
+.btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.meeting-minutes-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 2rem 0;
+}
+
+.meeting-minutes-page .container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* 页面头部 */
+.meeting-minutes-page .page-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  position: relative;
+  padding: 1.5rem 0;
+}
+
+.meeting-minutes-page .page-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 4px;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  border-radius: 2px;
+  animation: expand-header 0.8s ease-out;
+}
+
+.meeting-minutes-page .page-title {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  animation: slideInDown 0.6s ease-out;
+  position: relative;
+}
+
+@keyframes expand-header {
+  from { width: 0; }
+  to { width: 100px; }
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.meeting-minutes-page .source-status {
+  position: absolute;
+  top: 1.5rem;
+  right: 0;
+}
+
+.meeting-minutes-page .status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 0.75rem;
+  color: #166534;
+  font-weight: 500;
+}
+
+.meeting-minutes-page .status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* 主要内容网格 */
+.meeting-minutes-page .content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  min-height: 700px;
+  align-items: stretch;
+}
+
+/* 左侧区域 */
+.meeting-minutes-page .left-section {
+  display: grid;
+  grid-template-rows: 320px 1fr;
+  gap: 1.5rem;
+  height: 100%;
+  min-height: 700px;
+}
+
+/* 卡片样式 */
+.meeting-minutes-page .section-card {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+
+.meeting-minutes-page .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.meeting-minutes-page .card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.meeting-minutes-page .header-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+/* 模板选择器 */
+.meeting-minutes-page .template-selector {
+  padding: 1.5rem;
+}
+
+.meeting-minutes-page .selector-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.meeting-minutes-page .template-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.meeting-minutes-page .template-card:hover {
+  border-color: #667eea;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+}
+
+.meeting-minutes-page .template-card.active {
+  border-color: #667eea;
+  background: #f0f4ff;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+}
+
+.meeting-minutes-page .template-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.meeting-minutes-page .template-info h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 0.25rem 0;
+}
+
+.meeting-minutes-page .template-info p {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* 提纲部分 */
+.meeting-minutes-page .outline-section {
+  padding: 0 1.5rem 1.5rem;
+}
+
+.meeting-minutes-page .section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.meeting-minutes-page .section-header h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.meeting-minutes-page .outline-preview {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.meeting-minutes-page .outline-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.meeting-minutes-page .outline-item:last-child {
+  border-bottom: none;
+}
+
+.meeting-minutes-page .item-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: #667eea;
+  color: white;
+  border-radius: 50%;
+  font-size: 0.8rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.meeting-minutes-page .item-text {
+  color: #374151;
+  font-weight: 500;
+}
+
+/* 提纲编辑器 */
+.meeting-minutes-page .outline-editor {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.meeting-minutes-page .editor-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.meeting-minutes-page .editor-item:last-child {
+  margin-bottom: 0;
+}
+
+.meeting-minutes-page .outline-input {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.9rem;
+  transition: border-color 0.2s ease;
+}
+
+.meeting-minutes-page .outline-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.meeting-minutes-page .editor-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+
+/* 原文显示区域 */
+.meeting-minutes-page .original-text-section {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 模板配置区域 */
+.meeting-minutes-page .template-config-section {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.meeting-minutes-page .text-stats {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.meeting-minutes-page .char-count {
+  font-size: 0.8rem;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+}
+
+.meeting-minutes-page .original-text-content {
+  flex: 1;
+  min-height: 0;
+  padding: 1.5rem;
+}
+
+.meeting-minutes-page .text-display {
+  flex: 1;
+  height: 100%;
+  min-height: 200px;
+  max-height: 300px;
+  overflow: hidden;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+}
+
+.meeting-minutes-page .original-text {
+  width: 100%;
+  height: 100%;
+  padding: 1rem;
+  margin: 0;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #374151;
+  background: transparent;
+  border: none;
+  resize: none;
+  overflow-y: auto;
+  overflow-x: hidden;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+/* 自定义滚动条样式 */
+.meeting-minutes-page .original-text::-webkit-scrollbar {
+  width: 6px;
+}
+
+.meeting-minutes-page .original-text::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.meeting-minutes-page .original-text::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+
+.meeting-minutes-page .original-text::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* 原文空状态 */
+.meeting-minutes-page .empty-original-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 150px;
+  color: #64748b;
+  padding: 1.5rem;
+}
+
+.meeting-minutes-page .empty-original-text .empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.meeting-minutes-page .empty-original-text h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 0.5rem 0;
+}
+
+.meeting-minutes-page .empty-original-text p {
+  font-size: 0.9rem;
+  margin: 0 0 1.5rem 0;
+  line-height: 1.5;
+}
+
+/* 结果区域 */
+.meeting-minutes-page .result-section {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.meeting-minutes-page .result-section .section-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  flex: 1;
+}
+
+.meeting-minutes-page .result-area {
+  flex: 1;
+  padding: 1.5rem;
+  min-height: 0;
+}
+
+.meeting-minutes-page .result-display {
+  height: 100%;
+}
+
+.meeting-minutes-page .summary-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.meeting-minutes-page .summary-text {
+  flex: 1;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #374151;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin: 0;
+  padding: 1rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* 空状态 */
+.meeting-minutes-page .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  height: 300px;
+  color: #64748b;
+}
+
+.meeting-minutes-page .empty-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.meeting-minutes-page .empty-state h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 0.5rem 0;
+}
+
+.meeting-minutes-page .empty-state p {
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* 编辑模式 */
+.meeting-minutes-page .edit-mode {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.meeting-minutes-page .summary-editor {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  padding: 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  resize: none;
+  transition: border-color 0.2s ease;
+}
+
+.meeting-minutes-page .summary-editor:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.meeting-minutes-page .edit-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+/* 操作按钮区域 */
+.meeting-minutes-page .result-actions {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+/* 按钮样式 */
+.meeting-minutes-page .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.meeting-minutes-page .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.meeting-minutes-page .btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.meeting-minutes-page .btn-primary:hover:not(:disabled) {
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  transform: translateY(-1px);
+}
+
+.meeting-minutes-page .btn-outline {
+  background: white;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.meeting-minutes-page .btn-outline:hover:not(:disabled) {
+  background: #f9fafb;
+  border-color: #667eea;
+  color: #667eea;
+}
+
+.meeting-minutes-page .btn-danger {
+  background: #ef4444;
+  color: white;
+}
+
+.meeting-minutes-page .btn-danger:hover:not(:disabled) {
+  background: #dc2626;
+}
+
+.meeting-minutes-page .btn-remove {
+  background: #f8fafc;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+}
+
+.meeting-minutes-page .btn-remove:hover:not(:disabled) {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fecaca;
+  transform: scale(1.05);
+}
+
+.meeting-minutes-page .btn-remove svg {
+  transition: all 0.2s ease;
+}
+
+.meeting-minutes-page .btn-remove:hover:not(:disabled) svg {
+  transform: scale(1.1);
+}
+
+/* 模板管理相关样式 */
+.meeting-minutes-page .template-list-section {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.meeting-minutes-page .template-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.meeting-minutes-page .template-list-header h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.meeting-minutes-page .template-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.meeting-minutes-page .template-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.meeting-minutes-page .template-item:hover {
+  border-color: #667eea;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+}
+
+.meeting-minutes-page .template-item.selected {
+  border-color: #667eea;
+  background: #f0f4ff;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+}
+
+.meeting-minutes-page .template-info {
+  flex: 1;
+}
+
+.meeting-minutes-page .template-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 0.25rem;
+}
+
+.meeting-minutes-page .template-meta {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.meeting-minutes-page .template-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.meeting-minutes-page .empty-templates {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: #64748b;
+}
+
+.meeting-minutes-page .empty-templates .empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.meeting-minutes-page .empty-templates p {
+  margin: 0.5rem 0;
+}
+
+.meeting-minutes-page .empty-hint {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.meeting-minutes-page .selected-template-preview {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.meeting-minutes-page .selected-template-preview h5 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 0.75rem 0;
+}
+
+/* 模板编辑器样式 */
+.meeting-minutes-page .template-editor {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.meeting-minutes-page .template-name-section {
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.meeting-minutes-page .template-name-label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.meeting-minutes-page .template-name-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.9rem;
+  transition: border-color 0.2s ease;
+}
+
+.meeting-minutes-page .template-name-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.meeting-minutes-page .btn-sm {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+}
+
+.meeting-minutes-page .btn-large {
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.meeting-minutes-page .btn-icon {
+  padding: 0.5rem;
+  min-width: auto;
+}
+
+/* 加载状态 */
+.meeting-minutes-page .btn.loading {
+  pointer-events: none;
+}
+
+.meeting-minutes-page .spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 图标样式 */
+.meeting-minutes-page .icon {
+  font-size: 1em;
+  flex-shrink: 0;
+}
+
+/* 错误提示 */
+.meeting-minutes-page .error-toast {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.75rem;
+  color: #dc2626;
+  font-weight: 500;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.meeting-minutes-page .error-icon {
+  font-size: 1.25rem;
+}
+
+/* 模态框样式 */
+.meeting-minutes-page .modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.meeting-minutes-page .modal-content {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+  max-width: 500px;
+  width: 90%;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.meeting-minutes-page .modal-header {
+  padding: 1.5rem 1.5rem 0;
+}
+
+.meeting-minutes-page .modal-header h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #dc2626;
+  margin: 0;
+}
+
+.meeting-minutes-page .modal-body {
+  padding: 1rem 1.5rem;
+}
+
+.meeting-minutes-page .modal-body p {
+  color: #64748b;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.meeting-minutes-page .modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+/* 响应式设计 */
+@media (max-width: 1024px) {
+  .meeting-minutes-page .content-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    min-height: auto;
+  }
+
+  .meeting-minutes-page .left-section {
+    grid-template-rows: auto auto;
+    min-height: auto;
+    height: auto;
+  }
+
+  .meeting-minutes-page .original-text-section,
+  .meeting-minutes-page .template-config-section {
+    height: auto;
+    min-height: 300px;
+  }
+  
+  .meeting-minutes-page .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .meeting-minutes-page .selector-group {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 640px) {
+  .meeting-minutes-page {
+    padding: 1rem 0;
+  }
+  
+  .meeting-minutes-page .container {
+    padding: 0 1rem;
+  }
+  
+  .meeting-minutes-page .page-title {
+    font-size: 2rem;
+  }
+  
+  .meeting-minutes-page .card-header {
+    padding: 1rem;
+  }
+  
+  .meeting-minutes-page .template-selector,
+  .meeting-minutes-page .outline-section,
+  .meeting-minutes-page .generate-section,
+  .meeting-minutes-page .original-text-content,
+  .meeting-minutes-page .result-area,
+  .meeting-minutes-page .result-actions {
+    padding: 1rem;
+  }
+  
+  .meeting-minutes-page .original-text-section {
+    max-height: 300px;
+  }
+  
+  .meeting-minutes-page .text-display,
+  .meeting-minutes-page .original-text {
+    max-height: 200px;
+  }
+  
+  .meeting-minutes-page .template-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .meeting-minutes-page .editor-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .meeting-minutes-page .editor-actions,
+  .meeting-minutes-page .edit-actions,
+  .meeting-minutes-page .result-actions,
+  .meeting-minutes-page .modal-actions {
+    flex-direction: column;
+  }
+}

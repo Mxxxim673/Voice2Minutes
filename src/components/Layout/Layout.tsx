@@ -33,6 +33,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </li>
             <li>
               <Link 
+                to="/meeting-minutes" 
+                className={`nav-link ${location.pathname === '/meeting-minutes' ? 'active' : ''}`}
+              >
+                {t('navigation.meetingMinutes')}
+              </Link>
+            </li>
+            <li>
+              <Link 
                 to="/usage" 
                 className={`nav-link ${location.pathname === '/usage' ? 'active' : ''}`}
               >

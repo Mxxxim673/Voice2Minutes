@@ -61,6 +61,9 @@ export const enforceApiQuotaLimits = async (
         case 'subscription':
           userLimit = 300;
           break;
+        case 'admin':
+          userLimit = 99999; // 管理员无限制
+          break;
         default:
           userLimit = API_LIMITS.trialLimitMinutes;
       }

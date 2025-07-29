@@ -88,7 +88,8 @@ const AudioToText: React.FC = () => {
           
           // 统一的配额计算逻辑
           const isGuestUser = isGuest || !user || user?.userType === 'guest';
-          const totalQuota = isGuestUser ? 5 : (user?.quotaMinutes || 10);
+          const isAdmin = user?.email === 'max.z.software@gmail.com';
+          const totalQuota = isAdmin ? 99999 : (isGuestUser ? 5 : (user?.quotaMinutes || 10));
           const remainingMinutes = Math.max(0, totalQuota - currentUsedMinutes);
           
           console.log('📋 文件检测完成:', {
@@ -97,8 +98,8 @@ const AudioToText: React.FC = () => {
             剩余配额: formatRemainingTime(remainingMinutes)
           });
           
-          // 检查是否超出剩余时长
-          if (fileDuration > remainingMinutes) {
+          // 检查是否超出剩余时长（管理员跳过检查）
+          if (!isAdmin && fileDuration > remainingMinutes) {
             setFileUploadError(
               `文件时长 ${formatDuration(fileDuration)} 超出剩余时长 ${formatRemainingTime(remainingMinutes)}，无法上传此文件。`
             );
@@ -108,8 +109,8 @@ const AudioToText: React.FC = () => {
             // 时长合适，可以上传
             setUploadedFile(file);
             
-            if (fileDuration > remainingMinutes * 0.8) {
-              // 如果使用了80%以上的剩余时长，给出提醒
+            if (!isAdmin && fileDuration > remainingMinutes * 0.8) {
+              // 如果使用了80%以上的剩余时长，给出提醒（管理员跳过）
               setUsageLimitWarning(
                 `注意：此文件将消耗 ${formatDuration(fileDuration)}，接近您的剩余时长限制。`
               );
@@ -144,7 +145,8 @@ const AudioToText: React.FC = () => {
     try {
       // 统一的用户类型和配额检查
       const isGuestUser = isGuest || !user || user?.userType === 'guest';
-      const userType = isGuestUser ? 'guest' : (user?.userType || 'trial');
+      const isAdmin = user?.email === 'max.z.software@gmail.com';
+      const userType = isAdmin ? 'admin' : (isGuestUser ? 'guest' : (user?.userType || 'trial'));
       
       // 获取当前使用量 - 使用真实数据
       const currentUsage = currentUsedMinutes;
@@ -181,8 +183,8 @@ const AudioToText: React.FC = () => {
         return;
       }
       
-      // 如果音频时长超过剩余配额，进行截断处理（但仍然允许转写）
-      if (originalDuration > remainingMinutes) {
+      // 如果音频时长超过剩余配额，进行截断处理（但仅限非管理员用户）
+      if (!isAdmin && originalDuration > remainingMinutes) {
         console.log(`⚠️ 音频超出剩余配额，将截断处理: ${formatDuration(originalDuration)} -> ${formatRemainingTime(remainingMinutes)}`);
         
         const truncateResult = await truncateAudioForLimit(audioFile, remainingMinutes);
@@ -252,9 +254,9 @@ const AudioToText: React.FC = () => {
     const originalMimeType = audioBlob.type || 'audio/webm';
     console.log('🎵 原始音频格式:', originalMimeType);
     
-    // OpenAI API 支持的格式列表
+    // OpenAI API 支持的格式列表（包括各种变体）
     const supportedFormats = [
-      'audio/flac', 'audio/m4a', 'audio/mp3', 'audio/mp4', 
+      'audio/flac', 'audio/m4a', 'audio/x-m4a', 'audio/mp3', 'audio/mp4', 
       'audio/mpeg', 'audio/mpga', 'audio/oga', 'audio/ogg', 
       'audio/wav', 'audio/webm'
     ];
@@ -289,8 +291,10 @@ const AudioToText: React.FC = () => {
   // 获取文件扩展名
   const getFileExtension = (mimeType: string): string => {
     if (mimeType.includes('wav')) return 'wav';
+    if (mimeType.includes('m4a')) return 'm4a';
     if (mimeType.includes('mp4')) return 'mp4';
-    if (mimeType.includes('mpeg')) return 'mpeg';
+    if (mimeType.includes('mp3') || mimeType.includes('mpeg')) return 'mp3';
+    if (mimeType.includes('flac')) return 'flac';
     if (mimeType.includes('ogg')) return 'ogg';
     if (mimeType.includes('webm')) return 'webm';
     return 'webm'; // 默认
@@ -299,8 +303,10 @@ const AudioToText: React.FC = () => {
   // 获取干净的MIME类型（去除codec信息）
   const getCleanMimeType = (mimeType: string): string => {
     if (mimeType.includes('wav')) return 'audio/wav';
+    if (mimeType.includes('m4a')) return 'audio/m4a';
     if (mimeType.includes('mp4')) return 'audio/mp4';
-    if (mimeType.includes('mpeg')) return 'audio/mpeg';
+    if (mimeType.includes('mp3') || mimeType.includes('mpeg')) return 'audio/mpeg';
+    if (mimeType.includes('flac')) return 'audio/flac';
     if (mimeType.includes('ogg')) return 'audio/ogg';
     if (mimeType.includes('webm')) return 'audio/webm';
     return 'audio/webm'; // 默认
@@ -492,6 +498,10 @@ const AudioToText: React.FC = () => {
             {user ? (
               (() => {
                 const isGuestUser = isGuest || user.userType === 'guest';
+                const isAdmin = user?.email === 'max.z.software@gmail.com';
+                if (isAdmin) {
+                  return '管理者モード: 無制限';
+                }
                 const totalQuota = isGuestUser ? 5 : (user.quotaMinutes || 10);
                 const remainingTime = Math.max(0, totalQuota - currentUsedMinutes);
                 return `残り時間: ${formatRemainingTime(remainingTime)}`;

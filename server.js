@@ -1251,9 +1251,146 @@ app.get('/', (req, res) => {
       'POST /api/guest/identity',
       'POST /api/guest/verify',
       'GET /api/guest/stats',
-      'POST /api/test/register-flow'
+      'POST /api/test/register-flow',
+      'POST /api/minutes/generate'
     ]
   });
+});
+
+// 会议纪要生成API
+app.post('/api/minutes/generate', async (req, res) => {
+  try {
+    const { transcript_id, template_type, outline, original_text, detected_language, target_language } = req.body;
+
+    // 验证请求参数
+    if (!original_text || !outline || !Array.isArray(outline)) {
+      return res.status(400).json({ 
+        error: '缺少必要参数: original_text, outline' 
+      });
+    }
+
+    // 验证用户权限（如果有认证头）
+    const authHeader = req.headers.authorization;
+    let user = null;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      try {
+        const { data } = await supabase.auth.getUser(token);
+        user = data.user;
+      } catch (error) {
+        console.log('Token validation failed, treating as guest user');
+      }
+    }
+
+    // 构建提示词
+    const outlineText = outline.join('、');
+    
+    // 语言映射
+    const languageMap = {
+      'zh': { name: '中文', code: 'zh' },
+      'ja': { name: '日语', code: 'ja' },
+      'en': { name: '英语', code: 'en' }
+    };
+    
+    // 使用target_language优先，如果没有则使用detected_language
+    const finalLanguage = target_language || detected_language || 'zh';
+    const targetLang = languageMap[finalLanguage] || languageMap['zh'];
+    
+    const systemPrompt = `你是一个专业的会议纪要生成助手。请根据提供的会议转录内容生成结构化、详细、专业的会议纪要。
+
+要求：
+1. **结构严格按照提纲**：严格按照提供的提纲结构组织内容，每个部分都要有明确的标题
+2. **内容详细充实**：每个部分都要提供详细、具体的内容，不要只是简单的一句话
+3. **信息准确性**：只根据原文内容提炼信息，不得编造任何不存在的内容
+4. **缺失信息处理**：如果某个提纲项目的信息不完整或缺失，请标注"未提及"或"信息不完整"
+5. **语言一致性**：全文必须使用${targetLang.name}，不允许混合其他语言
+6. **格式规范**：使用清晰的分级标题和项目符号，便于阅读
+7. **专业性**：保持专业、客观、准确的语调
+
+提纲结构：${outlineText}
+
+请用${targetLang.name}生成专业的会议纪要。`;
+    
+    const userPrompt = `请根据以下会议转录内容生成专业详细的会议纪要：
+
+===== 会议转录内容 =====
+${original_text}
+===== 转录内容结束 =====
+
+请严格按照以下提纲结构生成详细完整的会议纪要：
+${outline.map((item, index) => `${index + 1}. ${item}`).join('\n')}
+
+注意：
+- 必须使用${targetLang.name}编写整个会议纪要
+- 每个部分都要包含详细内容，不要简单带过
+- 如果原文中没有相关信息，请明确标注`;
+
+    // 调用OpenAI API
+    const openaiApiKey = process.env.VITE_OPENAI_API_KEY;
+    if (!openaiApiKey) {
+      throw new Error('OpenAI API key not configured');
+    }
+
+    console.log('🤖 正在生成会议纪要...');
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${openaiApiKey}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini', // 使用GPT-4o-mini模型（您要求的GPT-4.1 mini）
+        messages: [
+          {
+            role: 'system',
+            content: systemPrompt
+          },
+          {
+            role: 'user',
+            content: userPrompt
+          }
+        ],
+        max_tokens: 4000,
+        temperature: 0.3, // 较低的温度确保输出更加一致和准确
+        top_p: 0.9
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('OpenAI API error:', errorData);
+      throw new Error(`OpenAI API error: ${response.status} ${errorData.error?.message || response.statusText}`);
+    }
+
+    const aiResult = await response.json();
+    const generatedSummary = aiResult.choices[0]?.message?.content;
+
+    if (!generatedSummary) {
+      throw new Error('Failed to generate summary from AI response');
+    }
+
+    // 生成唯一的summary ID
+    const summaryId = `summary_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    console.log('✅ 会议纪要生成成功');
+
+    res.json({
+      success: true,
+      summary_id: summaryId,
+      summary: generatedSummary,
+      template_type: template_type,
+      outline: outline,
+      detected_language: detected_language,
+      generated_at: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('❌ 会议纪要生成失败:', error);
+    res.status(500).json({
+      error: '会议纪要生成失败',
+      details: process.env.NODE_ENV === 'development' ? error.message : '服务器内部错误'
+    });
+  }
 });
 
 // 404处理

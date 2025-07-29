@@ -5,6 +5,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
 import Layout from './components/Layout/Layout';
 import AudioToText from './pages/AudioToText/AudioToText';
+import MeetingMinutes from './pages/MeetingMinutes/MeetingMinutes';
 import Usage from './pages/Usage/Usage';
 import Pricing from './pages/Pricing/Pricing';
 import Auth from './pages/Auth/Auth';
@@ -31,6 +32,7 @@ function App() {
                         <Routes>
                           <Route path="/" element={<AudioToText />} />
                           <Route path="/audio-to-text" element={<AudioToText />} />
+                          <Route path="/meeting-minutes" element={<MeetingMinutes />} />
                           <Route path="/usage" element={<Usage />} />
                           <Route path="/pricing" element={<Pricing />} />
                         </Routes>

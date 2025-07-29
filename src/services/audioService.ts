@@ -139,9 +139,9 @@ const transcribeFile = async (audioFile: File): Promise<string> => {
     throw new Error(`File size ${(audioFile.size / 1024 / 1024).toFixed(2)}MB exceeds maximum allowed size of ${MAX_FILE_SIZE / 1024 / 1024}MB`);
   }
   
-  // Validate file type - OpenAI API 支持的格式
+  // Validate file type - OpenAI API 支持的格式（包括各种变体）
   const validTypes = [
-    'audio/flac', 'audio/m4a', 'audio/mp3', 'audio/mp4', 
+    'audio/flac', 'audio/m4a', 'audio/x-m4a', 'audio/mp3', 'audio/mp4', 
     'audio/mpeg', 'audio/mpga', 'audio/oga', 'audio/ogg', 
     'audio/wav', 'audio/webm'
   ];
