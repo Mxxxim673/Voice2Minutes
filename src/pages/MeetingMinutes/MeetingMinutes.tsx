@@ -569,13 +569,32 @@ const MeetingMinutes: React.FC = () => {
             <div className="section-card original-text-section">
               <div className="card-header">
                 <h2 className="card-title">{t('meetingMinutes.originalText')}</h2>
-                {originalText && (
-                  <div className="text-stats">
-                    <span className="char-count">
-                      {originalText.length} {t('meetingMinutes.characters')}
-                    </span>
-                  </div>
-                )}
+                <div className="header-actions">
+                  {originalText && (
+                    <div className="text-stats">
+                      <span className="char-count">
+                        {originalText.length} {t('meetingMinutes.characters')}
+                      </span>
+                    </div>
+                  )}
+                  <button
+                    onClick={handleGenerateSummary}
+                    className={`btn btn-primary ${isGenerating ? 'loading' : ''}`}
+                    disabled={isGenerating || isEditingOutline}
+                  >
+                    {isGenerating ? (
+                      <>
+                        <span className="spinner"></span>
+                        {t('meetingMinutes.generating')}
+                      </>
+                    ) : (
+                      <>
+                        <span className="icon">🚀</span>
+                        {t('meetingMinutes.startGeneration')}
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
               
               <div className="original-text-content">
@@ -799,40 +818,8 @@ const MeetingMinutes: React.FC = () => {
 
           {/* 右侧：结果展示区 */}
           <div className="result-section">
-            <div className="section-card">
-              <div className="card-header">
-                <h2 className="card-title">{t('meetingMinutes.generatedSummary')}</h2>
-                <div className="header-actions">
-                  <button
-                    onClick={handleGenerateSummary}
-                    className={`btn btn-primary ${isGenerating ? 'loading' : ''}`}
-                    disabled={isGenerating || isEditingOutline}
-                  >
-                    {isGenerating ? (
-                      <>
-                        <span className="spinner"></span>
-                        {t('meetingMinutes.generating')}
-                      </>
-                    ) : (
-                      <>
-                        <span className="icon">🚀</span>
-                        {t('meetingMinutes.startGeneration')}
-                      </>
-                    )}
-                  </button>
-                  {summary && !isEditingSummary && (
-                    <button
-                      onClick={handleEditText}
-                      className="btn btn-outline btn-sm"
-                    >
-                      <span className="icon">✏️</span>
-                      {t('meetingMinutes.editText')}
-                    </button>
-                  )}
-                </div>
-              </div>
-              
-              <div className="result-area">
+            <div className="section-card result-card-unified">
+              <div className="result-area-unified">
                 {isEditingSummary ? (
                   <div className="edit-mode">
                     <textarea
@@ -866,10 +853,8 @@ const MeetingMinutes: React.FC = () => {
                         <pre className="summary-text">{summary.summary}</pre>
                       </div>
                     ) : (
-                      <div className="empty-state">
-                        <div className="empty-icon">📝</div>
-                        <h3>{t('meetingMinutes.noSummaryYet')}</h3>
-                        <p>{t('meetingMinutes.generatePrompt')}</p>
+                      <div className="empty-result-state">
+                        <pre className="result-placeholder">{t('meetingMinutes.resultPlaceholder')}</pre>
                       </div>
                     )}
                   </div>
@@ -878,6 +863,15 @@ const MeetingMinutes: React.FC = () => {
               
               {/* 操作按钮 */}
               <div className="result-actions">
+                {summary && !isEditingSummary && (
+                  <button
+                    onClick={handleEditText}
+                    className="btn btn-outline btn-sm"
+                  >
+                    <span className="icon">✏️</span>
+                    {t('meetingMinutes.editText')}
+                  </button>
+                )}
                 <button
                   onClick={handleCopyText}
                   className={`btn btn-outline ${!summary ? 'disabled' : ''}`}

@@ -4,7 +4,7 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .meeting-minutes-page,
   .meeting-minutes-page {
-    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%) !important;
+    background: linear-gradient(135deg, rgba(74, 144, 226, 0.05) 0%, rgba(80, 200, 120, 0.05) 100%) !important;
   }
 
   .meeting-minutes-page * {
@@ -12,8 +12,9 @@
   }
 
   .meeting-minutes-page .section-card {
-    background: var(--background-primary) !important;
-    border-color: var(--border-color) !important;
+    background: rgba(30, 30, 30, 0.95) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
   }
 
   .meeting-minutes-page .card-header {
@@ -168,11 +169,15 @@
   }
 
   .meeting-minutes-page .empty-original-text {
-    color: var(--text-secondary);
+    color: var(--text-tertiary);
   }
 
   .meeting-minutes-page .empty-original-text h3 {
-    color: var(--text-primary);
+    color: var(--text-secondary);
+  }
+
+  .meeting-minutes-page .empty-original-text p {
+    color: var(--text-tertiary);
   }
 
   .meeting-minutes-page .summary-text {
@@ -369,12 +374,21 @@
   .meeting-minutes-page .empty-original-text,
   .meeting-minutes-page .empty-state,
   .meeting-minutes-page .empty-templates {
-    color: var(--text-secondary) !important;
+    color: var(--text-tertiary) !important;
   }
 
   .meeting-minutes-page .empty-original-text h3,
   .meeting-minutes-page .empty-state h3 {
-    color: var(--text-primary) !important;
+    color: var(--text-secondary) !important;
+  }
+
+  .meeting-minutes-page .empty-original-text p {
+    color: var(--text-tertiary) !important;
+  }
+
+  /* 空状态结果区域 */
+  .meeting-minutes-page .result-placeholder {
+    color: var(--text-tertiary) !important;
   }
 
   /* 修复标准模板提纲列表背景 */
@@ -500,7 +514,7 @@
 
 /* 浅色主题样式 - 明确覆盖深色主题样式 */
 [data-theme="light"] .meeting-minutes-page {
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%) !important;
+  background: linear-gradient(135deg, rgba(74, 144, 226, 0.02) 0%, rgba(80, 200, 120, 0.02) 100%) !important;
 }
 
 [data-theme="light"] .meeting-minutes-page * {
@@ -508,13 +522,43 @@
 }
 
 [data-theme="light"] .meeting-minutes-page .section-card {
-  background: var(--background-primary) !important;
-  border-color: var(--border-color) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+/* 浅色主题下的玻璃反光效果 */
+[data-theme="light"] .meeting-minutes-page .section-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(74, 144, 226, 0.1), transparent);
+  transition: left 0.5s ease;
+  z-index: 1;
+}
+
+[data-theme="light"] .meeting-minutes-page .section-card:hover::before {
+  left: 100%;
+}
+
+[data-theme="light"] .meeting-minutes-page .section-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
 }
 
 [data-theme="light"] .meeting-minutes-page .card-header {
   background: var(--background-secondary) !important;
   border-color: var(--border-color) !important;
+  position: relative;
+  z-index: 2;
 }
 
 [data-theme="light"] .meeting-minutes-page .original-text-section,
@@ -658,7 +702,7 @@
 
 /* 手动深色主题切换 - 覆盖系统设置 */
 [data-theme="dark"] .meeting-minutes-page {
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%) !important;
+  background: linear-gradient(135deg, rgba(74, 144, 226, 0.05) 0%, rgba(80, 200, 120, 0.05) 100%) !important;
 }
 
 [data-theme="dark"] .meeting-minutes-page * {
@@ -666,13 +710,43 @@
 }
 
 [data-theme="dark"] .meeting-minutes-page .section-card {
-  background: var(--background-primary) !important;
-  border-color: var(--border-color) !important;
+  background: rgba(30, 30, 30, 0.95) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+/* 深色主题下的玻璃反光效果 */
+[data-theme="dark"] .meeting-minutes-page .section-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(74, 144, 226, 0.1), transparent);
+  transition: left 0.5s ease;
+  z-index: 1;
+}
+
+[data-theme="dark"] .meeting-minutes-page .section-card:hover::before {
+  left: 100%;
+}
+
+[data-theme="dark"] .meeting-minutes-page .section-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
 }
 
 [data-theme="dark"] .meeting-minutes-page .card-header {
   background: var(--background-tertiary) !important;
   border-color: var(--border-color) !important;
+  position: relative;
+  z-index: 2;
 }
 
 [data-theme="dark"] .meeting-minutes-page .card-title {
@@ -723,6 +797,8 @@
   background: var(--background-tertiary);
   border-color: var(--primary-blue);
   color: var(--primary-blue);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(10, 132, 255, 0.2);
 }
 
 [data-theme="dark"] .meeting-minutes-page .btn-danger {
@@ -734,6 +810,8 @@
   background-color: var(--error-red);
   color: white;
   border-color: var(--error-red);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(255, 69, 58, 0.3);
 }
 
 /* 清空项目列表样式 */
@@ -791,7 +869,7 @@
 }
 .meeting-minutes-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: linear-gradient(135deg, rgba(74, 144, 226, 0.02) 0%, rgba(80, 200, 120, 0.02) 100%);
   padding: 2rem 0;
 }
 
@@ -900,13 +978,39 @@
   min-height: 700px;
 }
 
-/* 卡片样式 */
+/* 卡片样式 - 应用音频转文字页面的玻璃反光质感 */
 .meeting-minutes-page .section-card {
-  background: white;
-  border-radius: 1rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  border: 1px solid #e2e8f0;
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
   overflow: hidden;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+/* 添加玻璃反光效果 */
+.meeting-minutes-page .section-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(74, 144, 226, 0.1), transparent);
+  transition: left 0.5s ease;
+  z-index: 1;
+}
+
+.meeting-minutes-page .section-card:hover::before {
+  left: 100%;
+}
+
+.meeting-minutes-page .section-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
 }
 
 .meeting-minutes-page .card-header {
@@ -916,6 +1020,8 @@
   padding: 1.5rem;
   border-bottom: 1px solid #e2e8f0;
   background: #f8fafc;
+  position: relative;
+  z-index: 2;
 }
 
 .meeting-minutes-page .card-title {
@@ -934,6 +1040,8 @@
 /* 模板选择器 */
 .meeting-minutes-page .template-selector {
   padding: 1.5rem;
+  position: relative;
+  z-index: 2;
 }
 
 .meeting-minutes-page .selector-group {
@@ -950,18 +1058,44 @@
   border: 2px solid #e2e8f0;
   border-radius: 0.75rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 模板卡片玻璃反光效果 */
+.meeting-minutes-page .template-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+  transition: left 0.5s ease;
+  z-index: 1;
+}
+
+.meeting-minutes-page .template-card:hover::before {
+  left: 100%;
+}
+
+.meeting-minutes-page .template-card > * {
+  position: relative;
+  z-index: 2;
 }
 
 .meeting-minutes-page .template-card:hover {
   border-color: #667eea;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.2);
+  transform: translateY(-2px);
 }
 
 .meeting-minutes-page .template-card.active {
   border-color: #667eea;
   background: #f0f4ff;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.25);
+  transform: translateY(-1px);
 }
 
 .meeting-minutes-page .template-icon {
@@ -985,6 +1119,8 @@
 /* 提纲部分 */
 .meeting-minutes-page .outline-section {
   padding: 0 1.5rem 1.5rem;
+  position: relative;
+  z-index: 2;
 }
 
 .meeting-minutes-page .section-header {
@@ -1115,6 +1251,8 @@
   flex: 1;
   min-height: 0;
   padding: 1.5rem;
+  position: relative;
+  z-index: 2;
 }
 
 .meeting-minutes-page .text-display {
@@ -1175,30 +1313,84 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   text-align: center;
-  min-height: 150px;
-  color: #64748b;
+  min-height: 120px;
+  color: #94a3b8;
+  padding: 0.8rem 1.5rem 1rem 1.5rem;
+}
+
+/* 统一布局的结果卡片 */
+.meeting-minutes-page .result-card-unified {
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+.meeting-minutes-page .result-area-unified {
+  background: var(--background-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.meeting-minutes-page .result-area-unified .result-display {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.meeting-minutes-page .result-area-unified .result-actions {
+  background: var(--background-tertiary);
+  border-top: 1px solid var(--border-color);
+}
+
+/* 空状态样式 - 左上角对齐 */
+.meeting-minutes-page .empty-result-state {
   padding: 1.5rem;
+  text-align: left;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.meeting-minutes-page .result-placeholder {
+  font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #94a3b8;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  white-space: pre-wrap;
+  flex: 1;
+  font-style: italic;
+  opacity: 0.8;
 }
 
 .meeting-minutes-page .empty-original-text .empty-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  opacity: 0.5;
+  font-size: 2.2rem;
+  margin-bottom: 0.6rem;
+  opacity: 0.4;
 }
 
 .meeting-minutes-page .empty-original-text h3 {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #374151;
-  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #64748b;
+  margin: 0 0 0.4rem 0;
 }
 
 .meeting-minutes-page .empty-original-text p {
-  font-size: 0.9rem;
-  margin: 0 0 1.5rem 0;
-  line-height: 1.5;
+  font-size: 0.8rem;
+  margin: 0 0 1rem 0;
+  line-height: 1.4;
+  color: #94a3b8;
 }
 
 /* 结果区域 */
@@ -1219,6 +1411,8 @@
   flex: 1;
   padding: 1.5rem;
   min-height: 0;
+  position: relative;
+  z-index: 2;
 }
 
 .meeting-minutes-page .result-display {
@@ -1317,9 +1511,12 @@
   padding: 1.5rem;
   border-top: 1px solid #e2e8f0;
   background: #f8fafc;
+  margin-top: auto;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
 }
 
-/* 按钮样式 */
+/* 按钮样式 - 添加玻璃反光质感 */
 .meeting-minutes-page .btn {
   display: inline-flex;
   align-items: center;
@@ -1330,8 +1527,32 @@
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   text-decoration: none;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 按钮玻璃反光效果 */
+.meeting-minutes-page .btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.4s ease;
+  z-index: 1;
+}
+
+.meeting-minutes-page .btn:hover::before {
+  left: 100%;
+}
+
+.meeting-minutes-page .btn > * {
+  position: relative;
+  z-index: 2;
 }
 
 .meeting-minutes-page .btn:disabled {
@@ -1345,8 +1566,8 @@
 }
 
 .meeting-minutes-page .btn-primary:hover:not(:disabled) {
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  transform: translateY(-2px);
 }
 
 .meeting-minutes-page .btn-outline {
@@ -1359,6 +1580,8 @@
   background: #f9fafb;
   border-color: #667eea;
   color: #667eea;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.15);
 }
 
 .meeting-minutes-page .btn-danger {
@@ -1368,6 +1591,8 @@
 
 .meeting-minutes-page .btn-danger:hover:not(:disabled) {
   background: #dc2626;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
 }
 
 .meeting-minutes-page .btn-remove {
@@ -1432,18 +1657,44 @@
   border: 2px solid #e2e8f0;
   border-radius: 0.5rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 模板列表项玻璃反光效果 */
+.meeting-minutes-page .template-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.08), transparent);
+  transition: left 0.4s ease;
+  z-index: 1;
+}
+
+.meeting-minutes-page .template-item:hover::before {
+  left: 100%;
+}
+
+.meeting-minutes-page .template-item > * {
+  position: relative;
+  z-index: 2;
 }
 
 .meeting-minutes-page .template-item:hover {
   border-color: #667eea;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.15);
+  transform: translateY(-2px);
 }
 
 .meeting-minutes-page .template-item.selected {
   border-color: #667eea;
   background: #f0f4ff;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+  transform: translateY(-1px);
 }
 
 .meeting-minutes-page .template-info {
