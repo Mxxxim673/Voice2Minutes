@@ -1,5 +1,486 @@
 /* 现代化会议纪要页面样式 */
 
+/* 深色主题支持 */
+@media (prefers-color-scheme: dark) {
+  .meeting-minutes-page {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%) !important;
+  }
+
+  .meeting-minutes-page * {
+    color: var(--text-primary);
+  }
+
+  .meeting-minutes-page .section-card {
+    background: var(--background-primary) !important;
+    border-color: var(--border-color) !important;
+  }
+
+  .meeting-minutes-page .card-header {
+    background: var(--background-tertiary) !important;
+    border-color: var(--border-color) !important;
+  }
+
+  /* 强制修复所有卡片背景 */
+  .meeting-minutes-page .original-text-section,
+  .meeting-minutes-page .template-config-section,
+  .meeting-minutes-page .result-section .section-card {
+    background: var(--background-primary) !important;
+    border-color: var(--border-color) !important;
+  }
+
+  .meeting-minutes-page .original-text-section .card-header,
+  .meeting-minutes-page .template-config-section .card-header,
+  .meeting-minutes-page .result-section .card-header {
+    background: var(--background-tertiary) !important;
+    border-color: var(--border-color) !important;
+  }
+
+  .meeting-minutes-page .card-title {
+    color: var(--text-primary);
+  }
+
+  .meeting-minutes-page .page-title {
+    background: linear-gradient(135deg, var(--primary-blue) 0%, #8A2BE2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .meeting-minutes-page .status-indicator {
+    background: #1a2e1a;
+    border-color: #2d5a2d;
+    color: var(--success-green);
+  }
+
+  .meeting-minutes-page .status-dot {
+    background: var(--success-green);
+  }
+
+  .meeting-minutes-page .template-card {
+    background: var(--background-primary) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+  }
+
+  .meeting-minutes-page .template-card:hover {
+    border-color: var(--primary-blue) !important;
+    box-shadow: 0 4px 12px var(--primary-blue-light) !important;
+  }
+
+  .meeting-minutes-page .template-card.active {
+    border-color: var(--primary-blue) !important;
+    background: var(--primary-blue-light) !important;
+    box-shadow: 0 4px 12px var(--primary-blue-light) !important;
+  }
+
+  /* 专门修复模板选择器区域 */
+  .meeting-minutes-page .template-selector {
+    background: transparent !important;
+  }
+
+  .meeting-minutes-page .selector-group .template-card {
+    background: var(--background-primary) !important;
+    border-color: var(--border-color) !important;
+  }
+
+  .meeting-minutes-page .selector-group .template-card:hover {
+    border-color: var(--primary-blue) !important;
+    box-shadow: 0 4px 12px var(--primary-blue-light) !important;
+  }
+
+  .meeting-minutes-page .selector-group .template-card.active {
+    border-color: var(--primary-blue) !important;
+    background: var(--primary-blue-light) !important;
+    box-shadow: 0 4px 12px var(--primary-blue-light) !important;
+  }
+
+  .meeting-minutes-page .template-info h3 {
+    color: var(--text-primary) !important;
+  }
+
+  .meeting-minutes-page .template-info p {
+    color: var(--text-secondary) !important;
+  }
+
+  .meeting-minutes-page .outline-preview {
+    background: var(--background-tertiary);
+    border-color: var(--border-color);
+  }
+
+  .meeting-minutes-page .outline-editor {
+    background: var(--background-tertiary);
+    border-color: var(--border-color);
+  }
+
+  .meeting-minutes-page .outline-item {
+    border-color: var(--border-color);
+  }
+
+  .meeting-minutes-page .item-number {
+    background: var(--primary-blue);
+  }
+
+  .meeting-minutes-page .item-text {
+    color: var(--text-primary);
+  }
+
+  .meeting-minutes-page .outline-input {
+    background: var(--background-primary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+  }
+
+  .meeting-minutes-page .outline-input:focus {
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px var(--primary-blue-light);
+  }
+
+  .meeting-minutes-page .editor-actions {
+    border-color: var(--border-color);
+  }
+
+  .meeting-minutes-page .char-count {
+    background: var(--background-tertiary);
+    color: var(--text-secondary);
+  }
+
+  .meeting-minutes-page .text-display {
+    background: var(--background-tertiary);
+    border-color: var(--border-color);
+  }
+
+  .meeting-minutes-page .original-text {
+    color: var(--text-primary);
+    background: transparent;
+  }
+
+  .meeting-minutes-page .original-text::-webkit-scrollbar-track {
+    background: var(--background-tertiary);
+  }
+
+  .meeting-minutes-page .original-text::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+  }
+
+  .meeting-minutes-page .original-text::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+  }
+
+  .meeting-minutes-page .empty-original-text {
+    color: var(--text-secondary);
+  }
+
+  .meeting-minutes-page .empty-original-text h3 {
+    color: var(--text-primary);
+  }
+
+  .meeting-minutes-page .summary-text {
+    background: var(--background-tertiary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+  }
+
+  .meeting-minutes-page .empty-state {
+    color: var(--text-secondary);
+  }
+
+  .meeting-minutes-page .empty-state h3 {
+    color: var(--text-primary);
+  }
+
+  .meeting-minutes-page .summary-editor {
+    background: var(--background-primary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+  }
+
+  .meeting-minutes-page .summary-editor:focus {
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px var(--primary-blue-light);
+  }
+
+  .meeting-minutes-page .result-actions {
+    background: var(--background-tertiary) !important;
+    border-color: var(--border-color) !important;
+  }
+
+  /* 强制修复操作按钮区域背景 */
+  .meeting-minutes-page .result-section .result-actions,
+  .meeting-minutes-page .section-card .result-actions {
+    background: var(--background-tertiary) !important;
+    border-top: 1px solid var(--border-color) !important;
+  }
+
+  .meeting-minutes-page .btn-outline {
+    background: var(--background-primary);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+  }
+
+  .meeting-minutes-page .btn-outline:hover:not(:disabled) {
+    background: var(--background-tertiary);
+    border-color: var(--primary-blue);
+    color: var(--primary-blue);
+  }
+
+  .meeting-minutes-page .btn-remove {
+    background: var(--background-tertiary);
+    color: var(--text-secondary);
+    border-color: var(--border-color);
+  }
+
+  .meeting-minutes-page .btn-remove:hover:not(:disabled) {
+    background: rgba(255, 69, 58, 0.1);
+    color: var(--error-red);
+    border-color: rgba(255, 69, 58, 0.3);
+  }
+
+  .meeting-minutes-page .template-list-section {
+    background: var(--background-tertiary);
+    border-color: var(--border-color);
+  }
+
+  .meeting-minutes-page .template-list-header {
+    border-color: var(--border-color);
+  }
+
+  .meeting-minutes-page .template-item {
+    background: var(--background-primary);
+    border-color: var(--border-color);
+  }
+
+  .meeting-minutes-page .template-item:hover {
+    border-color: var(--primary-blue);
+    box-shadow: 0 2px 8px rgba(10, 132, 255, 0.2);
+  }
+
+  .meeting-minutes-page .template-item.selected {
+    border-color: var(--primary-blue);
+    background: rgba(10, 132, 255, 0.1);
+    box-shadow: 0 2px 8px rgba(10, 132, 255, 0.3);
+  }
+
+  .meeting-minutes-page .template-name {
+    color: var(--text-primary);
+  }
+
+  .meeting-minutes-page .template-meta {
+    color: var(--text-secondary);
+  }
+
+  .meeting-minutes-page .empty-templates {
+    color: var(--text-secondary);
+  }
+
+  .meeting-minutes-page .selected-template-preview {
+    border-color: var(--border-color);
+  }
+
+  .meeting-minutes-page .selected-template-preview h5 {
+    color: var(--text-primary);
+  }
+
+  .meeting-minutes-page .template-editor {
+    background: var(--background-tertiary);
+    border-color: var(--border-color);
+  }
+
+  .meeting-minutes-page .template-name-section {
+    border-color: var(--border-color);
+  }
+
+  .meeting-minutes-page .template-name-label {
+    color: var(--text-primary);
+  }
+
+  .meeting-minutes-page .template-name-input {
+    background: var(--background-primary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+  }
+
+  .meeting-minutes-page .template-name-input:focus {
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px var(--primary-blue-light);
+  }
+
+  .meeting-minutes-page .error-toast {
+    background: rgba(255, 69, 58, 0.1);
+    border-color: rgba(255, 69, 58, 0.3);
+    color: var(--error-red);
+  }
+
+  .meeting-minutes-page .modal-content {
+    background: var(--background-primary);
+  }
+
+  .meeting-minutes-page .modal-header h3 {
+    color: var(--error-red);
+  }
+
+  .meeting-minutes-page .modal-body p {
+    color: var(--text-secondary);
+  }
+
+  .meeting-minutes-page .modal-actions {
+    border-color: var(--border-color);
+  }
+
+  .meeting-minutes-page .clear-items-list {
+    background-color: var(--background-tertiary);
+    border-left-color: var(--warning-orange);
+  }
+
+  .meeting-minutes-page .clear-items-list li {
+    color: var(--text-secondary);
+    border-color: var(--border-color);
+  }
+
+  /* 强制深色主题的额外修复 */
+  .meeting-minutes-page .section-header h3 {
+    color: var(--text-primary) !important;
+  }
+
+  .meeting-minutes-page .template-list-header h4 {
+    color: var(--text-primary) !important;
+  }
+
+  .meeting-minutes-page .empty-hint {
+    color: var(--text-secondary) !important;
+  }
+
+  /* 确保所有按钮文本在深色模式下可见 */
+  .meeting-minutes-page .btn {
+    color: var(--text-primary);
+  }
+
+  .meeting-minutes-page .btn-primary {
+    color: white !important;
+  }
+
+  /* 修复模板描述文本 */
+  .meeting-minutes-page .template-info h3,
+  .meeting-minutes-page .template-info p {
+    color: inherit;
+  }
+
+  /* 确保空状态图标和文本正确显示 */
+  .meeting-minutes-page .empty-original-text,
+  .meeting-minutes-page .empty-state,
+  .meeting-minutes-page .empty-templates {
+    color: var(--text-secondary) !important;
+  }
+
+  .meeting-minutes-page .empty-original-text h3,
+  .meeting-minutes-page .empty-state h3 {
+    color: var(--text-primary) !important;
+  }
+
+  /* 修复标准模板提纲列表背景 */
+  .meeting-minutes-page .outline-preview {
+    background: var(--background-tertiary) !important;
+    border-color: var(--border-color) !important;
+  }
+
+  .meeting-minutes-page .outline-item {
+    border-color: var(--border-color) !important;
+  }
+
+  .meeting-minutes-page .outline-item:last-child {
+    border-bottom: none !important;
+  }
+
+  /* 确保所有提纲项文本可见 */
+  .meeting-minutes-page .item-text {
+    color: var(--text-primary) !important;
+  }
+
+  .meeting-minutes-page .item-number {
+    background: var(--primary-blue) !important;
+    color: white !important;
+  }
+
+  /* 修复所有可能遗漏的文本颜色 */
+  .meeting-minutes-page h1,
+  .meeting-minutes-page h2,
+  .meeting-minutes-page h3,
+  .meeting-minutes-page h4,
+  .meeting-minutes-page h5,
+  .meeting-minutes-page h6 {
+    color: var(--text-primary) !important;
+  }
+
+  .meeting-minutes-page p,
+  .meeting-minutes-page span,
+  .meeting-minutes-page div {
+    color: var(--text-primary);
+  }
+
+  /* 模板图标和文本 */
+  .meeting-minutes-page .template-icon {
+    opacity: 0.8;
+  }
+
+  /* 确保所有按钮区域背景正确 */
+  .meeting-minutes-page .header-actions,
+  .meeting-minutes-page .editor-actions,
+  .meeting-minutes-page .edit-actions {
+    background: transparent;
+  }
+
+  /* 修复可能的输入框背景 */
+  .meeting-minutes-page input,
+  .meeting-minutes-page textarea {
+    background: var(--background-primary) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+  }
+
+  .meeting-minutes-page input:focus,
+  .meeting-minutes-page textarea:focus {
+    border-color: var(--primary-blue) !important;
+    box-shadow: 0 0 0 3px var(--primary-blue-light) !important;
+  }
+
+  /* 最终的强制修复 - 覆盖所有可能的白色背景 */
+  .meeting-minutes-page div[style*="background"],
+  .meeting-minutes-page div[style*="background-color"] {
+    background: var(--background-primary) !important;
+  }
+
+  /* 强制修复具体的卡片容器 */
+  .meeting-minutes-page .container > .content-grid > * > .section-card {
+    background: var(--background-primary) !important;
+    border: 1px solid var(--border-color) !important;
+  }
+
+  .meeting-minutes-page .left-section > .section-card,
+  .meeting-minutes-page .result-section > .section-card {
+    background: var(--background-primary) !important;
+    border: 1px solid var(--border-color) !important;
+  }
+
+  /* 确保模板选择区域正确显示 */
+  .meeting-minutes-page .template-selector .template-card {
+    background: var(--background-primary) !important;
+    border: 2px solid var(--border-color) !important;
+    color: var(--text-primary) !important;
+  }
+
+  /* 最终修复 - 操作按钮区域 */
+  .meeting-minutes-page div[class*="result-actions"],
+  .meeting-minutes-page div[class*="actions"] {
+    background: var(--background-tertiary) !important;
+    border-top-color: var(--border-color) !important;
+  }
+
+  /* 确保具体的操作区域背景正确 */
+  .meeting-minutes-page .result-section > .section-card > .result-actions {
+    background: var(--background-tertiary) !important;
+    border-top: 1px solid var(--border-color) !important;
+  }
+}
+
 /* 危险按钮样式 */
 .btn-danger {
   color: #dc3545;
@@ -14,6 +495,24 @@
 
 .btn-danger:focus {
   box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+/* 深色主题下的危险按钮适配 */
+@media (prefers-color-scheme: dark) {
+  .meeting-minutes-page .btn-danger {
+    color: var(--error-red);
+    border-color: var(--error-red);
+  }
+
+  .meeting-minutes-page .btn-danger:hover {
+    background-color: var(--error-red);
+    color: white;
+    border-color: var(--error-red);
+  }
+
+  .meeting-minutes-page .btn-danger:focus {
+    box-shadow: 0 0 0 0.2rem rgba(255, 69, 58, 0.25);
+  }
 }
 
 /* 清空项目列表样式 */
