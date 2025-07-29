@@ -499,25 +499,37 @@ app.get('/api/usage/quota', async (req, res) => {
       return res.status(401).json({ error: '无效的访问令牌' });
     }
 
-    // 获取用量信息
-    const { data: usage, error: usageError } = await supabaseAdmin
-      .from('usage_minutes')
-      .select('*')
-      .eq('user_id', data.user.id)
-      .single();
+    // 使用新的用量计算函数
+    const { data: quotaData, error: quotaError } = await supabaseAdmin
+      .rpc('calculate_user_quota', { user_id_param: data.user.id });
 
-    if (usageError) {
-      console.error('获取用量信息失败:', usageError);
+    if (quotaError || !quotaData || quotaData.length === 0) {
+      console.error('获取用量信息失败:', quotaError);
       return res.status(500).json({ error: '获取用量信息失败' });
     }
+
+    const quota = quotaData[0];
 
     res.json({
       success: true,
       quota: {
-        totalMinutes: usage.total_minutes,
-        usedMinutes: usage.used_minutes,
-        remainingMinutes: Math.max(0, usage.total_minutes - usage.used_minutes),
-        resetAt: usage.reset_at
+        totalMinutes: quota.total_minutes,
+        usedMinutes: quota.used_minutes,
+        remainingMinutes: quota.remaining_minutes,
+        breakdown: {
+          trial: {
+            total: quota.trial_remaining + (quota.used_minutes > 0 ? Math.min(quota.used_minutes, 10) : 0),
+            used: quota.used_minutes > 0 ? Math.min(quota.used_minutes, 10) : 0,
+            remaining: quota.trial_remaining
+          },
+          purchased: {
+            remaining: quota.purchased_remaining
+          },
+          subscription: {
+            remaining: quota.subscription_remaining,
+            nextReset: quota.next_reset
+          }
+        }
       }
     });
 
@@ -549,58 +561,251 @@ app.post('/api/usage/consume', async (req, res) => {
       return res.status(401).json({ error: '无效的访问令牌' });
     }
 
-    // 获取当前用量
-    const { data: currentUsage, error: usageError } = await supabaseAdmin
-      .from('usage_minutes')
-      .select('*')
-      .eq('user_id', data.user.id)
-      .single();
+    // 使用新的用量消费函数
+    const { data: consumeResult, error: consumeError } = await supabaseAdmin
+      .rpc('consume_user_minutes', { 
+        user_id_param: data.user.id, 
+        minutes_to_consume: minutes 
+      });
 
-    if (usageError) {
-      console.error('获取用量信息失败:', usageError);
-      return res.status(500).json({ error: '获取用量信息失败' });
+    if (consumeError || !consumeResult || consumeResult.length === 0) {
+      console.error('消费用量失败:', consumeError);
+      return res.status(500).json({ error: '消费用量失败' });
     }
 
-    const newUsedMinutes = currentUsage.used_minutes + minutes;
+    const result = consumeResult[0];
     
-    // 检查是否超过配额
-    if (newUsedMinutes > currentUsage.total_minutes) {
+    if (!result.success) {
       return res.status(400).json({ 
-        error: '用量超出配额',
-        remainingMinutes: Math.max(0, currentUsage.total_minutes - currentUsage.used_minutes)
+        error: result.message,
+        remainingMinutes: result.remaining_minutes
       });
     }
 
-    // 更新用量
-    const { error: updateError } = await supabaseAdmin
-      .from('usage_minutes')
-      .update({ 
-        used_minutes: newUsedMinutes,
-        updated_at: new Date().toISOString()
-      })
-      .eq('user_id', data.user.id);
+    // 获取更新后的配额信息
+    const { data: quotaData, error: quotaError } = await supabaseAdmin
+      .rpc('calculate_user_quota', { user_id_param: data.user.id });
 
-    if (updateError) {
-      console.error('更新用量失败:', updateError);
-      return res.status(500).json({ error: '更新用量失败' });
-    }
+    const quota = quotaData && quotaData.length > 0 ? quotaData[0] : null;
 
-    console.log(`✅ 用户 ${data.user.email} 消费了 ${minutes} 分钟，剩余 ${currentUsage.total_minutes - newUsedMinutes} 分钟`);
+    console.log(`✅ 用户 ${data.user.email} 消费了 ${minutes} 分钟（来源：${result.consumed_from}），剩余 ${result.remaining_minutes} 分钟`);
 
     res.json({
       success: true,
-      message: '用量更新成功',
-      quota: {
-        totalMinutes: currentUsage.total_minutes,
-        usedMinutes: newUsedMinutes,
-        remainingMinutes: currentUsage.total_minutes - newUsedMinutes,
-        consumedMinutes: minutes
-      }
+      message: result.message,
+      consumedFrom: result.consumed_from,
+      quota: quota ? {
+        totalMinutes: quota.total_minutes,
+        usedMinutes: quota.used_minutes,
+        remainingMinutes: quota.remaining_minutes,
+        consumedMinutes: minutes,
+        breakdown: {
+          trial: {
+            remaining: quota.trial_remaining
+          },
+          purchased: {
+            remaining: quota.purchased_remaining
+          },
+          subscription: {
+            remaining: quota.subscription_remaining,
+            nextReset: quota.next_reset
+          }
+        }
+      } : null
     });
 
   } catch (error) {
     console.error('❌ 消费用量失败:', error);
     res.status(500).json({ error: '消费用量失败' });
+  }
+});
+
+// 购买时长API
+app.post('/api/usage/purchase', async (req, res) => {
+  try {
+    const { minutes } = req.body;
+    
+    if (!minutes || minutes <= 0) {
+      return res.status(400).json({ error: '无效的购买时长' });
+    }
+
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: '未提供访问令牌' });
+    }
+
+    const token = authHeader.substring(7);
+    const { data, error } = await supabase.auth.getUser(token);
+    
+    if (error || !data.user) {
+      return res.status(401).json({ error: '无效的访问令牌' });
+    }
+
+    // 添加购买时长
+    const { data: result, error: purchaseError } = await supabaseAdmin
+      .rpc('add_purchased_minutes', { 
+        user_id_param: data.user.id, 
+        minutes_to_add: minutes 
+      });
+
+    if (purchaseError || !result) {
+      console.error('购买时长失败:', purchaseError);
+      return res.status(500).json({ error: '购买时长失败' });
+    }
+
+    // 获取更新后的配额信息
+    const { data: quotaData, error: quotaError } = await supabaseAdmin
+      .rpc('calculate_user_quota', { user_id_param: data.user.id });
+
+    const quota = quotaData && quotaData.length > 0 ? quotaData[0] : null;
+
+    console.log(`✅ 用户 ${data.user.email} 购买了 ${minutes} 分钟时长`);
+
+    res.json({
+      success: true,
+      message: '购买时长成功',
+      purchasedMinutes: minutes,
+      quota: quota ? {
+        totalMinutes: quota.total_minutes,
+        usedMinutes: quota.used_minutes,
+        remainingMinutes: quota.remaining_minutes,
+        breakdown: {
+          trial: { remaining: quota.trial_remaining },
+          purchased: { remaining: quota.purchased_remaining },
+          subscription: { 
+            remaining: quota.subscription_remaining,
+            nextReset: quota.next_reset 
+          }
+        }
+      } : null
+    });
+
+  } catch (error) {
+    console.error('❌ 购买时长失败:', error);
+    res.status(500).json({ error: '购买时长失败' });
+  }
+});
+
+// 设置订阅API
+app.post('/api/usage/subscription', async (req, res) => {
+  try {
+    const { type, minutes } = req.body;
+    
+    if (!type || !minutes || !['monthly', 'yearly'].includes(type) || minutes <= 0) {
+      return res.status(400).json({ error: '无效的订阅参数' });
+    }
+
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: '未提供访问令牌' });
+    }
+
+    const token = authHeader.substring(7);
+    const { data, error } = await supabase.auth.getUser(token);
+    
+    if (error || !data.user) {
+      return res.status(401).json({ error: '无效的访问令牌' });
+    }
+
+    // 设置订阅
+    const { data: result, error: subscriptionError } = await supabaseAdmin
+      .rpc('set_subscription', { 
+        user_id_param: data.user.id, 
+        subscription_type_param: type,
+        subscription_minutes_param: minutes
+      });
+
+    if (subscriptionError || !result) {
+      console.error('设置订阅失败:', subscriptionError);
+      return res.status(500).json({ error: '设置订阅失败' });
+    }
+
+    // 获取更新后的配额信息
+    const { data: quotaData, error: quotaError } = await supabaseAdmin
+      .rpc('calculate_user_quota', { user_id_param: data.user.id });
+
+    const quota = quotaData && quotaData.length > 0 ? quotaData[0] : null;
+
+    console.log(`✅ 用户 ${data.user.email} 设置了 ${type} 订阅（${minutes} 分钟）`);
+
+    res.json({
+      success: true,
+      message: '订阅设置成功',
+      subscription: { type, minutes },
+      quota: quota ? {
+        totalMinutes: quota.total_minutes,
+        usedMinutes: quota.used_minutes,
+        remainingMinutes: quota.remaining_minutes,
+        breakdown: {
+          trial: { remaining: quota.trial_remaining },
+          purchased: { remaining: quota.purchased_remaining },
+          subscription: { 
+            remaining: quota.subscription_remaining,
+            nextReset: quota.next_reset 
+          }
+        }
+      } : null
+    });
+
+  } catch (error) {
+    console.error('❌ 设置订阅失败:', error);
+    res.status(500).json({ error: '设置订阅失败' });
+  }
+});
+
+// 取消订阅API
+app.delete('/api/usage/subscription', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: '未提供访问令牌' });
+    }
+
+    const token = authHeader.substring(7);
+    const { data, error } = await supabase.auth.getUser(token);
+    
+    if (error || !data.user) {
+      return res.status(401).json({ error: '无效的访问令牌' });
+    }
+
+    // 取消订阅
+    const { data: result, error: cancelError } = await supabaseAdmin
+      .rpc('cancel_subscription', { user_id_param: data.user.id });
+
+    if (cancelError || !result) {
+      console.error('取消订阅失败:', cancelError);
+      return res.status(500).json({ error: '取消订阅失败' });
+    }
+
+    // 获取更新后的配额信息
+    const { data: quotaData, error: quotaError } = await supabaseAdmin
+      .rpc('calculate_user_quota', { user_id_param: data.user.id });
+
+    const quota = quotaData && quotaData.length > 0 ? quotaData[0] : null;
+
+    console.log(`✅ 用户 ${data.user.email} 取消了订阅`);
+
+    res.json({
+      success: true,
+      message: '订阅取消成功',
+      quota: quota ? {
+        totalMinutes: quota.total_minutes,
+        usedMinutes: quota.used_minutes,
+        remainingMinutes: quota.remaining_minutes,
+        breakdown: {
+          trial: { remaining: quota.trial_remaining },
+          purchased: { remaining: quota.purchased_remaining },
+          subscription: { 
+            remaining: quota.subscription_remaining,
+            nextReset: quota.next_reset 
+          }
+        }
+      } : null
+    });
+
+  } catch (error) {
+    console.error('❌ 取消订阅失败:', error);
+    res.status(500).json({ error: '取消订阅失败' });
   }
 });
 
@@ -1246,6 +1451,9 @@ app.get('/', (req, res) => {
       'POST /api/auth/logout',
       'GET /api/usage/quota',
       'POST /api/usage/consume',
+      'POST /api/usage/purchase',
+      'POST /api/usage/subscription',
+      'DELETE /api/usage/subscription',
       'POST /api/email/send-verification',
       'POST /api/email/send-welcome',
       'POST /api/guest/identity',

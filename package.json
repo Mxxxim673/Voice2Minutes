@@ -11,7 +11,9 @@
     "server": "node server.js",
     "server:dev": "nodemon server.js",
     "start:full": "concurrently \"npm run server\" \"npm run dev\"",
-    "email:test": "node -e \"console.log('Testing SMTP connection...'); require('./server.js')\""
+    "email:test": "node -e \"console.log('Testing SMTP connection...'); require('./server.js')\"",
+    "build:legal": "node build-legal.js",
+    "deploy:legal": "npm run build:legal && shx cp dist/legal.html public/ && vite build"
   },
   "dependencies": {
     "@fingerprintjs/fingerprintjs": "^4.6.2",
@@ -48,7 +50,9 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.3.0",
+    "markdown-it": "^14.1.0",
     "nodemon": "^3.0.3",
+    "shx": "^0.4.0",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.35.1",
     "vite": "^7.0.4"
