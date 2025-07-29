@@ -351,9 +351,9 @@ body {
   }
 }
 
-/* Dark mode support */
+/* Dark theme - via system preference */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --primary-blue: #0A84FF;
     --primary-blue-hover: #3399FF;
     --primary-blue-light: rgba(10, 132, 255, 0.2);
@@ -447,4 +447,131 @@ body {
     background-color: transparent;
     color: var(--text-primary);
   }
+}
+
+/* Manual theme switching - overrides system preference */
+[data-theme="dark"] {
+  --primary-blue: #0A84FF;
+  --primary-blue-hover: #3399FF;
+  --primary-blue-light: rgba(10, 132, 255, 0.2);
+  
+  --secondary-gray: #8E8E93;
+  --light-gray: #1C1C1E;
+  --medium-gray: #3A3A3C;
+  --dark-gray: #F2F2F7;
+  
+  --success-green: #30D158;
+  --warning-orange: #FF9F0A;
+  --error-red: #FF453A;
+  
+  --background-primary: #1C1C1E;
+  --background-secondary: #000000;
+  --background-tertiary: #2C2C2E;
+  
+  --text-primary: #FFFFFF;
+  --text-secondary: #8D8D93;
+  --text-tertiary: #48484A;
+  
+  --border-color: #38383A;
+  --divider-color: #38383A;
+}
+
+[data-theme="dark"] body {
+  color: var(--text-primary);
+  background-color: var(--background-secondary);
+}
+
+[data-theme="dark"] .logo {
+  color: var(--primary-blue);
+}
+
+[data-theme="dark"] .nav-link {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .nav-link:hover,
+[data-theme="dark"] .nav-link.active {
+  color: var(--primary-blue);
+}
+
+[data-theme="dark"] .button-secondary {
+  background-color: var(--medium-gray);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .button-secondary:hover {
+  background-color: var(--dark-gray);
+  color: var(--background-primary);
+}
+
+[data-theme="dark"] .input {
+  background-color: var(--background-primary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .input:focus {
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px var(--primary-blue-light);
+}
+
+[data-theme="dark"] .card {
+  background: var(--background-primary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .dropzone {
+  background-color: var(--background-secondary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .dropzone:hover,
+[data-theme="dark"] .dropzone.active {
+  border-color: var(--primary-blue);
+  background-color: var(--primary-blue-light);
+}
+
+[data-theme="dark"] .dropzone.has-file {
+  background-color: var(--background-primary);
+}
+
+[data-theme="dark"] .divider-text {
+  background-color: var(--background-primary);
+}
+
+[data-theme="dark"] .output-textarea {
+  background-color: transparent;
+  color: var(--text-primary);
+}
+
+/* Light theme - explicit override when user selects light */
+[data-theme="light"] {
+  --primary-blue: #007AFF;
+  --primary-blue-hover: #0056CC;
+  --primary-blue-light: #E3F2FD;
+  
+  --secondary-gray: #8E8E93;
+  --light-gray: #F2F2F7;
+  --medium-gray: #C7C7CC;
+  --dark-gray: #1C1C1E;
+  
+  --success-green: #34C759;
+  --warning-orange: #FF9500;
+  --error-red: #FF3B30;
+  
+  --background-primary: #FFFFFF;
+  --background-secondary: #F2F2F7;
+  --background-tertiary: #FFFFFF;
+  
+  --text-primary: #000000;
+  --text-secondary: #8E8E93;
+  --text-tertiary: #C7C7CC;
+  
+  --border-color: #C6C6C8;
+  --divider-color: #C6C6C8;
+}
+
+[data-theme="light"] body {
+  color: var(--text-primary);
+  background-color: var(--background-secondary);
 }

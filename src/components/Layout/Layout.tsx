@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../hooks/useAuth';
 import LanguageSelector from '../LanguageSelector/LanguageSelector';
+import ThemeToggle from '../ThemeToggle/ThemeToggle';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -58,6 +59,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </ul>
           
           <div className="nav-right">
+            <ThemeToggle />
             <LanguageSelector />
             {user ? (
               <div className="user-menu">

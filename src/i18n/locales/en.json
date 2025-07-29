@@ -21,6 +21,14 @@
     "usage": "Usage Statistics",
     "pricing": "Pricing"
   },
+  "theme": {
+    "light": "Light Theme",
+    "dark": "Dark Theme",
+    "system": "System Setting",
+    "toggleLabel": "Toggle Theme",
+    "current": "Current theme: {{theme}}",
+    "currentlyUsing": "Currently using"
+  },
   "audioToText": {
     "title": "Audio to Text Conversion",
     "subtitle": "Convert your audio recordings to accurate text transcriptions",

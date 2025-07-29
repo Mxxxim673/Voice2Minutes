@@ -21,6 +21,14 @@
     "usage": "使用量統計",
     "pricing": "料金"
   },
+  "theme": {
+    "light": "ライトテーマ",
+    "dark": "ダークテーマ",
+    "system": "システム設定",
+    "toggleLabel": "テーマ切り替え",
+    "current": "現在のテーマ：{{theme}}",
+    "currentlyUsing": "現在使用中"
+  },
   "audioToText": {
     "title": "音声文字起こし",
     "subtitle": "音声録音を正確なテキスト文字起こしに変換します",

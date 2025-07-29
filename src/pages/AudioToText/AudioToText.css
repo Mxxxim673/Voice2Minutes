@@ -845,3 +845,49 @@
     animation: spin 1s linear infinite;
   }
 }
+
+/* 浅色主题适配 */
+[data-theme="light"] .audio-to-text-page {
+  background: linear-gradient(135deg, rgba(74, 144, 226, 0.02) 0%, rgba(80, 200, 120, 0.02) 100%);
+}
+
+[data-theme="light"] .input-section .card {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: var(--border-color);
+}
+
+[data-theme="light"] .output-area {
+  background: var(--background-primary);
+  border-color: var(--border-color);
+}
+
+[data-theme="light"] .dropzone {
+  background: var(--background-secondary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .dropzone:hover,
+[data-theme="light"] .dropzone.active {
+  background: linear-gradient(135deg, rgba(74, 144, 226, 0.15) 0%, rgba(74, 144, 226, 0.08) 100%);
+  border-color: var(--primary-blue);
+}
+
+[data-theme="light"] .dropzone.has-file {
+  background: linear-gradient(135deg, rgba(80, 200, 120, 0.1) 0%, rgba(80, 200, 120, 0.05) 100%);
+  border-color: var(--success-green);
+}
+
+[data-theme="light"] .selected-file {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .card-title {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .output-textarea {
+  background: var(--background-primary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}

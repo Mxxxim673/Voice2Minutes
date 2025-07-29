@@ -21,6 +21,14 @@
     "usage": "使用量统计",
     "pricing": "价格"
   },
+  "theme": {
+    "light": "浅色主题",
+    "dark": "深色主题",
+    "system": "跟随系统",
+    "toggleLabel": "切换主题",
+    "current": "当前主题：{{theme}}",
+    "currentlyUsing": "当前使用"
+  },
   "audioToText": {
     "title": "音频转文字",
     "subtitle": "将您的音频录音转换为准确的文字转录",

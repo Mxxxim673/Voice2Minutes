@@ -1,7 +1,8 @@
 /* 现代化会议纪要页面样式 */
 
-/* 深色主题支持 */
+/* 深色主题支持 - 系统偏好设置 */
 @media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .meeting-minutes-page,
   .meeting-minutes-page {
     background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%) !important;
   }
@@ -497,6 +498,146 @@
   box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
 }
 
+/* 浅色主题样式 - 明确覆盖深色主题样式 */
+[data-theme="light"] .meeting-minutes-page {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%) !important;
+}
+
+[data-theme="light"] .meeting-minutes-page * {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .meeting-minutes-page .section-card {
+  background: var(--background-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="light"] .meeting-minutes-page .card-header {
+  background: var(--background-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="light"] .meeting-minutes-page .original-text-section,
+[data-theme="light"] .meeting-minutes-page .template-config-section,
+[data-theme="light"] .meeting-minutes-page .result-section .section-card {
+  background: var(--background-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="light"] .meeting-minutes-page .original-text-section .card-header,
+[data-theme="light"] .meeting-minutes-page .template-config-section .card-header,
+[data-theme="light"] .meeting-minutes-page .result-section .card-header {
+  background: var(--background-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="light"] .meeting-minutes-page .card-title {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .meeting-minutes-page .page-title {
+  background: linear-gradient(135deg, var(--primary-blue) 0%, #8A2BE2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-theme="light"] .meeting-minutes-page .status-indicator {
+  background: var(--light-gray);
+  color: var(--text-secondary);
+}
+
+[data-theme="light"] .meeting-minutes-page .status-indicator.processing {
+  background: var(--primary-blue-light);
+  color: var(--primary-blue);
+}
+
+[data-theme="light"] .meeting-minutes-page .status-indicator.success {
+  background: rgba(52, 199, 89, 0.1);
+  color: var(--success-green);
+}
+
+[data-theme="light"] .meeting-minutes-page .status-indicator.error {
+  background: rgba(255, 59, 48, 0.1);
+  color: var(--error-red);
+}
+
+[data-theme="light"] .meeting-minutes-page .template-item {
+  background: var(--background-primary);
+  border-color: var(--border-color);
+}
+
+[data-theme="light"] .meeting-minutes-page .template-item:hover {
+  border-color: var(--primary-blue);
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.15);
+}
+
+[data-theme="light"] .meeting-minutes-page .template-item.selected {
+  border-color: var(--primary-blue);
+  background: var(--primary-blue-light);
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.25);
+}
+
+[data-theme="light"] .meeting-minutes-page .template-name {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .meeting-minutes-page .template-meta {
+  color: var(--text-secondary);
+}
+
+[data-theme="light"] .meeting-minutes-page .empty-templates {
+  color: var(--text-secondary);
+}
+
+[data-theme="light"] .meeting-minutes-page .selected-template-preview {
+  border-color: var(--border-color);
+  background: var(--background-primary);
+}
+
+[data-theme="light"] .meeting-minutes-page .selected-template-preview h5 {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .meeting-minutes-page .template-editor {
+  background: var(--background-secondary);
+  border-color: var(--border-color);
+}
+
+[data-theme="light"] .meeting-minutes-page .template-name-section {
+  border-color: var(--border-color);
+}
+
+[data-theme="light"] .meeting-minutes-page .template-name-label {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .meeting-minutes-page .template-name-input {
+  background: var(--background-primary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .meeting-minutes-page .template-content-section {
+  border-color: var(--border-color);
+}
+
+[data-theme="light"] .meeting-minutes-page .template-content-label {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .meeting-minutes-page .template-content-textarea {
+  background: var(--background-primary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .meeting-minutes-page .output-textarea {
+  background: var(--background-primary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
 /* 深色主题下的危险按钮适配 */
 @media (prefers-color-scheme: dark) {
   .meeting-minutes-page .btn-danger {
@@ -513,6 +654,86 @@
   .meeting-minutes-page .btn-danger:focus {
     box-shadow: 0 0 0 0.2rem rgba(255, 69, 58, 0.25);
   }
+}
+
+/* 手动深色主题切换 - 覆盖系统设置 */
+[data-theme="dark"] .meeting-minutes-page {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%) !important;
+}
+
+[data-theme="dark"] .meeting-minutes-page * {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .meeting-minutes-page .section-card {
+  background: var(--background-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .meeting-minutes-page .card-header {
+  background: var(--background-tertiary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .meeting-minutes-page .card-title {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .meeting-minutes-page .page-title {
+  background: linear-gradient(135deg, var(--primary-blue) 0%, #8A2BE2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-theme="dark"] .meeting-minutes-page .template-card {
+  background: var(--background-primary) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .meeting-minutes-page .template-card:hover {
+  border-color: var(--primary-blue) !important;
+  box-shadow: 0 4px 12px var(--primary-blue-light) !important;
+}
+
+[data-theme="dark"] .meeting-minutes-page .template-card.active {
+  border-color: var(--primary-blue) !important;
+  background: var(--primary-blue-light) !important;
+  box-shadow: 0 4px 12px var(--primary-blue-light) !important;
+}
+
+[data-theme="dark"] .meeting-minutes-page .outline-preview {
+  background: var(--background-tertiary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .meeting-minutes-page .result-actions {
+  background: var(--background-tertiary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .meeting-minutes-page .btn-outline {
+  background: var(--background-primary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .meeting-minutes-page .btn-outline:hover:not(:disabled) {
+  background: var(--background-tertiary);
+  border-color: var(--primary-blue);
+  color: var(--primary-blue);
+}
+
+[data-theme="dark"] .meeting-minutes-page .btn-danger {
+  color: var(--error-red);
+  border-color: var(--error-red);
+}
+
+[data-theme="dark"] .meeting-minutes-page .btn-danger:hover {
+  background-color: var(--error-red);
+  color: white;
+  border-color: var(--error-red);
 }
 
 /* 清空项目列表样式 */
