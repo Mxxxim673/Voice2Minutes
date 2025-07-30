@@ -242,48 +242,61 @@
   }
 
   .meeting-minutes-page .template-list-section {
-    background: var(--background-tertiary);
-    border-color: var(--border-color);
+    background: var(--background-tertiary) !important;
+    border-color: var(--border-color) !important;
   }
 
   .meeting-minutes-page .template-list-header {
-    border-color: var(--border-color);
+    border-color: var(--border-color) !important;
   }
 
   .meeting-minutes-page .template-item {
-    background: var(--background-primary);
-    border-color: var(--border-color);
+    background: var(--background-primary) !important;
+    border-color: var(--border-color) !important;
   }
 
   .meeting-minutes-page .template-item:hover {
-    border-color: var(--primary-blue);
-    box-shadow: 0 2px 8px rgba(10, 132, 255, 0.2);
+    border-color: var(--primary-blue) !important;
+    box-shadow: 0 2px 8px rgba(10, 132, 255, 0.2) !important;
   }
 
   .meeting-minutes-page .template-item.selected {
-    border-color: var(--primary-blue);
-    background: rgba(10, 132, 255, 0.1);
-    box-shadow: 0 2px 8px rgba(10, 132, 255, 0.3);
+    border-color: var(--primary-blue) !important;
+    background: rgba(10, 132, 255, 0.1) !important;
+    box-shadow: 0 2px 8px rgba(10, 132, 255, 0.3) !important;
   }
 
   .meeting-minutes-page .template-name {
-    color: var(--text-primary);
+    color: var(--text-primary) !important;
   }
 
   .meeting-minutes-page .template-meta {
-    color: var(--text-secondary);
+    color: var(--text-secondary) !important;
   }
 
   .meeting-minutes-page .empty-templates {
-    color: var(--text-secondary);
+    color: var(--text-secondary) !important;
+  }
+
+  .meeting-minutes-page .empty-templates .empty-icon {
+    opacity: 0.6 !important;
+  }
+
+  .meeting-minutes-page .empty-templates p {
+    color: var(--text-tertiary) !important;
+  }
+
+  .meeting-minutes-page .empty-hint {
+    color: var(--text-tertiary) !important;
   }
 
   .meeting-minutes-page .selected-template-preview {
-    border-color: var(--border-color);
+    border-color: var(--border-color) !important;
+    background: var(--background-primary) !important;
   }
 
   .meeting-minutes-page .selected-template-preview h5 {
-    color: var(--text-primary);
+    color: var(--text-primary) !important;
   }
 
   .meeting-minutes-page .template-editor {
@@ -493,6 +506,59 @@
   .meeting-minutes-page .result-section > .section-card > .result-actions {
     background: var(--background-tertiary) !important;
     border-top: 1px solid var(--border-color) !important;
+  }
+
+  /* 强制覆盖底部默认的模板相关样式 */
+  .meeting-minutes-page .template-list-section {
+    background: var(--background-tertiary) !important;
+    border: 1px solid var(--border-color) !important;
+  }
+
+  .meeting-minutes-page .template-list-header {
+    border-bottom: 1px solid var(--border-color) !important;
+  }
+
+  .meeting-minutes-page .template-list-header h4 {
+    color: var(--text-primary) !important;
+  }
+
+  .meeting-minutes-page .template-list {
+    color: var(--text-primary) !important;
+  }
+
+  .meeting-minutes-page .template-item {
+    background: var(--background-primary) !important;
+    border: 2px solid var(--border-color) !important;
+  }
+
+  .meeting-minutes-page .template-item:hover {
+    border-color: var(--primary-blue) !important;
+    box-shadow: 0 4px 15px rgba(10, 132, 255, 0.15) !important;
+  }
+
+  .meeting-minutes-page .template-item.selected {
+    border-color: var(--primary-blue) !important;
+    background: rgba(10, 132, 255, 0.1) !important;
+    box-shadow: 0 4px 15px rgba(10, 132, 255, 0.2) !important;
+  }
+
+  /* 强制修复删除按钮样式 */
+  .meeting-minutes-page .btn-remove {
+    background: var(--background-tertiary) !important;
+    color: var(--text-secondary) !important;
+    border: 1px solid var(--border-color) !important;
+  }
+
+  .meeting-minutes-page .btn-remove:hover:not(:disabled) {
+    background: rgba(255, 69, 58, 0.1) !important;
+    color: var(--error-red) !important;
+    border-color: rgba(255, 69, 58, 0.3) !important;
+  }
+
+  /* 确保删除按钮中的图标可见 */
+  .meeting-minutes-page .btn-remove svg {
+    color: inherit !important;
+    stroke: currentColor !important;
   }
 }
 
@@ -785,6 +851,82 @@
 [data-theme="dark"] .meeting-minutes-page .result-actions {
   background: var(--background-tertiary) !important;
   border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .meeting-minutes-page .template-list-section {
+  background: var(--background-tertiary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .meeting-minutes-page .template-item {
+  background: var(--background-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .meeting-minutes-page .template-item:hover {
+  border-color: var(--primary-blue) !important;
+  box-shadow: 0 2px 8px rgba(10, 132, 255, 0.2) !important;
+}
+
+[data-theme="dark"] .meeting-minutes-page .template-item.selected {
+  border-color: var(--primary-blue) !important;
+  background: rgba(10, 132, 255, 0.1) !important;
+  box-shadow: 0 2px 8px rgba(10, 132, 255, 0.3) !important;
+}
+
+[data-theme="dark"] .meeting-minutes-page .template-name {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .meeting-minutes-page .template-meta {
+  color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .meeting-minutes-page .empty-templates {
+  color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .meeting-minutes-page .empty-templates .empty-icon {
+  opacity: 0.6 !important;
+}
+
+[data-theme="dark"] .meeting-minutes-page .empty-templates p {
+  color: var(--text-tertiary) !important;
+}
+
+[data-theme="dark"] .meeting-minutes-page .empty-hint {
+  color: var(--text-tertiary) !important;
+}
+
+[data-theme="dark"] .meeting-minutes-page .selected-template-preview {
+  border-color: var(--border-color) !important;
+  background: var(--background-primary) !important;
+}
+
+[data-theme="dark"] .meeting-minutes-page .selected-template-preview h5 {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .meeting-minutes-page .template-editor {
+  background: var(--background-tertiary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .meeting-minutes-page .btn-remove {
+  background: var(--background-tertiary) !important;
+  color: var(--text-secondary) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+[data-theme="dark"] .meeting-minutes-page .btn-remove:hover:not(:disabled) {
+  background: rgba(255, 69, 58, 0.1) !important;
+  color: var(--error-red) !important;
+  border-color: rgba(255, 69, 58, 0.3) !important;
+}
+
+[data-theme="dark"] .meeting-minutes-page .btn-remove svg {
+  color: inherit !important;
+  stroke: currentColor !important;
 }
 
 [data-theme="dark"] .meeting-minutes-page .btn-outline {
@@ -1106,13 +1248,13 @@
 .meeting-minutes-page .template-info h3 {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-primary);
   margin: 0 0 0.25rem 0;
 }
 
 .meeting-minutes-page .template-info p {
   font-size: 0.9rem;
-  color: #64748b;
+  color: var(--text-secondary);
   margin: 0;
 }
 
@@ -1171,7 +1313,7 @@
 }
 
 .meeting-minutes-page .item-text {
-  color: #374151;
+  color: var(--text-primary);
   font-weight: 500;
 }
 
@@ -1596,16 +1738,16 @@
 }
 
 .meeting-minutes-page .btn-remove {
-  background: #f8fafc;
-  color: #64748b;
-  border: 1px solid #e2e8f0;
+  background: var(--background-tertiary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
   transition: all 0.2s ease;
 }
 
 .meeting-minutes-page .btn-remove:hover:not(:disabled) {
-  background: #fee2e2;
-  color: #dc2626;
-  border-color: #fecaca;
+  background: rgba(255, 69, 58, 0.1);
+  color: var(--error-red);
+  border-color: rgba(255, 69, 58, 0.3);
   transform: scale(1.05);
 }
 
@@ -1619,8 +1761,8 @@
 
 /* 模板管理相关样式 */
 .meeting-minutes-page .template-list-section {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--background-tertiary);
+  border: 1px solid var(--border-color);
   border-radius: 0.5rem;
   padding: 1rem;
 }
@@ -1637,7 +1779,7 @@
 .meeting-minutes-page .template-list-header h4 {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-primary);
   margin: 0;
 }
 
@@ -1704,7 +1846,7 @@
 .meeting-minutes-page .template-name {
   font-size: 1rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-primary);
   margin-bottom: 0.25rem;
 }
 
@@ -1712,7 +1854,7 @@
   display: flex;
   gap: 1rem;
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .meeting-minutes-page .template-actions {
@@ -1724,7 +1866,7 @@
 .meeting-minutes-page .empty-templates {
   text-align: center;
   padding: 2rem 1rem;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .meeting-minutes-page .empty-templates .empty-icon {
@@ -1751,14 +1893,14 @@
 .meeting-minutes-page .selected-template-preview h5 {
   font-size: 0.9rem;
   font-weight: 600;
-  color: #374151;
+  color: var(--text-primary);
   margin: 0 0 0.75rem 0;
 }
 
 /* 模板编辑器样式 */
 .meeting-minutes-page .template-editor {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--background-tertiary);
+  border: 1px solid var(--border-color);
   border-radius: 0.5rem;
   padding: 1rem;
 }
@@ -1773,7 +1915,7 @@
   display: block;
   font-size: 0.9rem;
   font-weight: 600;
-  color: #374151;
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
 }
 
