@@ -13,7 +13,15 @@
     "start": "Start",
     "stop": "Stop",
     "upload": "Upload",
-    "download": "Download"
+    "download": "Download",
+    "timeUnits": {
+      "hours": "hours",
+      "minutes": "minutes",
+      "seconds": "seconds",
+      "hour": "hour",
+      "minute": "minute",
+      "second": "second"
+    }
   },
   "navigation": {
     "audioToText": "Audio to Text",
@@ -62,7 +70,7 @@
     "quotaLowWarning": "Your usage quota is running low",
     "usageLimitReached": "Usage time limit reached!",
     "guestModeSubtitle": "Guest Mode - Experience Audio to Text",
-    "remainingTime": "Remaining Time: {{minutes}} minutes",
+    "remainingTime": "Remaining Time: {{minutes}}",
     "guestUserTip": "Current trial duration is 5 minutes, you can upload audio files up to 5 minutes or record audio for experience",
     "trialUserTip": "All features unlocked, current trial duration is 10 minutes, you can upload audio files up to 10 minutes or record audio for experience",
     "guestUserLimitMessage": "Guest users can use {{totalMinutes}} minutes total. You have {{remainingMinutes}} minutes remaining.",
@@ -75,7 +83,7 @@
     "totalQuota": "Total quota",
     "guestUser": "Guest user",
     "trialUser": "Trial user",
-    "paidUser": "Paid user", 
+    "paidUser": "Paid user",
     "adminUser": "Administrator",
     "unknownUser": "Unknown",
     "outputPlaceholder": "Transcription results will appear here...\n\n📝 Available Features:\n• Upload audio files for transcription\n• Real-time audio recording\n• Copy transcription text\n• Export to Word document",
@@ -94,7 +102,20 @@
     "guestQuotaReachedTitle": "⏰ Usage limit reached, recording automatically stopped.",
     "trialComplete": "🎉 Trial period ended! Purchase more time to continue using full features.",
     "guestQuotaExhausted": "⚠️ Your trial time has been exhausted and transcription is not available. Please register for more time.",
-    "quotaExhaustedGeneral": "⚠️ Your quota has been exhausted and transcription is not available. Please purchase more time."
+    "quotaExhaustedGeneral": "⚠️ Your quota has been exhausted and transcription is not available. Please purchase more time.",
+    "audioDuration": "Audio Duration",
+    "adminMode": "Admin Mode: Unlimited",
+    "fileDurationExceedsQuota": "File duration {{fileDuration}} exceeds remaining time {{remainingTime}}, cannot upload this file.",
+    "fileDurationDetectionFailed": "Unable to detect audio file duration, please check if file format is correct.",
+    "audioProcessingFailed": "Audio format processing failed, please re-record",
+    "audioDurationDetectionFailed": "Unable to get audio duration, please check if file format is correct",
+    "transcriptionProcessingError": "Unknown error occurred during transcription process",
+    "largeFileProcessingNotice": "Large file is being processed in segments, this may take a few minutes...",
+    "browserAudioNotSupported": "Your browser does not support audio processing (AudioContext)",
+    "fileExceedsQuotaWarning": "Notice: This file will consume {{fileDuration}}, approaching your remaining time limit.",
+    "browserMediaRecorderNotSupported": "Your browser does not support media recording (MediaRecorder)",
+    "browserGetUserMediaNotSupported": "Your browser does not support media device access (getUserMedia)",
+    "recordingDataEmpty": "Recording data is empty, please re-record"
   },
   "meetingMinutes": {
     "title": "Meeting Minutes Generation",
@@ -184,7 +205,7 @@
     },
     "plans": {
       "5hours": "5 hours",
-      "10hours": "10 hours", 
+      "10hours": "10 hours",
       "30hours": "30 hours",
       "100hours": "100 hours",
       "monthly30": "Monthly (30 hours)",

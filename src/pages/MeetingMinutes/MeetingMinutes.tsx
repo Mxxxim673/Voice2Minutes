@@ -246,10 +246,8 @@ const MeetingMinutes: React.FC = () => {
       const currentOutline = templateType === 'standard' ? getCurrentLanguageOutline() : customOutline;
       const detectedLang = detectLanguage(originalText);
       
-      // 获取界面语言设置
-      const interfaceLanguage = localStorage.getItem('i18nextLng') || 'zh';
-      const targetLanguage = interfaceLanguage.startsWith('zh') ? 'zh' : 
-                            interfaceLanguage.startsWith('ja') ? 'ja' : 'en';
+      // 使用检测到的原文语言作为输出语言，确保输出与原文语言一致
+      const targetLanguage = detectedLang;
       
       const response = await fetch('/api/minutes/generate', {
         method: 'POST',

@@ -13,7 +13,15 @@
     "start": "开始",
     "stop": "停止",
     "upload": "上传",
-    "download": "下载"
+    "download": "下载",
+    "timeUnits": {
+      "hours": "小时",
+      "minutes": "分",
+      "seconds": "秒",
+      "hour": "小时",
+      "minute": "分钟",
+      "second": "秒"
+    }
   },
   "navigation": {
     "audioToText": "音频转文字",
@@ -62,7 +70,7 @@
     "quotaLowWarning": "您的使用配额即将用完",
     "usageLimitReached": "使用时长已达上限！",
     "guestModeSubtitle": "游客模式 - 体验音频转文字功能",
-    "remainingTime": "剩余时长: {{minutes}} 分钟",
+    "remainingTime": "剩余时长: {{minutes}}",
     "guestUserTip": "当前试用时长5分钟，可上传时长不超过5分钟的音频文件或者录音体验",
     "trialUserTip": "已解锁全部功能，当前试用时长10分钟，可上传时长不超过10分钟的音频文件或者录音体验",
     "guestUserLimitMessage": "访客用户总共可使用{{totalMinutes}}分钟。您还剩余{{remainingMinutes}}分钟。",
@@ -89,13 +97,26 @@
     "completeRecording": "完成录制",
     "continueRecording": "继续录制",
     "reRecord": "重新录制",
+    "audioDuration": "音频时长",
+    "adminMode": "管理者模式: 无限制",
     "audioDurationWarning": "📋 提示：音频时长 {{duration}} 分钟，您的剩余配额为 {{remaining}} 分钟。转录时将自动截断处理。",
     "guestTrialComplete": "🎉 访客体验已结束！注册账户可获得10分钟试用时长。",
     "unauthenticated": "未登录",
     "guestQuotaReachedTitle": "⏰ 已达到使用上限，录音已自动停止。",
     "trialComplete": "🎉 试用时长已结束！购买更多时长继续使用完整功能。",
     "guestQuotaExhausted": "⚠️ 您的体验时长已用完，无法进行转录。请注册获取更多时长。",
-    "quotaExhaustedGeneral": "⚠️ 您的配额已用完，无法进行转录。请购买更多时长。"
+    "quotaExhaustedGeneral": "⚠️ 您的配额已用完，无法进行转录。请购买更多时长。",
+    "fileDurationExceedsQuota": "文件时长 {{fileDuration}} 超出剩余时长 {{remainingTime}}，无法上传此文件。",
+    "fileDurationDetectionFailed": "无法检测音频文件时长，请检查文件格式是否正确。",
+    "audioProcessingFailed": "音频格式处理失败，请重新录制",
+    "audioDurationDetectionFailed": "无法获取音频时长，请检查文件格式是否正确",
+    "transcriptionProcessingError": "转录过程中发生未知错误",
+    "largeFileProcessingNotice": "大文件正在分段处理，这可能需要几分钟时间...",
+    "browserAudioNotSupported": "您的浏览器不支持音频处理 (AudioContext)",
+    "browserMediaRecorderNotSupported": "您的浏览器不支持媒体录制 (MediaRecorder)",
+    "browserGetUserMediaNotSupported": "您的浏览器不支持媒体设备访问 (getUserMedia)",
+    "recordingDataEmpty": "录音数据为空，请重新录制",
+    "fileExceedsQuotaWarning": "注意：此文件将消耗 {{fileDuration}}，接近您的剩余时长限制。"
   },
   "meetingMinutes": {
     "title": "会议纪要生成",

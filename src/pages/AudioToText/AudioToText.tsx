@@ -7,7 +7,7 @@ import { transcribeAudio } from '../../services/audioService';
 import { exportToWord } from '../../utils/exportUtils';
 import { getAudioDuration, truncateAudioForLimit } from '../../services/usageService';
 import { usageTracker } from '../../services/usageTracker';
-import { formatRemainingTime, formatDuration } from '../../utils/timeFormat';
+import { formatRemainingTime, formatRemainingTimeLocalized, formatDuration } from '../../utils/timeFormat';
 import './AudioToText.css';
 
 interface TranscriptionData {
@@ -101,7 +101,10 @@ const AudioToText: React.FC = () => {
           // 检查是否超出剩余时长（管理员跳过检查）
           if (!isAdmin && fileDuration > remainingMinutes) {
             setFileUploadError(
-              `文件时长 ${formatDuration(fileDuration)} 超出剩余时长 ${formatRemainingTime(remainingMinutes)}，无法上传此文件。`
+              t('audioToText.fileDurationExceedsQuota', { 
+                fileDuration: formatDuration(fileDuration), 
+                remainingTime: formatRemainingTime(remainingMinutes) 
+              })
             );
             // 不设置 uploadedFile，阻止后续处理
             return;
@@ -112,18 +115,18 @@ const AudioToText: React.FC = () => {
             if (!isAdmin && fileDuration > remainingMinutes * 0.8) {
               // 如果使用了80%以上的剩余时长，给出提醒（管理员跳过）
               setUsageLimitWarning(
-                `注意：此文件将消耗 ${formatDuration(fileDuration)}，接近您的剩余时长限制。`
+                t('audioToText.fileExceedsQuotaWarning', { fileDuration: formatDuration(fileDuration) })
               );
             }
           }
         } catch (error) {
           console.error('❌ 文件时长检测失败:', error);
-          setFileUploadError('无法检测音频文件时长，请检查文件格式是否正确。');
+          setFileUploadError(t('audioToText.fileDurationDetectionFailed'));
         }
         
       } catch (error) {
         console.error('File processing error:', error);
-        setError('文件处理错误，请检查文件格式是否正确');
+        setError(t('audioToText.fileProcessingError'));
       }
     }
   }, [isGuest, user, t]);
@@ -157,7 +160,7 @@ const AudioToText: React.FC = () => {
         originalDuration = await getAudioDuration(audioFile);
       } catch (error) {
         console.error('❌ 音频时长检测完全失败:', error);
-        setError('无法获取音频时长，请检查文件格式是否正确');
+        setError(t('audioToText.audioDurationDetectionFailed'));
         setIsProcessing(false);
         return;
       }
@@ -237,7 +240,7 @@ const AudioToText: React.FC = () => {
       
     } catch (error) {
       console.error('❌ 转录失败:', error);
-      setError(error instanceof Error ? error.message : '转录过程中发生未知错误');
+      setError(error instanceof Error ? error.message : t('audioToText.transcriptionProcessingError'));
     } finally {
       setIsProcessing(false);
     }
@@ -411,7 +414,7 @@ const AudioToText: React.FC = () => {
     
     if (audioBlob.size === 0) {
       console.error('❌ 音频数据为空，无法进行转录');
-      setError('录音数据为空，请重新录制');
+      setError(t('audioToText.recordingDataEmpty'));
       return;
     }
     
@@ -424,7 +427,7 @@ const AudioToText: React.FC = () => {
       handleTranscription(audioFile);
     } catch (error) {
       console.error('❌ 音频格式处理失败:', error);
-      setError('音频格式处理失败，请重新录制');
+      setError(t('audioToText.audioProcessingFailed'));
     }
   };
 
@@ -433,15 +436,15 @@ const AudioToText: React.FC = () => {
     const errors = [];
     
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      errors.push('❌ 您的浏览器不支持媒体设备访问 (getUserMedia)');
+      errors.push(`❌ ${t('audioToText.browserGetUserMediaNotSupported')}`);
     }
     
     if (!window.MediaRecorder) {
-      errors.push('❌ 您的浏览器不支持媒体录制 (MediaRecorder)');
+      errors.push(`❌ ${t('audioToText.browserMediaRecorderNotSupported')}`);
     }
     
     if (!window.AudioContext && !(window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext) {
-      errors.push('❌ 您的浏览器不支持音频处理 (AudioContext)');
+      errors.push(`❌ ${t('audioToText.browserAudioNotSupported')}`);
     }
     
     return errors;
@@ -500,11 +503,11 @@ const AudioToText: React.FC = () => {
                 const isGuestUser = isGuest || user.userType === 'guest';
                 const isAdmin = user?.email === 'max.z.software@gmail.com';
                 if (isAdmin) {
-                  return '管理者モード: 無制限';
+                  return t('audioToText.adminMode');
                 }
                 const totalQuota = isGuestUser ? 5 : (user.quotaMinutes || 10);
                 const remainingTime = Math.max(0, totalQuota - currentUsedMinutes);
-                return `残り時間: ${formatRemainingTime(remainingTime)}`;
+                return t('audioToText.remainingTime', { minutes: formatRemainingTimeLocalized(remainingTime) });
               })()
             ) : t('audioToText.subtitle')}
           </p>
@@ -538,7 +541,7 @@ const AudioToText: React.FC = () => {
                         </div>
                         {fileDetectedDuration !== null && (
                           <div className="file-duration" style={{ color: 'var(--primary-blue)', fontSize: 'var(--font-size-footnote)', marginTop: 'var(--spacing-xs)' }}>
-                            音频时长: {formatDuration(fileDetectedDuration)}
+{t('audioToText.audioDuration')}: {formatDuration(fileDetectedDuration)}
                           </div>
                         )}
                         <div className="file-status" style={{ color: 'var(--success-green)', fontSize: 'var(--font-size-footnote)', marginTop: 'var(--spacing-xs)' }}>
@@ -641,7 +644,7 @@ const AudioToText: React.FC = () => {
             <p>{t('audioToText.processing')}</p>
             {uploadedFile && uploadedFile.size > 25 * 1024 * 1024 && (
               <p style={{ fontSize: 'var(--font-size-footnote)', color: 'var(--text-secondary)', marginTop: 'var(--spacing-sm)' }}>
-                大文件正在分段处理，这可能需要几分钟时间...
+{t('audioToText.largeFileProcessingNotice')}
               </p>
             )}
           </div>

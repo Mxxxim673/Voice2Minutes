@@ -25,7 +25,7 @@ interface AuthContextType {
   register: (email: string, password: string) => Promise<User>;
   logout: () => void;
   continueAsGuest: () => void;
-  verifyEmail: (token: string) => Promise<boolean>;
+  verifyEmail: (inputCode: string) => Promise<boolean>;
   resendVerificationEmail: () => Promise<boolean>;
   updateUserQuota: (usedMinutes: number) => void;
   checkQuotaLimit: (requiredMinutes: number) => boolean;
@@ -497,10 +497,66 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     console.log('👤 访客模式初始化完成，使用量得到保留');
   };
 
-  const verifyEmail = async (): Promise<boolean> => {
-    // 注意：此方法现在主要用于向后兼容，实际验证通过 /auth/callback 页面处理
-    console.log('⚠️ verifyEmail 方法已弃用，请使用 /auth/callback 页面进行邮箱验证');
-    return false;
+  const verifyEmail = async (inputCode: string): Promise<boolean> => {
+    try {
+      const storedVerification = localStorage.getItem('pendingVerification');
+      const pendingUser = localStorage.getItem('pendingUser');
+      
+      if (!storedVerification || !pendingUser) {
+        console.error('没有找到待验证的信息');
+        return false;
+      }
+      
+      const verificationData = JSON.parse(storedVerification);
+      const userData = JSON.parse(pendingUser);
+      
+      // 检查验证码是否过期
+      const now = Date.now();
+      const codeAge = now - verificationData.timestamp;
+      const CODE_EXPIRY = 10 * 60 * 1000; // 10分钟
+      
+      if (codeAge >= CODE_EXPIRY) {
+        console.error('验证码已过期');
+        // 清理过期数据
+        localStorage.removeItem('pendingVerification');
+        localStorage.removeItem('pendingUser');
+        return false;
+      }
+      
+      // 验证输入的验证码
+      if (inputCode.trim() !== verificationData.code.trim()) {
+        console.error('验证码不匹配:', { input: inputCode.trim(), stored: verificationData.code.trim() });
+        return false;
+      }
+      
+      // 验证码正确，激活用户账户
+      // 更新用户状态为已验证
+      const verifiedUser: User = {
+        ...userData,
+        isEmailVerified: true
+      };
+      
+      // 存储用户数据并登录
+      localStorage.setItem('authToken', 'supabase_session');
+      localStorage.setItem('userData', JSON.stringify(verifiedUser));
+      
+      // 清理待验证数据
+      localStorage.removeItem('pendingVerification');
+      localStorage.removeItem('pendingUser');
+      localStorage.removeItem('guestMode');
+      
+      // 设置用户状态
+      setUser(verifiedUser);
+      setIsGuest(false);
+      setPendingVerification(null);
+      
+      console.log('✅ 邮箱验证成功，用户已登录:', verifiedUser.email);
+      return true;
+      
+    } catch (error) {
+      console.error('邮箱验证过程出错:', error);
+      return false;
+    }
   };
 
   const resendVerificationEmail = async (): Promise<boolean> => {
