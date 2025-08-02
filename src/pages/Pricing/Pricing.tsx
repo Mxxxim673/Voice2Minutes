@@ -72,7 +72,7 @@ const Pricing: React.FC = () => {
     }
   ];
 
-  const handleSelectPlan = (plan: PricingPlan) => {
+  const handleSelectPlan = async (plan: PricingPlan) => {
     if (!user) {
       alert('请先登录后再购买套餐');
       return;
@@ -129,8 +129,38 @@ const Pricing: React.FC = () => {
       return;
     }
     
-    // 普通用户的付费流程
-    alert(`Selected: ${plan.hours} hours for ${plan.currency}${plan.price.toLocaleString()}\n\n⚠️ 注意：这是演示版本，实际使用需要集成支付系统`);
+    // 普通用户的付费流程 - 调用Stripe Checkout
+    try {
+      console.log(`🛒 开始创建支付会话 - 套餐: ${plan.id}, 用户: ${user.email}`);
+      
+      const response = await fetch('/api/payment/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          planId: plan.id,
+          userId: user.id,
+          userEmail: user.email,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '创建支付会话失败');
+      }
+
+      const { checkoutUrl } = await response.json();
+      
+      console.log(`✅ 支付会话创建成功，跳转到Stripe Checkout`);
+      
+      // 跳转到Stripe Checkout页面
+      window.location.href = checkoutUrl;
+      
+    } catch (error) {
+      console.error('创建支付会话失败:', error);
+      alert(`支付初始化失败：${error.message}\n\n请稍后重试或联系客服`);
+    }
   };
 
   const formatPrice = (price: number, currency: string) => {

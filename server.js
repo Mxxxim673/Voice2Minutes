@@ -8,6 +8,7 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 import { createClient } from '@supabase/supabase-js';
+import Stripe from 'stripe';
 
 dotenv.config();
 
@@ -18,6 +19,11 @@ const PORT = process.env.PORT || 3001;
 const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://your-project.supabase.co';
 const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'your-service-key';
+
+// Stripe 配置
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_your_stripe_secret_key', {
+  apiVersion: '2024-11-20.acacia'
+});
 
 // 普通客户端（匿名权限）
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -36,6 +42,72 @@ app.use(cors({
   origin: ['http://localhost:5173', 'http://localhost:3000'], // Vite 和其他本地端口
   credentials: true
 }));
+
+// Stripe webhook 需要在 express.json() 之前处理，因为需要原始body
+app.post('/api/payment/webhook', express.raw({type: 'application/json'}), async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+  let event;
+
+  // 如果没有配置webhook secret，跳过验证（开发阶段）
+  if (!endpointSecret) {
+    console.log('⚠️ STRIPE_WEBHOOK_SECRET 未配置，跳过webhook验证');
+    try {
+      event = JSON.parse(req.body);
+    } catch (err) {
+      console.error('解析webhook数据失败:', err.message);
+      return res.status(400).send(`Webhook Parse Error: ${err.message}`);
+    }
+  } else {
+    try {
+      event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+    } catch (err) {
+      console.error('Webhook signature verification failed:', err.message);
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+  }
+
+  console.log(`📨 收到Stripe webhook事件: ${event.type}`);
+
+  // 处理事件
+  try {
+    switch (event.type) {
+      case 'checkout.session.completed':
+        const session = event.data.object;
+        
+        // 更新用户配额
+        await handleSuccessfulPayment(session);
+        break;
+        
+      case 'payment_intent.succeeded':
+        const paymentIntent = event.data.object;
+        console.log('💰 支付成功:', paymentIntent.id);
+        break;
+        
+      case 'invoice.payment_succeeded':
+        const invoice = event.data.object;
+        console.log('📄 订阅发票支付成功:', invoice.id);
+        // 处理订阅续费
+        if (invoice.subscription) {
+          await handleSubscriptionRenewal(invoice);
+        }
+        break;
+        
+      default:
+        console.log(`🔔 未处理的webhook事件类型: ${event.type}`);
+    }
+  } catch (error) {
+    console.error('处理webhook事件失败:', error);
+    return res.status(500).json({ 
+      error: '处理webhook事件失败',
+      details: process.env.NODE_ENV === 'development' ? error.message : '服务器内部错误'
+    });
+  }
+
+  res.json({received: true});
+});
+
 app.use(express.json({ limit: '10mb' }));
 
 // 邮件发送速率限制
@@ -273,27 +345,9 @@ app.post('/api/auth/register', emailLimiter, async (req, res) => {
       return res.status(400).json({ error: '注册失败，未返回用户信息' });
     }
 
-    // 2. 使用管理客户端调用RPC初始化用户数据
-    const { error: initError } = await supabaseAdmin.rpc('init_user', {
-      p_user_id: user.id,
-      p_lang: language,
-      p_timezone: 'Asia/Tokyo',
-      p_free_minutes: 10
-    });
-
-    if (initError) {
-      console.error('用户数据初始化失败:', initError);
-      // 注册成功但初始化失败，返回警告但不阻止注册
-      return res.status(201).json({
-        success: true,
-        warning: '注册成功，但用户数据初始化失败，请联系支持',
-        user: {
-          id: user.id,
-          email: user.email,
-          email_confirmed_at: user.email_confirmed_at
-        }
-      });
-    }
+    // 注意：不在这里初始化用户数据，等待邮箱验证后再初始化
+    // 存储用户语言信息到临时缓存，待验证后使用
+    console.log('用户注册成功，等待邮箱验证:', email);
 
     console.log('✅ 用户注册和初始化成功:', email);
     
@@ -303,7 +357,10 @@ app.post('/api/auth/register', emailLimiter, async (req, res) => {
       user: {
         id: user.id,
         email: user.email,
-        email_confirmed_at: user.email_confirmed_at
+        email_confirmed_at: user.email_confirmed_at,
+        isEmailVerified: false,
+        lang: language,
+        timezone: 'Asia/Tokyo'
       }
     });
 
@@ -379,6 +436,68 @@ app.post('/api/auth/ensure-user-data', async (req, res) => {
   }
 });
 
+// 邮箱确认API - 在用户点击邮箱验证链接后初始化用户数据
+app.post('/api/auth/confirm-email', async (req, res) => {
+  try {
+    const { user_id, lang, timezone } = req.body;
+    
+    if (!user_id) {
+      return res.status(400).json({ error: '缺少用户ID' });
+    }
+
+    // 检查用户是否存在且已验证邮箱
+    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(user_id);
+    
+    if (userError || !userData.user) {
+      console.error('用户查询失败:', userError);
+      return res.status(400).json({ error: '用户不存在' });
+    }
+
+    if (!userData.user.email_confirmed_at) {
+      return res.status(400).json({ error: '邮箱尚未验证' });
+    }
+
+    // 检查用户数据是否已经初始化
+    const { data: existingProfile } = await supabaseAdmin
+      .from('user_profiles')
+      .select('id')
+      .eq('id', user_id)
+      .single();
+
+    if (existingProfile) {
+      // 用户数据已存在，直接返回成功
+      return res.json({
+        success: true,
+        message: '用户已验证并初始化'
+      });
+    }
+
+    // 初始化用户数据
+    const { error: initError } = await supabaseAdmin.rpc('init_user', {
+      p_user_id: user_id,
+      p_lang: lang || 'zh',
+      p_timezone: timezone || 'Asia/Tokyo',
+      p_free_minutes: 10
+    });
+
+    if (initError) {
+      console.error('用户数据初始化失败:', initError);
+      return res.status(500).json({ error: '用户数据初始化失败' });
+    }
+
+    console.log('✅ 用户邮箱验证并初始化成功:', userData.user.email);
+    
+    res.json({
+      success: true,
+      message: '邮箱验证成功，用户数据已初始化'
+    });
+    
+  } catch (error) {
+    console.error('邮箱确认处理失败:', error);
+    res.status(500).json({ error: '邮箱确认处理失败' });
+  }
+});
+
 // 用户登录端点
 app.post('/api/auth/login', async (req, res) => {
   try {
@@ -404,6 +523,14 @@ app.post('/api/auth/login', async (req, res) => {
 
     if (!data.user) {
       return res.status(401).json({ error: '登录失败' });
+    }
+
+    // 检查邮箱是否已验证
+    if (!data.user.email_confirmed_at) {
+      return res.status(401).json({ 
+        error: '请先验证您的邮箱。请检查邮箱中的验证邮件。',
+        code: 'EMAIL_NOT_VERIFIED'
+      });
     }
 
     // 获取用户完整信息
@@ -1601,6 +1728,297 @@ ${outline.map((item, index) => `${index + 1}. ${item}`).join('\n')}
   }
 });
 
+// Stripe 价格ID映射（基于你的Stripe产品）
+const STRIPE_PRICE_MAP = {
+  '5hours': 'price_1Rq9N4C8Q3Tw1xm1bPKG5IqI',     // 5時間プラン
+  '10hours': 'price_1RreZuC8Q3Tw1xm1CJ6L27hT',     // 10時間プラン
+  '30hours': 'price_1RreadC8Q3Tw1xm1oV9DLYYf',     // 30時間プラン
+  '100hours': 'price_1RrebjC8Q3Tw1xm1iUmLF8Cj',    // 100時間プラン
+  'monthly30': 'price_1RrediC8Q3Tw1xm1qYrgmjWh',   // 月額サブスクリプション
+  'annual330': 'price_1RregeC8Q3Tw1xm1QCmkUi3p'    // 年額サブスクリプション
+};
+
+// 创建Stripe Checkout会话
+app.post('/api/payment/create-checkout-session', async (req, res) => {
+  try {
+    const { planId, userId, userEmail } = req.body;
+
+    // 验证输入参数
+    if (!planId || !userId || !userEmail) {
+      return res.status(400).json({ 
+        error: '缺少必要参数: planId, userId, userEmail' 
+      });
+    }
+
+    // 验证planId是否有效
+    const priceId = STRIPE_PRICE_MAP[planId];
+    if (!priceId) {
+      return res.status(400).json({ 
+        error: '无效的套餐ID' 
+      });
+    }
+
+    // 创建Stripe Checkout会话
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price: priceId,
+          quantity: 1,
+        },
+      ],
+      mode: planId.includes('monthly') || planId.includes('annual') ? 'subscription' : 'payment',
+      success_url: `${req.headers.origin || 'http://localhost:5173'}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${req.headers.origin || 'http://localhost:5173'}/payment/cancel`,
+      customer_email: userEmail,
+      metadata: {
+        userId: userId,
+        planId: planId,
+        userEmail: userEmail
+      },
+      allow_promotion_codes: true,
+      billing_address_collection: 'auto',
+      locale: 'ja', // 设置为日语界面
+    });
+
+    console.log(`✅ 创建Stripe Checkout会话成功: ${session.id}, 用户: ${userEmail}, 套餐: ${planId}`);
+
+    res.json({
+      sessionId: session.id,
+      checkoutUrl: session.url
+    });
+
+  } catch (error) {
+    console.error('创建Stripe Checkout会话失败:', error);
+    res.status(500).json({ 
+      error: '创建支付会话失败',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+
+// 处理成功支付
+async function handleSuccessfulPayment(session) {
+  try {
+    const { userId, planId, userEmail } = session.metadata;
+    
+    console.log(`🎉 支付成功 - 用户: ${userEmail}, 套餐: ${planId}, 会话: ${session.id}`);
+
+    // 根据套餐类型更新用户配额
+    const planConfig = {
+      '5hours': { hours: 5, type: 'oneTime' },
+      '10hours': { hours: 10, type: 'oneTime' },
+      '30hours': { hours: 30, type: 'oneTime' },
+      '100hours': { hours: 100, type: 'oneTime' },
+      'monthly30': { hours: 30, type: 'subscription', period: 'monthly' },
+      'annual330': { hours: 330, type: 'subscription', period: 'annual' }
+    };
+
+    const config = planConfig[planId];
+    if (!config) {
+      console.error(`未知的套餐配置: ${planId}`);
+      return;
+    }
+
+    // 首先根据邮箱查找用户ID
+    const { data: authUsers, error: authError } = await supabaseAdmin.auth.admin.listUsers();
+    if (authError) {
+      console.error('获取用户列表失败:', authError);
+      return;
+    }
+    
+    const targetUser = authUsers.users.find(u => u.email === userEmail);
+    if (!targetUser) {
+      console.error(`未找到邮箱为 ${userEmail} 的用户`);
+      return;
+    }
+    
+    const targetUserId = targetUser.id;
+    
+    // 更新用户数据在Supabase
+    const hoursInMinutes = config.hours * 60;
+    
+    if (config.type === 'subscription') {
+      // 订阅类型：设置配额并重置使用量
+      const { error: profileError } = await supabaseAdmin
+        .from('users_profile')
+        .upsert({
+          user_id: targetUserId,
+          display_name: userEmail,
+          quota_minutes: hoursInMinutes,
+          user_type: 'paid',
+          plan_type: config.period === 'monthly' ? '月付订阅' : '年付订阅',
+          subscription_type: config.period,
+          subscription_id: session.subscription,
+          updated_at: new Date().toISOString()
+        });
+
+      const { error: usageError } = await supabaseAdmin
+        .from('usage_minutes')
+        .upsert({
+          user_id: targetUserId,
+          used_minutes: 0,
+          last_reset_date: new Date().toISOString()
+        });
+
+      if (profileError || usageError) {
+        console.error('更新订阅用户数据失败:', { profileError, usageError });
+      } else {
+        console.log(`✅ 订阅用户配额更新成功: ${userEmail}, ${config.hours}小时`);
+      }
+    } else {
+      // 一次性购买：累加配额
+      const { data: currentProfile, error: getProfileError } = await supabaseAdmin
+        .from('users_profile')
+        .select('quota_minutes')
+        .eq('user_id', targetUserId)
+        .single();
+
+      const { data: currentUsage, error: getUsageError } = await supabaseAdmin
+        .from('usage_minutes')
+        .select('used_minutes')
+        .eq('user_id', targetUserId)
+        .single();
+
+      const currentQuota = currentProfile?.quota_minutes || 10;
+      const currentUsed = currentUsage?.used_minutes || 0;
+
+      const { error: profileError } = await supabaseAdmin
+        .from('users_profile')
+        .upsert({
+          user_id: targetUserId,
+          display_name: userEmail,
+          quota_minutes: currentQuota + hoursInMinutes,
+          user_type: 'paid',
+          plan_type: `${config.hours}小时套餐`,
+          updated_at: new Date().toISOString()
+        });
+
+      if (!getUsageError && !currentUsage) {
+        // 如果使用量记录不存在，创建一个
+        await supabaseAdmin
+          .from('usage_minutes')
+          .upsert({
+            user_id: targetUserId,
+            used_minutes: 0,
+            last_reset_date: new Date().toISOString()
+          });
+      }
+
+      if (profileError) {
+        console.error('更新用户配额失败:', profileError);
+      } else {
+        console.log(`✅ 用户配额更新成功: ${userEmail}, 新增${config.hours}小时, 总配额${Math.floor((currentQuota + hoursInMinutes)/60)}小时`);
+      }
+    }
+
+  } catch (error) {
+    console.error('处理成功支付失败:', error);
+  }
+}
+
+// 处理订阅续费
+async function handleSubscriptionRenewal(invoice) {
+  try {
+    const customerId = invoice.customer;
+    const subscriptionId = invoice.subscription;
+    
+    // 根据订阅ID找到用户并重置配额
+    const { data: users, error } = await supabaseAdmin
+      .from('users')
+      .select('*')
+      .eq('subscription_id', subscriptionId);
+
+    if (error || !users || users.length === 0) {
+      console.error('找不到订阅用户:', subscriptionId);
+      return;
+    }
+
+    const user = users[0];
+    
+    // 重置使用量（续费时重新获得完整配额）
+    const { error: updateError } = await supabaseAdmin
+      .from('users')
+      .update({
+        used_minutes: 0,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', user.id);
+
+    if (updateError) {
+      console.error('订阅续费重置配额失败:', updateError);
+    } else {
+      console.log(`🔄 订阅续费成功，配额已重置: ${user.email}`);
+    }
+
+  } catch (error) {
+    console.error('处理订阅续费失败:', error);
+  }
+}
+
+// 处理订阅取消
+async function handleSubscriptionCancellation(subscription) {
+  try {
+    const subscriptionId = subscription.id;
+    
+    // 找到对应的用户
+    const { data: users, error } = await supabaseAdmin
+      .from('users')
+      .select('*')
+      .eq('subscription_id', subscriptionId);
+
+    if (error || !users || users.length === 0) {
+      console.error('找不到订阅用户:', subscriptionId);
+      return;
+    }
+
+    const user = users[0];
+    
+    // 更新用户状态但保留现有配额直到用完
+    const { error: updateError } = await supabaseAdmin
+      .from('users')
+      .update({
+        subscription_type: null,
+        subscription_id: null,
+        plan_type: '已取消订阅',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', user.id);
+
+    if (updateError) {
+      console.error('更新取消订阅状态失败:', updateError);
+    } else {
+      console.log(`❌ 订阅已取消: ${user.email}`);
+    }
+
+  } catch (error) {
+    console.error('处理订阅取消失败:', error);
+  }
+}
+
+// 验证支付会话状态
+app.get('/api/payment/session/:sessionId', async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    
+    res.json({
+      status: session.payment_status,
+      customerEmail: session.customer_email,
+      metadata: session.metadata
+    });
+
+  } catch (error) {
+    console.error('获取支付会话失败:', error);
+    res.status(500).json({ 
+      error: '获取支付会话失败',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
 // 404处理
 app.use('*', (req, res) => {
   res.status(404).json({
@@ -1608,6 +2026,43 @@ app.use('*', (req, res) => {
     path: req.originalUrl
   });
 });
+
+// 清理未验证用户的定时任务 - 每小时运行一次
+setInterval(async () => {
+  try {
+    console.log('🧹 开始清理未验证用户...');
+    
+    // 获取所有用户
+    const { data: users, error } = await supabaseAdmin.auth.admin.listUsers();
+    
+    if (error) {
+      console.error('获取用户列表失败:', error);
+      return;
+    }
+    
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    let cleanedCount = 0;
+    
+    for (const user of users.users) {
+      // 清理超过24小时未验证的用户
+      if (!user.email_confirmed_at && new Date(user.created_at) < oneDayAgo) {
+        try {
+          await supabaseAdmin.auth.admin.deleteUser(user.id);
+          console.log(`清理未验证用户: ${user.email}`);
+          cleanedCount++;
+        } catch (deleteError) {
+          console.error(`删除用户失败 ${user.email}:`, deleteError);
+        }
+      }
+    }
+    
+    if (cleanedCount > 0) {
+      console.log(`✅ 已清理 ${cleanedCount} 个未验证用户`);
+    }
+  } catch (error) {
+    console.error('清理未验证用户失败:', error);
+  }
+}, 60 * 60 * 1000); // 每小时执行一次
 
 // 启动服务器
 app.listen(PORT, () => {

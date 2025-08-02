@@ -11,6 +11,8 @@ import Usage from './pages/Usage/Usage';
 import Pricing from './pages/Pricing/Pricing';
 import Auth from './pages/Auth/Auth';
 import AuthCallback from './pages/AuthCallback/AuthCallback';
+import PaymentSuccess from './pages/PaymentSuccess/PaymentSuccess';
+import PaymentCancel from './pages/PaymentCancel/PaymentCancel';
 import './styles/globals.css';
 
 function App() {
@@ -27,6 +29,10 @@ function App() {
                     {/* Auth routes without layout */}
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/auth/callback" element={<AuthCallback />} />
+                    
+                    {/* Payment routes without layout */}
+                    <Route path="/payment/success" element={<PaymentSuccess />} />
+                    <Route path="/payment/cancel" element={<PaymentCancel />} />
                     
                     {/* Main routes with layout */}
                     <Route path="/*" element={

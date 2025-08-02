@@ -1,0 +1,343 @@
+/* 支付取消页面样式 */
+.payment-cancel-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, rgba(245, 101, 101, 0.02) 0%, rgba(251, 146, 60, 0.02) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.payment-cancel-page .container {
+  max-width: 600px;
+  width: 100%;
+}
+
+.cancel-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 1.5rem;
+  padding: 3rem 2rem;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+  animation: slideInUp 0.6s ease-out;
+}
+
+/* 玻璃反光效果 */
+.cancel-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(251, 146, 60, 0.1), transparent);
+  transition: left 0.8s ease;
+  z-index: 1;
+}
+
+.cancel-card:hover::before {
+  left: 100%;
+}
+
+.cancel-card > * {
+  position: relative;
+  z-index: 2;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.icon {
+  font-size: 4rem;
+  margin-bottom: 1.5rem;
+  display: block;
+}
+
+.cancel-icon {
+  animation: sway 2s ease-in-out infinite;
+}
+
+@keyframes sway {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.cancel-card h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1a202c;
+  margin: 0 0 1rem 0;
+  background: linear-gradient(135deg, #f56565 0%, #fb923c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.cancel-message {
+  font-size: 1.2rem;
+  color: #4a5568;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+/* 信息提示框 */
+.info-box {
+  background: rgba(59, 130, 246, 0.05);
+  border: 1px solid rgba(59, 130, 246, 0.1);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin: 2rem 0;
+  text-align: left;
+}
+
+.info-box h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #3b82f6;
+  margin: 0 0 1rem 0;
+  text-align: center;
+}
+
+.info-box ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.info-box li {
+  padding: 0.5rem 0;
+  color: #4a5568;
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.info-box li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: #10b981;
+  font-weight: bold;
+}
+
+/* 操作按钮 */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 2rem 0;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: none;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 按钮玻璃反光效果 */
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s ease;
+  z-index: 1;
+}
+
+.btn:hover::before {
+  left: 100%;
+}
+
+.btn > * {
+  position: relative;
+  z-index: 2;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.btn-outline {
+  background: rgba(255, 255, 255, 0.8);
+  color: #667eea;
+  border: 2px solid rgba(102, 126, 234, 0.3);
+}
+
+.btn-outline:hover {
+  background: rgba(102, 126, 234, 0.1);
+  border-color: #667eea;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+}
+
+/* 支持信息 */
+.support-info {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+.support-info p {
+  color: #718096;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* 深色主题支持 */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .payment-cancel-page,
+  .payment-cancel-page {
+    background: linear-gradient(135deg, rgba(245, 101, 101, 0.05) 0%, rgba(251, 146, 60, 0.05) 100%);
+  }
+
+  :root:not([data-theme="light"]) .cancel-card,
+  .payment-cancel-page .cancel-card {
+    background: rgba(30, 30, 30, 0.95) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  :root:not([data-theme="light"]) .cancel-card h1,
+  .payment-cancel-page .cancel-card h1 {
+    color: var(--text-primary) !important;
+  }
+
+  :root:not([data-theme="light"]) .cancel-message,
+  .payment-cancel-page .cancel-message {
+    color: var(--text-secondary) !important;
+  }
+
+  :root:not([data-theme="light"]) .info-box,
+  .payment-cancel-page .info-box {
+    background: rgba(59, 130, 246, 0.1) !important;
+    border-color: rgba(59, 130, 246, 0.2) !important;
+  }
+
+  :root:not([data-theme="light"]) .info-box h3,
+  .payment-cancel-page .info-box h3 {
+    color: var(--primary-blue) !important;
+  }
+
+  :root:not([data-theme="light"]) .info-box li,
+  .payment-cancel-page .info-box li {
+    color: var(--text-secondary) !important;
+  }
+
+  :root:not([data-theme="light"]) .btn-outline,
+  .payment-cancel-page .btn-outline {
+    background: rgba(40, 40, 40, 0.8) !important;
+    color: var(--primary-blue) !important;
+    border-color: var(--primary-blue) !important;
+  }
+
+  :root:not([data-theme="light"]) .support-info p,
+  .payment-cancel-page .support-info p {
+    color: var(--text-tertiary) !important;
+  }
+}
+
+/* 手动深色主题 */
+[data-theme="dark"] .payment-cancel-page {
+  background: linear-gradient(135deg, rgba(245, 101, 101, 0.05) 0%, rgba(251, 146, 60, 0.05) 100%);
+}
+
+[data-theme="dark"] .cancel-card {
+  background: rgba(30, 30, 30, 0.95) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
+}
+
+[data-theme="dark"] .cancel-card h1 {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .cancel-message {
+  color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .info-box {
+  background: rgba(59, 130, 246, 0.1) !important;
+  border-color: rgba(59, 130, 246, 0.2) !important;
+}
+
+[data-theme="dark"] .info-box h3 {
+  color: var(--primary-blue) !important;
+}
+
+[data-theme="dark"] .info-box li {
+  color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .btn-outline {
+  background: rgba(40, 40, 40, 0.8) !important;
+  color: var(--primary-blue) !important;
+  border-color: var(--primary-blue) !important;
+}
+
+[data-theme="dark"] .support-info p {
+  color: var(--text-tertiary) !important;
+}
+
+/* 响应式设计 */
+@media (max-width: 640px) {
+  .payment-cancel-page {
+    padding: 1rem;
+  }
+
+  .cancel-card {
+    padding: 2rem 1.5rem;
+  }
+
+  .cancel-card h1 {
+    font-size: 2rem;
+  }
+
+  .actions {
+    gap: 0.75rem;
+  }
+
+  .btn {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9rem;
+  }
+}
