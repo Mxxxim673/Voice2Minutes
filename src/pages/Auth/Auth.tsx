@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../hooks/useAuth';
 import './Auth.css';
 
-type AuthMode = 'login' | 'register' | 'verify';
+type AuthMode = 'login' | 'register' | 'verify' | 'reset-password' | 'reset-verify';
 
 const Auth: React.FC = () => {
   const navigate = useNavigate();
@@ -16,7 +16,9 @@ const Auth: React.FC = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    verificationCode: ''
+    verificationCode: '',
+    newPassword: '',
+    confirmNewPassword: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -60,6 +62,50 @@ const Auth: React.FC = () => {
         } else {
           throw new Error(t('auth.verifyFailed'));
         }
+      } else if (mode === 'reset-password') {
+        // 发送密码重置验证码
+        const response = await fetch('/api/auth/send-reset-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: formData.email })
+        });
+        
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+          throw new Error(result.error || t('auth.resetCodeSendFailed'));
+        }
+        
+        setSuccess(t('auth.resetCodeSent'));
+        setMode('reset-verify');
+      } else if (mode === 'reset-verify') {
+        // 验证重置码并重置密码
+        if (formData.newPassword !== formData.confirmNewPassword) {
+          throw new Error(t('auth.passwordMismatch'));
+        }
+        if (formData.newPassword.length < 6) {
+          throw new Error(t('auth.passwordTooShort'));
+        }
+        
+        const response = await fetch('/api/auth/reset-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: formData.email,
+            verificationCode: formData.verificationCode,
+            newPassword: formData.newPassword
+          })
+        });
+        
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+          throw new Error(result.error || t('auth.resetFailed'));
+        }
+        
+        setSuccess(t('auth.resetSuccess'));
+        setTimeout(() => {
+          setMode('login');
+          setFormData(prev => ({ ...prev, password: '', newPassword: '', confirmNewPassword: '', verificationCode: '' }));
+        }, 2000);
       }
     } catch (error) {
       setError(error instanceof Error ? error.message : t('auth.genericError'));
@@ -137,6 +183,11 @@ const Auth: React.FC = () => {
           {t('auth.noAccount')}{' '}
           <button type="button" className="link-button" onClick={() => setMode('register')}>
             {t('auth.register')}
+          </button>
+        </p>
+        <p>
+          <button type="button" className="link-button" onClick={() => setMode('reset-password')}>
+            {t('auth.forgotPassword')}
           </button>
         </p>
       </div>
@@ -264,6 +315,125 @@ const Auth: React.FC = () => {
     </div>
   );
 
+  const renderResetPasswordForm = () => (
+    <form onSubmit={handleSubmit} className="auth-form">
+      <div className="form-group">
+        <label htmlFor="email">{t('auth.email')}</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          value={formData.email}
+          onChange={handleInputChange}
+          required
+          className="form-input"
+          placeholder={t('auth.emailPlaceholder')}
+        />
+      </div>
+      
+      <button type="submit" className="button button-primary auth-submit" disabled={loading}>
+        {loading ? t('common.loading') : t('auth.sendResetCode')}
+      </button>
+      
+      <div className="auth-footer">
+        <p>
+          <button type="button" className="link-button" onClick={() => setMode('login')}>
+            {t('auth.backToLogin')}
+          </button>
+        </p>
+      </div>
+    </form>
+  );
+
+  const renderResetVerifyForm = () => (
+    <div className="auth-form">
+      <div className="verify-notice">
+        <div className="verify-icon">🔒</div>
+        <h3>{t('auth.resetPasswordTitle')}</h3>
+        <p>{t('auth.resetPasswordDescription', { email: formData.email })}</p>
+      </div>
+      
+      <form onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label htmlFor="verificationCode">{t('auth.verificationCode')}</label>
+          <input
+            type="text"
+            id="verificationCode"
+            name="verificationCode"
+            value={formData.verificationCode}
+            onChange={handleInputChange}
+            required
+            className="form-input verification-input"
+            placeholder="123456"
+            maxLength={6}
+          />
+        </div>
+        
+        <div className="form-group">
+          <label htmlFor="newPassword">{t('auth.newPassword')}</label>
+          <div className="password-input-container">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              id="newPassword"
+              name="newPassword"
+              value={formData.newPassword}
+              onChange={handleInputChange}
+              required
+              className="form-input"
+              placeholder={t('auth.newPasswordPlaceholder')}
+              minLength={6}
+            />
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? '👁️' : '👁️‍🗨️'}
+            </button>
+          </div>
+          <div className="form-hint">
+            {t('auth.passwordHint')}
+          </div>
+        </div>
+        
+        <div className="form-group">
+          <label htmlFor="confirmNewPassword">{t('auth.confirmNewPassword')}</label>
+          <div className="password-input-container">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              id="confirmNewPassword"
+              name="confirmNewPassword"
+              value={formData.confirmNewPassword}
+              onChange={handleInputChange}
+              required
+              className="form-input"
+              placeholder={t('auth.confirmPasswordPlaceholder')}
+            />
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? '👁️' : '👁️‍🗨️'}
+            </button>
+          </div>
+        </div>
+        
+        <button type="submit" className="button button-primary auth-submit" disabled={loading}>
+          {loading ? t('common.loading') : t('auth.resetPassword')}
+        </button>
+      </form>
+      
+      <div className="auth-footer">
+        <p>
+          <button type="button" className="link-button" onClick={() => setMode('login')}>
+            {t('auth.backToLogin')}
+          </button>
+        </p>
+      </div>
+    </div>
+  );
+
   return (
     <div className="auth-page">
       <div className="auth-container">
@@ -272,10 +442,14 @@ const Auth: React.FC = () => {
             {mode === 'login' && t('auth.welcomeBack')}
             {mode === 'register' && t('auth.createAccount')}
             {mode === 'verify' && t('auth.verifyEmail')}
+            {mode === 'reset-password' && t('auth.resetPasswordTitle')}
+            {mode === 'reset-verify' && t('auth.resetPasswordTitle')}
           </h1>
-          {mode !== 'verify' && (
+          {!['verify', 'reset-verify'].includes(mode) && (
             <p className="auth-subtitle">
-              {mode === 'login' ? t('auth.loginSubtitle') : t('auth.registerSubtitle')}
+              {mode === 'login' && t('auth.loginSubtitle')}
+              {mode === 'register' && t('auth.registerSubtitle')}
+              {mode === 'reset-password' && t('auth.resetPasswordSubtitle')}
             </p>
           )}
         </div>
@@ -298,8 +472,10 @@ const Auth: React.FC = () => {
           {mode === 'login' && renderLoginForm()}
           {mode === 'register' && renderRegisterForm()}
           {mode === 'verify' && renderVerifyForm()}
+          {mode === 'reset-password' && renderResetPasswordForm()}
+          {mode === 'reset-verify' && renderResetVerifyForm()}
 
-          {mode !== 'verify' && (
+          {!['verify', 'reset-password', 'reset-verify'].includes(mode) && (
             <>
               <div className="auth-divider">
                 <span>{t('auth.dividerOr')}</span>

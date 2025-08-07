@@ -412,6 +412,140 @@ const getVerificationEmailTemplate = (language = 'zh', verificationCode) => {
   return templates[language] || templates.zh;
 };
 
+// 获取密码重置邮件模板
+const createPasswordResetEmailTemplate = ({ resetCode, email, language = 'zh' }) => {
+  const templates = {
+    zh: {
+      subject: 'Voice2Minutes - 密码重置验证码',
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa;">
+          <div style="background: white; border-radius: 8px; padding: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #4a90e2; font-size: 28px; margin: 0;">Voice2Minutes</h1>
+              <p style="color: #666; font-size: 16px; margin: 10px 0 0 0;">专业的音频转文字服务</p>
+            </div>
+            
+            <h2 style="color: #333; font-size: 22px; margin-bottom: 20px;">🔒 密码重置</h2>
+            
+            <p style="color: #555; font-size: 16px; line-height: 1.6; margin-bottom: 25px;">
+              您请求重置 Voice2Minutes 账户密码。请使用以下验证码完成密码重置：
+            </p>
+            
+            <div style="background: #f1f5f9; border: 2px dashed #4a90e2; border-radius: 8px; padding: 30px; text-align: center; margin: 30px 0;">
+              <p style="color: #333; font-size: 14px; margin-bottom: 10px;">您的重置验证码是：</p>
+              <h1 style="color: #4a90e2; font-size: 36px; font-weight: bold; letter-spacing: 8px; margin: 0; font-family: 'Courier New', monospace;">${resetCode}</h1>
+            </div>
+            
+            <div style="background: #ffe6e6; border-left: 4px solid #ff4757; padding: 15px; margin: 25px 0; border-radius: 4px;">
+              <p style="color: #c92a2a; font-size: 14px; margin: 0;">
+                <strong>🔒 安全提醒：</strong><br>
+                • 验证码有效期为 <strong>10分钟</strong><br>
+                • 请勿向任何人泄露您的验证码<br>
+                • 如果您没有申请密码重置，请立即联系我们<br>
+                • 账户：${email}
+              </p>
+            </div>
+            
+            <div style="border-top: 1px solid #eee; padding-top: 20px; margin-top: 30px; text-align: center;">
+              <p style="color: #999; font-size: 12px; margin: 0;">
+                此邮件由系统自动发送，请勿回复<br>
+                © 2025 Voice2Minutes. All rights reserved.
+              </p>
+            </div>
+          </div>
+        </div>
+      `,
+      text: `Voice2Minutes - 密码重置验证码\n\n您请求重置 Voice2Minutes 账户密码。\n\n您的重置验证码是：${resetCode}\n\n验证码有效期为10分钟，请及时使用。\n\n账户：${email}\n\n如果您没有申请密码重置，请立即联系我们。\n\n© 2025 Voice2Minutes`
+    },
+    en: {
+      subject: 'Voice2Minutes - Password Reset Code',
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa;">
+          <div style="background: white; border-radius: 8px; padding: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #4a90e2; font-size: 28px; margin: 0;">Voice2Minutes</h1>
+              <p style="color: #666; font-size: 16px; margin: 10px 0 0 0;">Professional Audio-to-Text Service</p>
+            </div>
+            
+            <h2 style="color: #333; font-size: 22px; margin-bottom: 20px;">🔒 Password Reset</h2>
+            
+            <p style="color: #555; font-size: 16px; line-height: 1.6; margin-bottom: 25px;">
+              You requested to reset your Voice2Minutes account password. Please use the following code:
+            </p>
+            
+            <div style="background: #f1f5f9; border: 2px dashed #4a90e2; border-radius: 8px; padding: 30px; text-align: center; margin: 30px 0;">
+              <p style="color: #333; font-size: 14px; margin-bottom: 10px;">Your reset code is:</p>
+              <h1 style="color: #4a90e2; font-size: 36px; font-weight: bold; letter-spacing: 8px; margin: 0; font-family: 'Courier New', monospace;">${resetCode}</h1>
+            </div>
+            
+            <div style="background: #ffe6e6; border-left: 4px solid #ff4757; padding: 15px; margin: 25px 0; border-radius: 4px;">
+              <p style="color: #c92a2a; font-size: 14px; margin: 0;">
+                <strong>🔒 Security Notice:</strong><br>
+                • Code expires in <strong>10 minutes</strong><br>
+                • Do not share your reset code with anyone<br>
+                • If you didn't request this reset, please contact us immediately<br>
+                • Account: ${email}
+              </p>
+            </div>
+            
+            <div style="border-top: 1px solid #eee; padding-top: 20px; margin-top: 30px; text-align: center;">
+              <p style="color: #999; font-size: 12px; margin: 0;">
+                This email was sent automatically, please do not reply<br>
+                © 2025 Voice2Minutes. All rights reserved.
+              </p>
+            </div>
+          </div>
+        </div>
+      `,
+      text: `Voice2Minutes - Password Reset Code\n\nYou requested to reset your Voice2Minutes account password.\n\nYour reset code is: ${resetCode}\n\nThis code expires in 10 minutes.\n\nAccount: ${email}\n\nIf you didn't request this reset, please contact us immediately.\n\n© 2025 Voice2Minutes`
+    },
+    ja: {
+      subject: 'Voice2Minutes - パスワードリセット認証コード',
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa;">
+          <div style="background: white; border-radius: 8px; padding: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #4a90e2; font-size: 28px; margin: 0;">Voice2Minutes</h1>
+              <p style="color: #666; font-size: 16px; margin: 10px 0 0 0;">プロフェッショナル音声文字起こしサービス</p>
+            </div>
+            
+            <h2 style="color: #333; font-size: 22px; margin-bottom: 20px;">🔒 パスワードリセット</h2>
+            
+            <p style="color: #555; font-size: 16px; line-height: 1.6; margin-bottom: 25px;">
+              Voice2Minutesアカウントのパスワードリセットをリクエストされました。以下の認証コードをご使用ください：
+            </p>
+            
+            <div style="background: #f1f5f9; border: 2px dashed #4a90e2; border-radius: 8px; padding: 30px; text-align: center; margin: 30px 0;">
+              <p style="color: #333; font-size: 14px; margin-bottom: 10px;">リセット認証コード：</p>
+              <h1 style="color: #4a90e2; font-size: 36px; font-weight: bold; letter-spacing: 8px; margin: 0; font-family: 'Courier New', monospace;">${resetCode}</h1>
+            </div>
+            
+            <div style="background: #ffe6e6; border-left: 4px solid #ff4757; padding: 15px; margin: 25px 0; border-radius: 4px;">
+              <p style="color: #c92a2a; font-size: 14px; margin: 0;">
+                <strong>🔒 セキュリティ通知：</strong><br>
+                • 認証コードの有効期限は <strong>10分間</strong> です<br>
+                • 認証コードを他人に教えないでください<br>
+                • このリセットをリクエストしていない場合は、すぐにお問い合わせください<br>
+                • アカウント：${email}
+              </p>
+            </div>
+            
+            <div style="border-top: 1px solid #eee; padding-top: 20px; margin-top: 30px; text-align: center;">
+              <p style="color: #999; font-size: 12px; margin: 0;">
+                このメールは自動送信されています。返信しないでください<br>
+                © 2025 Voice2Minutes. All rights reserved.
+              </p>
+            </div>
+          </div>
+        </div>
+      `,
+      text: `Voice2Minutes - パスワードリセット認証コード\n\nVoice2Minutesアカウントのパスワードリセットをリクエストされました。\n\nリセット認証コード: ${resetCode}\n\n認証コードの有効期限は10分間です。\n\nアカウント：${email}\n\nこのリセットをリクエストしていない場合は、すぐにお問い合わせください。\n\n© 2025 Voice2Minutes`
+    }
+  };
+  
+  return templates[language] || templates.zh;
+};
+
 // Gmail SMTP 配置
 const createTransporter = () => {
   return nodemailer.createTransport({
@@ -653,6 +787,181 @@ app.post('/api/auth/verify-code', async (req, res) => {
     console.error('❌ 验证码验证失败:', error);
     res.status(500).json({
       error: '验证失败',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// 发送密码重置验证码
+app.post('/api/auth/send-reset-code', emailLimiter, async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ error: '邮箱地址必填' });
+    }
+    
+    // 检查用户是否存在
+    const { data: user, error: userError } = await supabaseAdmin.auth.admin.listUsers();
+    const existingUser = user?.users?.find(u => u.email === email);
+      
+    if (!existingUser) {
+      return res.status(404).json({ 
+        error: '该邮箱未注册，请先注册账户',
+        code: 'EMAIL_NOT_FOUND' 
+      });
+    }
+    
+    if (!existingUser.email_confirmed_at) {
+      return res.status(400).json({ 
+        error: '该邮箱尚未验证，请先完成邮箱验证',
+        code: 'EMAIL_NOT_VERIFIED' 
+      });
+    }
+    
+    // 生成重置验证码
+    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const timestamp = Date.now();
+    
+    // 存储重置验证码
+    if (!global.pendingVerifications) {
+      global.pendingVerifications = {};
+    }
+    
+    global.pendingVerifications[`reset_${email}`] = {
+      code: resetCode,
+      timestamp: timestamp,
+      purpose: 'password_reset',
+      userId: existingUser.id
+    };
+    
+    console.log('🔑 生成密码重置验证码:', resetCode, '给用户:', email);
+    
+    // 发送重置邮件
+    const emailTemplate = createPasswordResetEmailTemplate({
+      resetCode: resetCode,
+      email: email,
+      language: req.body.language || 'zh'
+    });
+    
+    // 使用内部邮件发送API
+    try {
+      const emailResponse = await fetch(`http://localhost:${PORT}/api/email/send-verification`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: email,
+          subject: emailTemplate.subject,
+          html: emailTemplate.html,
+          text: emailTemplate.text,
+          fromName: 'Voice2Minutes 安全中心'
+        })
+      });
+
+      const emailResult = await emailResponse.json();
+      
+      if (!emailResponse.ok || !emailResult.success) {
+        throw new Error('密码重置邮件发送失败: ' + (emailResult.error || 'Unknown error'));
+      }
+
+      console.log('📧 密码重置邮件发送成功:', emailResult.messageId);
+      
+    } catch (error) {
+      console.error('❌ 密码重置邮件发送失败:', error);
+      return res.status(500).json({ error: '重置邮件发送失败，请稍后重试' });
+    }
+    
+    console.log('✅ 密码重置邮件已发送:', email);
+    
+    res.json({
+      success: true,
+      message: '密码重置验证码已发送至您的邮箱'
+    });
+    
+  } catch (error) {
+    console.error('❌ 密码重置验证码发送失败:', error);
+    res.status(500).json({
+      error: '密码重置验证码发送失败',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// 验证重置码并重置密码
+app.post('/api/auth/reset-password', async (req, res) => {
+  try {
+    const { email, verificationCode, newPassword } = req.body;
+    
+    if (!email || !verificationCode || !newPassword) {
+      return res.status(400).json({ error: '邮箱、验证码和新密码必填' });
+    }
+    
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: '密码长度至少6位' });
+    }
+    
+    // 检查重置验证码
+    const resetKey = `reset_${email}`;
+    const storedVerification = global.pendingVerifications?.[resetKey];
+    
+    if (!storedVerification) {
+      return res.status(400).json({ 
+        error: '未找到重置请求，请重新申请密码重置',
+        code: 'RESET_NOT_FOUND' 
+      });
+    }
+    
+    // 检查验证码是否正确
+    if (storedVerification.code !== verificationCode.trim()) {
+      return res.status(400).json({ 
+        error: '验证码错误',
+        code: 'INVALID_CODE' 
+      });
+    }
+    
+    // 检查验证码是否过期（10分钟）
+    const now = Date.now();
+    const codeAge = now - storedVerification.timestamp;
+    const CODE_EXPIRY = 10 * 60 * 1000; // 10分钟
+    
+    if (codeAge >= CODE_EXPIRY) {
+      delete global.pendingVerifications[resetKey];
+      return res.status(400).json({ 
+        error: '验证码已过期，请重新申请密码重置',
+        code: 'CODE_EXPIRED' 
+      });
+    }
+    
+    // 重置用户密码
+    const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+      storedVerification.userId,
+      { password: newPassword }
+    );
+    
+    if (updateError) {
+      console.error('密码重置失败:', updateError);
+      return res.status(500).json({ 
+        error: '密码重置失败，请稍后重试',
+        details: process.env.NODE_ENV === 'development' ? updateError.message : undefined
+      });
+    }
+    
+    // 清理重置验证码
+    delete global.pendingVerifications[resetKey];
+    
+    console.log('✅ 密码重置成功:', email);
+    
+    res.json({
+      success: true,
+      message: '密码重置成功，请使用新密码登录'
+    });
+    
+  } catch (error) {
+    console.error('❌ 密码重置失败:', error);
+    res.status(500).json({
+      error: '密码重置失败',
       details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
