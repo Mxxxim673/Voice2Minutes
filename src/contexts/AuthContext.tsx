@@ -336,7 +336,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const { user: authUser, error } = await AuthService.login(email, password);
       
       if (error || !authUser) {
-        throw new Error(error?.message || '登录失败');
+        // 检查是否是邮箱验证错误
+        const errorMessage = error?.message || '登录失败';
+        if (errorMessage.includes('邮箱尚未验证') || errorMessage.includes('邮箱验证状态异常') || 
+            errorMessage.includes('Email not confirmed') || errorMessage.includes('EMAIL_NOT_VERIFIED')) {
+          throw new Error('邮箱尚未验证，请先验证您的邮箱后再登录。如未收到验证邮件，请重新注册。');
+        }
+        throw new Error(errorMessage);
+      }
+
+      // 强制检查邮箱验证状态
+      if (!authUser.isEmailVerified) {
+        console.error('❌ 前端二次检查：邮箱未验证，阻止登录:', email);
+        throw new Error('邮箱验证状态异常，请重新验证您的邮箱。');
       }
 
       // 转换为前端User格式
@@ -375,46 +387,50 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const currentLanguage = i18n.language || 'ja';
       
-      // 使用Supabase认证服务注册
-      const { user: supabaseUser, error } = await AuthService.register(email, password, currentLanguage);
-      
-      if (error || !supabaseUser) {
-        throw new Error(error?.message || '注册失败');
-      }
-
-      // 生成验证码并发送验证邮件
-      const verificationCode = generateVerificationCode();
-      
-      const emailSent = await sendVerificationEmail({
-        email,
-        verificationCode,
-        language: currentLanguage
+      // 使用后端API注册（包含自定义验证邮件发送）
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          language: currentLanguage
+        })
       });
-      
-      if (!emailSent) {
-        // 邮件发送失败时的错误信息
-        const errorMessage = currentLanguage === 'zh' ? '验证邮件发送失败，请检查邮箱地址或稍后重试' :
-                             currentLanguage === 'ja' ? 'メール送信に失敗しました。メールアドレスを確認するか、しばらくしてから再試行してください' :
-                             'Verification email failed to send, please check your email address or try again later';
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        // 处理不同类型的错误响应
+        let errorMessage = '注册失败';
+        if (typeof result.error === 'string') {
+          errorMessage = result.error;
+        } else if (result.error && result.error.message) {
+          errorMessage = result.error.message;
+        } else if (result.message) {
+          errorMessage = result.message;
+        }
         throw new Error(errorMessage);
       }
-      
-      // 创建前端用户对象（基于Supabase用户，但加上验证逻辑）
+
+      // 创建前端用户对象
       const userData: User = {
-        id: supabaseUser.id,
-        email: supabaseUser.email || email,
+        id: result.user.id,
+        email: result.user.email,
         isEmailVerified: false, // 需要邮件验证
         userType: 'trial',
         quotaMinutes: 10, // 注册用户获得10分钟试用
         usedMinutes: 0,
         trialMinutes: 10,
-        createdAt: supabaseUser.created_at || new Date().toISOString()
+        createdAt: result.user.createdAt || new Date().toISOString()
       };
       
-      // 存储待验证信息
+      // 存储待验证信息（后端已处理验证码发送）
       setPendingVerification({
         email,
-        code: verificationCode,
+        code: '', // 后端处理验证码，前端不需要存储
         timestamp: Date.now(),
         language: currentLanguage
       });
@@ -423,12 +439,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem('pendingUser', JSON.stringify(userData));
       localStorage.setItem('pendingVerification', JSON.stringify({
         email,
-        code: verificationCode,
+        code: '',
         timestamp: Date.now(),
-        language: currentLanguage // 保存注册时的语言设置
+        language: currentLanguage
       }));
       
-      console.log('📧 Supabase注册成功，验证邮件已发送至:', email);
+      console.log('📧 注册成功，验证邮件已发送至:', email);
       return userData;
     } catch (error) {
       console.error('Registration failed:', error);
@@ -523,14 +539,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return false;
       }
       
-      // 验证输入的验证码
-      if (inputCode.trim() !== verificationData.code.trim()) {
-        console.error('验证码不匹配:', { input: inputCode.trim(), stored: verificationData.code.trim() });
+      // 使用后端验证码验证API
+      const response = await fetch('/api/auth/verify-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: verificationData.email,
+          verificationCode: inputCode.trim()
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        console.error('验证码验证失败:', result.error);
         return false;
       }
       
-      // 验证码正确，激活用户账户
-      // 更新用户状态为已验证
+      // 验证成功，激活用户账户
       const verifiedUser: User = {
         ...userData,
         isEmailVerified: true

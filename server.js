@@ -36,8 +36,8 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
   }
 });
 
-// 中间件配置
-app.use(helmet()); // 安全头
+// 中间件配置 - 暂时禁用helmet进行调试
+// app.use(helmet()); // 安全头 - 暂时注释掉
 app.use(cors({
   origin: ['http://localhost:5173', 'http://localhost:3000'], // Vite 和其他本地端口
   credentials: true
@@ -113,7 +113,7 @@ app.use(express.json({ limit: '10mb' }));
 // 邮件发送速率限制
 const emailLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15分钟
-  max: 5, // 每个IP最多5封邮件
+  max: 20, // 每个IP最多20封邮件（支持多人同时注册）
   message: {
     error: '邮件发送频率过高，请稍后再试',
     retryAfter: '15分钟'
@@ -281,6 +281,137 @@ const analyzeGuestRisk = (guestData, existingData) => {
   };
 };
 
+// 获取验证邮件模板
+const getVerificationEmailTemplate = (language = 'zh', verificationCode) => {
+  const templates = {
+    zh: {
+      subject: 'Voice2Minutes - 邮箱验证码',
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa;">
+          <div style="background: white; border-radius: 8px; padding: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #4a90e2; font-size: 28px; margin: 0;">Voice2Minutes</h1>
+              <p style="color: #666; font-size: 16px; margin: 10px 0 0 0;">专业的音频转文字服务</p>
+            </div>
+            
+            <h2 style="color: #333; font-size: 22px; margin-bottom: 20px;">邮箱验证</h2>
+            
+            <p style="color: #555; font-size: 16px; line-height: 1.6; margin-bottom: 25px;">
+              感谢您注册 Voice2Minutes！请使用以下验证码完成邮箱验证：
+            </p>
+            
+            <div style="background: #f1f5f9; border: 2px dashed #4a90e2; border-radius: 8px; padding: 30px; text-align: center; margin: 30px 0;">
+              <p style="color: #333; font-size: 14px; margin-bottom: 10px;">您的验证码是：</p>
+              <h1 style="color: #4a90e2; font-size: 36px; font-weight: bold; letter-spacing: 8px; margin: 0; font-family: 'Courier New', monospace;">${verificationCode}</h1>
+            </div>
+            
+            <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 25px 0; border-radius: 4px;">
+              <p style="color: #856404; font-size: 14px; margin: 0;">
+                <strong>⚠️ 重要提醒：</strong><br>
+                • 验证码有效期为 <strong>10分钟</strong><br>
+                • 请勿向任何人泄露您的验证码<br>
+                • 如果您没有注册账户，请忽略此邮件
+              </p>
+            </div>
+            
+            <div style="border-top: 1px solid #eee; padding-top: 20px; margin-top: 30px; text-align: center;">
+              <p style="color: #999; font-size: 12px; margin: 0;">
+                此邮件由系统自动发送，请勿回复<br>
+                © 2025 Voice2Minutes. All rights reserved.
+              </p>
+            </div>
+          </div>
+        </div>
+      `,
+      text: `Voice2Minutes - 邮箱验证码\n\n感谢您注册 Voice2Minutes！\n\n您的验证码是：${verificationCode}\n\n验证码有效期为10分钟，请及时使用。\n\n如果您没有注册账户，请忽略此邮件。\n\n© 2025 Voice2Minutes`
+    },
+    en: {
+      subject: 'Voice2Minutes - Email Verification Code',
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa;">
+          <div style="background: white; border-radius: 8px; padding: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #4a90e2; font-size: 28px; margin: 0;">Voice2Minutes</h1>
+              <p style="color: #666; font-size: 16px; margin: 10px 0 0 0;">Professional Audio-to-Text Service</p>
+            </div>
+            
+            <h2 style="color: #333; font-size: 22px; margin-bottom: 20px;">Email Verification</h2>
+            
+            <p style="color: #555; font-size: 16px; line-height: 1.6; margin-bottom: 25px;">
+              Thank you for registering with Voice2Minutes! Please use the following verification code:
+            </p>
+            
+            <div style="background: #f1f5f9; border: 2px dashed #4a90e2; border-radius: 8px; padding: 30px; text-align: center; margin: 30px 0;">
+              <p style="color: #333; font-size: 14px; margin-bottom: 10px;">Your verification code is:</p>
+              <h1 style="color: #4a90e2; font-size: 36px; font-weight: bold; letter-spacing: 8px; margin: 0; font-family: 'Courier New', monospace;">${verificationCode}</h1>
+            </div>
+            
+            <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 25px 0; border-radius: 4px;">
+              <p style="color: #856404; font-size: 14px; margin: 0;">
+                <strong>⚠️ Important Notice:</strong><br>
+                • Code expires in <strong>10 minutes</strong><br>
+                • Do not share your verification code with anyone<br>
+                • If you didn't register, please ignore this email
+              </p>
+            </div>
+            
+            <div style="border-top: 1px solid #eee; padding-top: 20px; margin-top: 30px; text-align: center;">
+              <p style="color: #999; font-size: 12px; margin: 0;">
+                This email was sent automatically, please do not reply<br>
+                © 2025 Voice2Minutes. All rights reserved.
+              </p>
+            </div>
+          </div>
+        </div>
+      `,
+      text: `Voice2Minutes - Email Verification Code\n\nThank you for registering with Voice2Minutes!\n\nYour verification code is: ${verificationCode}\n\nThis code expires in 10 minutes.\n\nIf you didn't register, please ignore this email.\n\n© 2025 Voice2Minutes`
+    },
+    ja: {
+      subject: 'Voice2Minutes - メール認証コード',
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa;">
+          <div style="background: white; border-radius: 8px; padding: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #4a90e2; font-size: 28px; margin: 0;">Voice2Minutes</h1>
+              <p style="color: #666; font-size: 16px; margin: 10px 0 0 0;">プロフェッショナル音声文字起こしサービス</p>
+            </div>
+            
+            <h2 style="color: #333; font-size: 22px; margin-bottom: 20px;">メール認証</h2>
+            
+            <p style="color: #555; font-size: 16px; line-height: 1.6; margin-bottom: 25px;">
+              Voice2Minutesにご登録いただき、ありがとうございます！以下の認証コードをご使用ください：
+            </p>
+            
+            <div style="background: #f1f5f9; border: 2px dashed #4a90e2; border-radius: 8px; padding: 30px; text-align: center; margin: 30px 0;">
+              <p style="color: #333; font-size: 14px; margin-bottom: 10px;">認証コード：</p>
+              <h1 style="color: #4a90e2; font-size: 36px; font-weight: bold; letter-spacing: 8px; margin: 0; font-family: 'Courier New', monospace;">${verificationCode}</h1>
+            </div>
+            
+            <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 25px 0; border-radius: 4px;">
+              <p style="color: #856404; font-size: 14px; margin: 0;">
+                <strong>⚠️ 重要なお知らせ：</strong><br>
+                • 認証コードの有効期限は <strong>10分間</strong> です<br>
+                • 認証コードを他人に教えないでください<br>
+                • アカウント登録をしていない場合は、このメールを無視してください
+              </p>
+            </div>
+            
+            <div style="border-top: 1px solid #eee; padding-top: 20px; margin-top: 30px; text-align: center;">
+              <p style="color: #999; font-size: 12px; margin: 0;">
+                このメールは自動送信されています。返信しないでください<br>
+                © 2025 Voice2Minutes. All rights reserved.
+              </p>
+            </div>
+          </div>
+        </div>
+      `,
+      text: `Voice2Minutes - メール認証コード\n\nVoice2Minutesにご登録いただき、ありがとうございます！\n\n認証コード: ${verificationCode}\n\n認証コードの有効期限は10分間です。\n\nアカウント登録をしていない場合は、このメールを無視してください。\n\n© 2025 Voice2Minutes`
+    }
+  };
+  
+  return templates[language] || templates.zh;
+};
+
 // Gmail SMTP 配置
 const createTransporter = () => {
   return nodemailer.createTransport({
@@ -322,16 +453,34 @@ app.post('/api/auth/register', emailLimiter, async (req, res) => {
       return res.status(400).json({ error: '密码至少需要6个字符' });
     }
 
-    // 1. 使用Supabase Auth注册用户
-    const { data, error } = await supabase.auth.signUp({
+    // 1. 首先检查邮箱是否已经注册
+    const { data: existingUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+    if (!listError && existingUsers) {
+      const existingUser = existingUsers.users.find(u => u.email === email);
+      if (existingUser) {
+        if (existingUser.email_confirmed_at) {
+          // 邮箱已验证，不允许重复注册
+          return res.status(400).json({ 
+            error: '该邮箱已注册并验证，请直接登录。如忘记密码，请使用密码重置功能。',
+            code: 'EMAIL_ALREADY_REGISTERED',
+            isVerified: true
+          });
+        } else {
+          // 邮箱未验证，删除旧记录后重新注册
+          console.log(`🧹 清理未验证的重复邮箱: ${email}`);
+          await supabaseAdmin.auth.admin.deleteUser(existingUser.id);
+        }
+      }
+    }
+
+    // 2. 使用Supabase Auth注册用户（立即确认邮箱，跳过邮件验证）
+    const { data, error } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
-      options: {
-        emailRedirectTo: `${req.protocol}://${req.get('host')}/auth/callback`,
-        data: {
-          lang: language,
-          timezone: 'Asia/Tokyo'
-        }
+      email_confirm: true, // 立即确认邮箱，不发送验证邮件
+      user_metadata: {
+        lang: language,
+        timezone: 'Asia/Tokyo'
       }
     });
 
@@ -345,11 +494,56 @@ app.post('/api/auth/register', emailLimiter, async (req, res) => {
       return res.status(400).json({ error: '注册失败，未返回用户信息' });
     }
 
-    // 注意：不在这里初始化用户数据，等待邮箱验证后再初始化
-    // 存储用户语言信息到临时缓存，待验证后使用
-    console.log('用户注册成功，等待邮箱验证:', email);
-
-    console.log('✅ 用户注册和初始化成功:', email);
+    // 3. 生成验证码并发送自定义验证邮件
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    console.log('🎯 生成验证码:', verificationCode, '给用户:', email);
+    
+    // 获取邮件模板
+    const emailTemplate = getVerificationEmailTemplate(language, verificationCode);
+    
+    // 发送验证邮件
+    try {
+      const emailResponse = await fetch(`http://localhost:${PORT}/api/email/send-verification`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: email,
+          subject: emailTemplate.subject,
+          html: emailTemplate.html,
+          text: emailTemplate.text,
+          fromEmail: process.env.SMTP_USER,
+          fromName: 'Voice2Minutes Team'
+        })
+      });
+      
+      const emailResult = await emailResponse.json();
+      
+      if (!emailResult.success) {
+        throw new Error('验证邮件发送失败: ' + (emailResult.error || 'Unknown error'));
+      }
+      
+      console.log('📧 验证邮件发送成功:', emailResult.messageId);
+    } catch (emailError) {
+      console.error('❌ 发送验证邮件失败:', emailError);
+      // 注册失败，删除已创建的Supabase用户
+      await supabaseAdmin.auth.admin.deleteUser(user.id);
+      return res.status(500).json({ error: '验证邮件发送失败，请稍后重试' });
+    }
+    
+    // 4. 存储验证码信息（用于后续验证）
+    // 这里可以存储到数据库或缓存中，暂时存储在内存中
+    global.pendingVerifications = global.pendingVerifications || {};
+    global.pendingVerifications[email] = {
+      code: verificationCode,
+      userId: user.id,
+      timestamp: Date.now(),
+      language: language
+    };
+    
+    console.log('✅ 用户注册成功，验证邮件已发送:', email);
     
     res.json({
       success: true,
@@ -368,6 +562,97 @@ app.post('/api/auth/register', emailLimiter, async (req, res) => {
     console.error('❌ 注册失败:', error);
     res.status(500).json({
       error: '注册失败',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// 验证码验证端点
+app.post('/api/auth/verify-code', async (req, res) => {
+  try {
+    const { email, verificationCode } = req.body;
+    
+    if (!email || !verificationCode) {
+      return res.status(400).json({ 
+        error: '缺少必要参数',
+        required: ['email', 'verificationCode']
+      });
+    }
+    
+    // 检查待验证信息
+    global.pendingVerifications = global.pendingVerifications || {};
+    const pendingInfo = global.pendingVerifications[email];
+    
+    if (!pendingInfo) {
+      return res.status(400).json({ 
+        error: '没有找到待验证的邮箱，请重新注册' 
+      });
+    }
+    
+    // 检查验证码是否过期 (10分钟)
+    const now = Date.now();
+    const codeAge = now - pendingInfo.timestamp;
+    const CODE_EXPIRY = 10 * 60 * 1000;
+    
+    if (codeAge >= CODE_EXPIRY) {
+      // 清理过期数据
+      delete global.pendingVerifications[email];
+      
+      // 删除未验证的Supabase用户
+      try {
+        await supabaseAdmin.auth.admin.deleteUser(pendingInfo.userId);
+      } catch (error) {
+        console.warn('清理过期用户失败:', error);
+      }
+      
+      return res.status(400).json({ 
+        error: '验证码已过期，请重新注册' 
+      });
+    }
+    
+    // 验证验证码
+    if (verificationCode.trim() !== pendingInfo.code.trim()) {
+      return res.status(400).json({ 
+        error: '验证码不正确' 
+      });
+    }
+    
+    // 验证成功 - 用户在创建时已经确认邮箱，无需再次激活
+    
+    // 初始化用户数据
+    const { error: initError } = await supabaseAdmin.rpc('init_user', {
+      p_user_id: pendingInfo.userId,
+      p_lang: pendingInfo.language || 'zh',
+      p_timezone: 'Asia/Tokyo',
+      p_free_minutes: 10
+    });
+
+    if (initError) {
+      console.error('用户数据初始化失败:', initError);
+      return res.status(500).json({ 
+        error: '用户数据初始化失败',
+        details: initError.message 
+      });
+    }
+    
+    // 清理验证信息
+    delete global.pendingVerifications[email];
+    
+    console.log('✅ 邮箱验证成功，用户已激活:', email);
+    
+    res.json({
+      success: true,
+      message: '邮箱验证成功，账户已激活',
+      user: {
+        email: email,
+        isEmailVerified: true
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ 验证码验证失败:', error);
+    res.status(500).json({
+      error: '验证失败',
       details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
@@ -525,11 +810,24 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(401).json({ error: '登录失败' });
     }
 
-    // 检查邮箱是否已验证
+    // 强制检查邮箱是否已验证 - 严格执行
     if (!data.user.email_confirmed_at) {
+      console.log(`❌ 未验证邮箱尝试登录: ${email}`);
       return res.status(401).json({ 
-        error: '请先验证您的邮箱。请检查邮箱中的验证邮件。',
-        code: 'EMAIL_NOT_VERIFIED'
+        error: '邮箱尚未验证，请先验证您的邮箱后再登录。如未收到验证邮件，请重新注册。',
+        code: 'EMAIL_NOT_VERIFIED',
+        requiresVerification: true
+      });
+    }
+
+    // 二次验证：从数据库再次确认邮箱验证状态
+    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(data.user.id);
+    if (authError || !authUser.user || !authUser.user.email_confirmed_at) {
+      console.log(`❌ 数据库二次检查失败，邮箱未验证: ${email}`);
+      return res.status(401).json({ 
+        error: '邮箱验证状态异常，请重新验证您的邮箱。',
+        code: 'EMAIL_NOT_VERIFIED',
+        requiresVerification: true
       });
     }
 
@@ -1318,7 +1616,15 @@ app.post('/api/email/send-verification', emailLimiter, async (req, res) => {
       to: to,
       subject: subject,
       html: html,
-      text: text || '请使用支持HTML的邮件客户端查看此邮件。'
+      text: text || '请使用支持HTML的邮件客户端查看此邮件。',
+      // 确保邮件正确显示
+      attachDataUrls: true,
+      alternatives: [
+        {
+          contentType: 'text/html; charset=utf-8',
+          content: html
+        }
+      ]
     };
 
     const info = await transporter.sendMail(mailOptions);
@@ -1587,6 +1893,7 @@ app.get('/', (req, res) => {
       'POST /api/guest/verify',
       'GET /api/guest/stats',
       'POST /api/test/register-flow',
+      'POST /api/auth/verify-code',
       'POST /api/minutes/generate'
     ]
   });

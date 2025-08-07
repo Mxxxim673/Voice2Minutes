@@ -68,8 +68,26 @@ export class AuthService {
         return { user: null, error: new Error('用户数据为空') }
       }
 
+      // 强制检查邮箱验证状态
+      if (!data.user.email_confirmed_at) {
+        console.error('❌ 邮箱未验证，阻止登录:', email)
+        return { 
+          user: null, 
+          error: new Error('邮箱尚未验证，请先验证您的邮箱后再登录。如未收到验证邮件，请重新注册。') 
+        }
+      }
+
       // 获取用户完整信息
       const authUser = await this.getUserWithProfile(data.user.id)
+      
+      // 最终验证 - 确保用户数据中也标记已验证
+      if (authUser && !authUser.isEmailVerified) {
+        console.error('❌ 用户数据显示邮箱未验证，阻止登录:', email)
+        return { 
+          user: null, 
+          error: new Error('邮箱验证状态异常，请重新验证您的邮箱。') 
+        }
+      }
       
       console.log('✅ 用户登录成功:', email)
       return { user: authUser, error: null }
