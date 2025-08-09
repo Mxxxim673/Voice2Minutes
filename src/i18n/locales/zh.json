@@ -27,7 +27,8 @@
     "audioToText": "音频转文字",
     "meetingMinutes": "会议纪要生成",
     "usage": "使用量统计",
-    "pricing": "价格"
+    "pricing": "价格",
+    "myPage": "我的账户"
   },
   "theme": {
     "light": "浅色主题",
@@ -360,6 +361,55 @@
     "guestCannotUpload": "游客用户无法上传文件，请使用实时录音功能",
     "recordingComplete": "录音模拟完成！使用了 {{minutes}} 分钟，剩余配额: {{remaining}} 分钟",
     "uploadComplete": "文件上传模拟完成！{{filename}} 处理完毕，使用了 {{minutes}} 分钟"
+  },
+  "myPage": {
+    "title": "我的账户",
+    "userInfo": "用户信息",
+    "email": "邮箱地址",
+    "userType": "用户类型",
+    "memberSince": "注册时间",
+    "goToUsage": "使用量统计",
+    "goToPricing": "购买时长",
+    "changePassword": "修改密码",
+    "paymentHistory": "付费记录",
+    "noPaymentRecords": "暂无付费记录",
+    "cancelSubscriptionNote": "购买订阅套餐后，可在此处取消自动续费",
+    "noActiveSubscription": "没有活跃的订阅",
+    "timePlan": "时长套餐",
+    "subscription": "订阅套餐",
+    "cancelSubscription": "取消订阅",
+    "onlySubscriptionCanCancel": "只有订阅套餐才能取消",
+    "subscriptionAlreadyCancelled": "订阅已取消或已过期",
+    "cancelSubscriptionConfirm": "确定要取消订阅吗？{{details}}",
+    "cancelSubscriptionDetails": "\n\n注意：\n• 取消后将停止自动续费\n• 当前订阅期限内服务继续有效\n• 到期后将无法继续使用订阅功能",
+    "subscriptionCancelSuccess": "订阅取消成功，自动续费已停止",
+    "subscriptionCancelError": "订阅取消失败，请稍后重试",
+    "currentPassword": "当前密码",
+    "newPassword": "新密码",
+    "confirmPassword": "确认密码",
+    "passwordMismatch": "密码不匹配",
+    "passwordChangeSuccess": "密码修改成功",
+    "passwordChangeError": "密码修改失败",
+    "loginToUnlock": "登录以访问您的账户",
+    "user": "用户",
+    "userTypes": {
+      "guest": "访客用户",
+      "trial": "试用用户",
+      "paid": "付费用户",
+      "subscription": "订阅用户",
+      "admin": "管理员",
+      "unknown": "未知"
+    },
+    "status": {
+      "active": "生效中",
+      "cancelled": "已取消",
+      "expired": "已过期"
+    },
+    "subscriptionExpiry": {
+      "continuesUntil": "持续到{{date}}",
+      "autoRenewalIn": "还剩{{days}}天自动续费",
+      "validUntil": "有效期至{{date}}"
+    }
   },
   "footer": {
     "copyright": "voice2minutes {{year}} 版权所有"

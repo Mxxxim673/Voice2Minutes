@@ -9,6 +9,7 @@ import AudioToText from './pages/AudioToText/AudioToText';
 import MeetingMinutes from './pages/MeetingMinutes/MeetingMinutes';
 import Usage from './pages/Usage/Usage';
 import Pricing from './pages/Pricing/Pricing';
+import MyPage from './pages/MyPage/MyPage';
 import Auth from './pages/Auth/Auth';
 import AuthCallback from './pages/AuthCallback/AuthCallback';
 import PaymentSuccess from './pages/PaymentSuccess/PaymentSuccess';
@@ -43,6 +44,7 @@ function App() {
                           <Route path="/meeting-minutes" element={<MeetingMinutes />} />
                           <Route path="/usage" element={<Usage />} />
                           <Route path="/pricing" element={<Pricing />} />
+                          <Route path="/mypage" element={<MyPage />} />
                         </Routes>
                       </Layout>
                     } />

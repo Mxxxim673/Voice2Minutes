@@ -1487,7 +1487,122 @@ app.post('/api/usage/subscription', async (req, res) => {
   }
 });
 
-// 取消订阅API
+// 获取用户支付历史API
+app.get('/api/user/payment-history', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: '未提供访问令牌' });
+    }
+    
+    const token = authHeader.substring(7);
+    const { data, error } = await supabase.auth.getUser(token);
+    
+    if (error || !data.user) {
+      return res.status(401).json({ error: '无效的访问令牌' });
+    }
+
+    // 检查是否为管理员用户
+    const isAdminUser = data.user.email === 'max.z.software@gmail.com';
+    
+    let records = [];
+    
+    if (isAdminUser) {
+      // 对于管理员用户，从usage_minutes表获取订阅信息
+      const { data: usage, error: usageError } = await supabaseAdmin
+        .from('usage_minutes')
+        .select('*')
+        .eq('user_id', data.user.id)
+        .single();
+      
+      if (!usageError && usage && usage.subscription_type) {
+        // 为管理员创建一个模拟的支付记录
+        records = [{
+          id: `admin-subscription-${usage.subscription_type}`,
+          type: 'subscription',
+          planType: usage.subscription_type === 'monthly' ? '月订阅' : '年订阅',
+          amount: usage.subscription_type === 'monthly' ? 2300 : 23200,
+          minutes: usage.subscription_minutes,
+          subscriptionPeriod: usage.subscription_type,
+          date: usage.subscription_start_at || usage.created_at,
+          status: usage.subscription_reset_at && new Date(usage.subscription_reset_at) > new Date() ? 'active' : 'expired',
+          expiresAt: usage.subscription_reset_at
+        }];
+      }
+    } else {
+      // 对于普通用户，从user_usage表获取支付记录（如果存在的话）
+      const { data: payments, error: paymentError } = await supabaseAdmin
+        .from('user_usage')
+        .select('*')
+        .eq('user_id', data.user.id)
+        .order('created_at', { ascending: false });
+      
+      if (!paymentError && payments) {
+        // 转换为前端需要的格式
+        records = payments.map(payment => ({
+          id: payment.id || `payment-${payment.user_id}-${payment.created_at}`,
+          type: payment.subscription_type ? 'subscription' : 'time_plan',
+          planType: payment.subscription_type === 'monthly' ? '月订阅' : 
+                    payment.subscription_type === 'yearly' ? '年订阅' : 
+                    `${payment.minutes}分钟套餐`,
+          amount: payment.subscription_type === 'monthly' ? 2300 : 
+                  payment.subscription_type === 'yearly' ? 23200 : 
+                  (payment.minutes * 0.5),
+          minutes: payment.minutes,
+          subscriptionPeriod: payment.subscription_type,
+          date: payment.created_at,
+          status: payment.subscription_expires_at && new Date(payment.subscription_expires_at) > new Date() ? 'active' : 'expired',
+          expiresAt: payment.subscription_expires_at
+        }));
+      }
+    }
+
+
+    res.json({ records });
+  } catch (error) {
+    console.error('获取支付历史失败:', error);
+    res.status(500).json({ error: '获取支付历史失败' });
+  }
+});
+
+// 取消订阅API (POST方式，与前端匹配)
+app.post('/api/subscription/cancel', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: '未提供访问令牌' });
+    }
+
+    const token = authHeader.substring(7);
+    const { data, error } = await supabase.auth.getUser(token);
+    
+    if (error || !data.user) {
+      return res.status(401).json({ error: '无效的访问令牌' });
+    }
+
+    // 取消订阅
+    const { data: result, error: cancelError } = await supabaseAdmin
+      .rpc('cancel_subscription', { user_id_param: data.user.id });
+
+    if (cancelError || !result) {
+      console.error('取消订阅失败:', cancelError);
+      return res.status(500).json({ error: '取消订阅失败' });
+    }
+
+    console.log(`✅ 用户 ${data.user.email} 取消了订阅`);
+
+    res.json({
+      success: true,
+      message: 'サブスクリプションが正常にキャンセルされました'
+    });
+
+  } catch (error) {
+    console.error('❌ 取消订阅失败:', error);
+    res.status(500).json({ error: 'サブスクリプションのキャンセルに失敗しました' });
+  }
+});
+
+// 取消订阅API (DELETE方式)
 app.delete('/api/usage/subscription', async (req, res) => {
   try {
     const authHeader = req.headers.authorization;

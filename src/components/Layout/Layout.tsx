@@ -56,6 +56,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 {t('navigation.pricing')}
               </Link>
             </li>
+            <li>
+              <Link 
+                to="/mypage" 
+                className={`nav-link ${location.pathname === '/mypage' ? 'active' : ''}`}
+              >
+                {t('navigation.myPage')}
+              </Link>
+            </li>
           </ul>
           
           <div className="nav-right">

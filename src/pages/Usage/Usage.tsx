@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../hooks/useAuth';
 import { getUsageStats, getUserQuota } from '../../services/usageService';
+import { usageTracker } from '../../services/usageTracker';
 import { calculateGlobalMaxUsage, getEmptyStateText } from '../../utils/chartUtils';
 import UsageChart from '../../components/UsageChart/UsageChart';
 import './Usage.css';
@@ -178,6 +179,12 @@ const Usage: React.FC = () => {
           // 同步更新所有 localStorage 数据
           localStorage.setItem('userData', JSON.stringify(resetUser));
           localStorage.setItem('adminUserData', JSON.stringify(resetUser));
+          
+          // 清空管理员支付记录
+          localStorage.removeItem('adminPaymentRecords');
+          
+          // 清空使用量追踪记录
+          await usageTracker.clearUserUsageRecords();
           
           // 强制刷新页面数据
           await loadUsageData();

@@ -1,0 +1,26 @@
+{
+  "scripts": {
+    "fix": "./quick-fix.sh",
+    "fix-interactive": "./auto-fix.sh",
+    "fix-code": "./fix-code-issues.sh",
+    "fix-frontend": "./fix-frontend.sh",
+    "health": "./auto-fix.sh && echo '5' | ./auto-fix.sh",
+    "dev-safe": "./quick-fix.sh || npm run dev"
+  },
+  "fix-system": {
+    "version": "1.0.0",
+    "description": "Voice2Minutes前端自动修复系统",
+    "common-issues": [
+      "usageService.getUserStats函数缺失",
+      "AuthService导入错误",
+      "服务器端口占用",
+      "依赖缓存问题",
+      "TypeScript编译错误"
+    ],
+    "usage": {
+      "quick-fix": "npm run fix",
+      "interactive": "npm run fix-interactive", 
+      "health-check": "npm run health"
+    }
+  }
+}

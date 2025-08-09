@@ -86,8 +86,9 @@ const Pricing: React.FC = () => {
       const hoursInMinutes = plan.hours * 60;
       
       // 确保当前用户数据正确（防止异常数据）
-      const currentQuotaMinutes = (user.quotaMinutes && user.quotaMinutes < 100000) ? user.quotaMinutes : 10;
-      const currentUsedMinutes = (user.usedMinutes && user.usedMinutes < 100000) ? user.usedMinutes : 0;
+      // 使用 >= 0 来允许从0开始，只防止负数和过大的数值
+      const currentQuotaMinutes = (user.quotaMinutes !== undefined && user.quotaMinutes >= 0 && user.quotaMinutes < 100000) ? user.quotaMinutes : 0;
+      const currentUsedMinutes = (user.usedMinutes !== undefined && user.usedMinutes >= 0 && user.usedMinutes < 100000) ? user.usedMinutes : 0;
       
       let updatedUser: typeof user;
       
@@ -115,6 +116,24 @@ const Pricing: React.FC = () => {
       setUser(updatedUser);
       localStorage.setItem('userData', JSON.stringify(updatedUser));
       localStorage.setItem('adminUserData', JSON.stringify(updatedUser)); // 同步管理员数据
+      
+      // 创建模拟支付记录用于MyPage显示
+      const mockPaymentRecord = {
+        id: `admin-${plan.type}-${Date.now()}`,
+        type: plan.type,
+        planType: plan.type === 'subscription' ? `${plan.hours}小时${plan.period === 'monthly' ? '月付' : '年付'}套餐` : `${plan.hours}小时套餐`,
+        amount: plan.price,
+        minutes: plan.hours * 60,
+        subscriptionPeriod: plan.period,
+        date: new Date().toISOString(),
+        status: 'active',
+        expiresAt: plan.type === 'subscription' ? new Date(Date.now() + (plan.period === 'monthly' ? 30 : 365) * 24 * 60 * 60 * 1000).toISOString() : undefined
+      };
+      
+      // 存储到localStorage供MyPage读取
+      const existingRecords = JSON.parse(localStorage.getItem('adminPaymentRecords') || '[]');
+      const updatedRecords = [mockPaymentRecord, ...existingRecords];
+      localStorage.setItem('adminPaymentRecords', JSON.stringify(updatedRecords));
       
       const totalHours = Math.floor(updatedUser.quotaMinutes / 60);
       const remainingHours = Math.floor((updatedUser.quotaMinutes - updatedUser.usedMinutes) / 60);

@@ -1114,7 +1114,7 @@
 /* 左侧区域 */
 .meeting-minutes-page .left-section {
   display: grid;
-  grid-template-rows: 320px 1fr;
+  grid-template-rows: 280px 1fr;
   gap: 1.5rem;
   height: 100%;
   min-height: 700px;
@@ -1158,25 +1158,31 @@
 .meeting-minutes-page .card-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem;
+  align-items: flex-start;
+  padding: 1rem 1.5rem;
   border-bottom: 1px solid #e2e8f0;
   background: #f8fafc;
   position: relative;
   z-index: 2;
+  gap: 1rem;
+  flex-wrap: wrap;
+  min-height: auto;
 }
 
 .meeting-minutes-page .card-title {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: #1e293b;
   margin: 0;
+  line-height: 1.3;
 }
 
 .meeting-minutes-page .header-actions {
   display: flex;
   gap: 0.75rem;
   flex-shrink: 0;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 /* 模板选择器 */
@@ -1378,6 +1384,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
+  margin-right: auto;
 }
 
 .meeting-minutes-page .char-count {
@@ -1408,6 +1415,7 @@
   background: #f8fafc;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 .meeting-minutes-page .original-text {
@@ -1455,11 +1463,12 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   text-align: center;
-  min-height: 120px;
+  min-height: 200px;
   color: #94a3b8;
-  padding: 0.8rem 1.5rem 1rem 1.5rem;
+  padding: 1rem 1.5rem;
+  flex: 1;
 }
 
 /* 统一布局的结果卡片 */
@@ -1516,8 +1525,8 @@
 }
 
 .meeting-minutes-page .empty-original-text .empty-icon {
-  font-size: 2.2rem;
-  margin-bottom: 0.6rem;
+  font-size: 1.8rem;
+  margin-bottom: 0.8rem;
   opacity: 0.4;
 }
 
@@ -1525,12 +1534,12 @@
   font-size: 1rem;
   font-weight: 500;
   color: #64748b;
-  margin: 0 0 0.4rem 0;
+  margin: 0 0 0.5rem 0;
 }
 
 .meeting-minutes-page .empty-original-text p {
-  font-size: 0.8rem;
-  margin: 0 0 1rem 0;
+  font-size: 0.85rem;
+  margin: 0 0 1.2rem 0;
   line-height: 1.4;
   color: #94a3b8;
 }
@@ -1662,6 +1671,7 @@
 .meeting-minutes-page .btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
   padding: 0.75rem 1rem;
   border: none;
@@ -1673,6 +1683,7 @@
   text-decoration: none;
   position: relative;
   overflow: hidden;
+  line-height: 1;
 }
 
 /* 按钮玻璃反光效果 */
@@ -1973,6 +1984,12 @@
 .meeting-minutes-page .icon {
   font-size: 1em;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  vertical-align: middle;
+  transform: translateY(-0.05em);
 }
 
 /* 错误提示 */
@@ -2106,6 +2123,17 @@
   .meeting-minutes-page .selector-group {
     flex-direction: column;
   }
+  
+  .meeting-minutes-page .card-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  
+  .meeting-minutes-page .header-actions {
+    justify-content: flex-end;
+    align-self: flex-end;
+  }
 }
 
 @media (max-width: 640px) {
@@ -2123,6 +2151,14 @@
   
   .meeting-minutes-page .card-header {
     padding: 1rem;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  
+  .meeting-minutes-page .header-actions {
+    justify-content: center;
+    align-self: stretch;
   }
   
   .meeting-minutes-page .template-selector,

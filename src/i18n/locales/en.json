@@ -27,7 +27,8 @@
     "audioToText": "Audio to Text",
     "meetingMinutes": "Meeting Minutes",
     "usage": "Usage Statistics",
-    "pricing": "Pricing"
+    "pricing": "Pricing",
+    "myPage": "My Account"
   },
   "theme": {
     "light": "Light Theme",
@@ -355,6 +356,55 @@
     "guestCannotUpload": "Guest users cannot upload files, please use live recording function",
     "recordingComplete": "Recording simulation completed! Used {{minutes}} minutes, remaining quota: {{remaining}} minutes",
     "uploadComplete": "File upload simulation completed! {{filename}} processed, used {{minutes}} minutes"
+  },
+  "myPage": {
+    "title": "My Account",
+    "userInfo": "User Information",
+    "email": "Email Address",
+    "userType": "User Type",
+    "memberSince": "Member Since",
+    "goToUsage": "Usage Statistics",
+    "goToPricing": "Purchase Time",
+    "changePassword": "Change Password",
+    "paymentHistory": "Payment History",
+    "noPaymentRecords": "No payment records yet",
+    "cancelSubscriptionNote": "After purchasing a subscription plan, you can cancel auto-renewal here",
+    "noActiveSubscription": "No active subscription",
+    "timePlan": "Time Plan",
+    "subscription": "Subscription",
+    "cancelSubscription": "Cancel Subscription",
+    "onlySubscriptionCanCancel": "Only subscription plans can be cancelled",
+    "subscriptionAlreadyCancelled": "Subscription is already cancelled or expired",
+    "cancelSubscriptionConfirm": "Are you sure you want to cancel your subscription?{{details}}",
+    "cancelSubscriptionDetails": "\n\nNote:\n• Auto-renewal will be stopped after cancellation\n• Your service remains active until the current billing period ends\n• Subscription features will be unavailable after expiration",
+    "subscriptionCancelSuccess": "Subscription cancelled successfully. Auto-renewal has been stopped",
+    "subscriptionCancelError": "Failed to cancel subscription. Please try again later",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "passwordMismatch": "Passwords do not match",
+    "passwordChangeSuccess": "Password changed successfully",
+    "passwordChangeError": "Failed to change password",
+    "loginToUnlock": "Login to Access Your Account",
+    "user": "User",
+    "userTypes": {
+      "guest": "Guest User",
+      "trial": "Trial User", 
+      "paid": "Paid User",
+      "subscription": "Subscription User",
+      "admin": "Administrator",
+      "unknown": "Unknown"
+    },
+    "status": {
+      "active": "Active",
+      "cancelled": "Cancelled",
+      "expired": "Expired"
+    },
+    "subscriptionExpiry": {
+      "continuesUntil": "Continues until {{date}}",
+      "autoRenewalIn": "Auto-renewal in {{days}} days",
+      "validUntil": "Valid until {{date}}"
+    }
   },
   "footer": {
     "copyright": "voice2minutes {{year}} all rights reserved"

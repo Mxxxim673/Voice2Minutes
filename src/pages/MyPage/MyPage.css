@@ -65,6 +65,25 @@
   color: var(--text-secondary);
 }
 
+.empty-record-example {
+  margin-top: var(--spacing-lg);
+  padding: var(--spacing-md);
+  background: var(--background-tertiary);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--border-radius-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.example-note {
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+  margin: 0;
+  font-style: italic;
+}
+
 .payment-records {
   display: flex;
   flex-direction: column;
@@ -91,6 +110,16 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xs);
+}
+
+.record-expiry-info {
+  font-size: var(--font-size-sm);
+  color: var(--primary-color);
+  font-weight: 500;
+  padding: 4px 8px;
+  background: rgba(var(--primary-color-rgb), 0.1);
+  border-radius: var(--border-radius-sm);
+  border-left: 3px solid var(--primary-color);
 }
 
 .record-type {
@@ -325,4 +354,66 @@
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* Warning button styles */
+.button-warning {
+  background-color: #f59e0b;
+  color: white;
+  border: 1px solid #f59e0b;
+  transition: all 0.2s ease;
+}
+
+.button-warning:hover:not(:disabled) {
+  background-color: #d97706;
+  border-color: #d97706;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(245, 158, 11, 0.3);
+}
+
+.button-warning:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+}
+
+/* Small button styles */
+.button-small {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  line-height: 1.2;
+}
+
+/* Cancel subscription button specific styles */
+.payment-record .button-warning.button-small {
+  margin-left: auto;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Disabled button styles */
+.button.disabled,
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #9ca3af;
+  border-color: #9ca3af;
+  color: #ffffff;
+}
+
+.button-warning.disabled,
+.button-warning:disabled {
+  background-color: #d1d5db;
+  border-color: #d1d5db;
+  color: #6b7280;
+}
+
+.button.disabled:hover,
+.button:disabled:hover,
+.button-warning.disabled:hover,
+.button-warning:disabled:hover {
+  background-color: #d1d5db;
+  border-color: #d1d5db;
+  color: #6b7280;
+  transform: none;
+  box-shadow: none;
 }

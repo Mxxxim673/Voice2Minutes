@@ -27,7 +27,8 @@
     "audioToText": "音声文字起こし",
     "meetingMinutes": "会議議事録",
     "usage": "使用量統計",
-    "pricing": "料金"
+    "pricing": "料金",
+    "myPage": "マイページ"
   },
   "theme": {
     "light": "ライトテーマ",
@@ -351,6 +352,55 @@
     "guestCannotUpload": "ゲストユーザーはファイルをアップロードできません。リアルタイム録音機能をご利用ください",
     "recordingComplete": "録音シミュレーション完了！{{minutes}}分使用、残りクォータ：{{remaining}}分",
     "uploadComplete": "ファイルアップロードシミュレーション完了！{{filename}}処理済み、{{minutes}}分使用"
+  },
+  "myPage": {
+    "title": "マイページ",
+    "userInfo": "ユーザー情報",
+    "email": "メールアドレス",
+    "userType": "ユーザータイプ",
+    "memberSince": "登録日",
+    "goToUsage": "使用量統計",
+    "goToPricing": "時間購入",
+    "changePassword": "パスワード変更",
+    "paymentHistory": "支払い履歴",
+    "noPaymentRecords": "支払い履歴はありません",
+    "cancelSubscriptionNote": "サブスクリプションプランをご購入いただくと、こちらで自動更新を解約できます",
+    "noActiveSubscription": "有効なサブスクリプションがありません",
+    "timePlan": "時間プラン",
+    "subscription": "サブスクリプション",
+    "cancelSubscription": "サブスクリプション解約",
+    "onlySubscriptionCanCancel": "サブスクリプションプランのみ解約できます",
+    "subscriptionAlreadyCancelled": "サブスクリプションは既に解約済みまたは期限切れです",
+    "cancelSubscriptionConfirm": "サブスクリプションを解約してもよろしいですか？{{details}}",
+    "cancelSubscriptionDetails": "\n\n注意事項：\n• 解約後は自動更新が停止されます\n• 現在の契約期間中はサービスをご利用いただけます\n• 期限切れ後はサブスクリプション機能が利用できなくなります",
+    "subscriptionCancelSuccess": "サブスクリプションを解約しました。自動更新が停止されました",
+    "subscriptionCancelError": "サブスクリプション解約に失敗しました。しばらくしてから再試行してください",
+    "currentPassword": "現在のパスワード",
+    "newPassword": "新しいパスワード",
+    "confirmPassword": "パスワード確認",
+    "passwordMismatch": "パスワードが一致しません",
+    "passwordChangeSuccess": "パスワード変更成功",
+    "passwordChangeError": "パスワード変更失敗",
+    "loginToUnlock": "アカウントにアクセスするにはログインしてください",
+    "user": "ユーザー",
+    "userTypes": {
+      "guest": "ゲストユーザー",
+      "trial": "試用ユーザー",
+      "paid": "有料ユーザー",
+      "subscription": "サブスクリプションユーザー",
+      "admin": "管理者",
+      "unknown": "不明"
+    },
+    "status": {
+      "active": "有効",
+      "cancelled": "キャンセル済み",
+      "expired": "期限切れ"
+    },
+    "subscriptionExpiry": {
+      "continuesUntil": "{{date}}まで継続",
+      "autoRenewalIn": "あと{{days}}日で自動更新",
+      "validUntil": "{{date}}まで有効"
+    }
   },
   "footer": {
     "copyright": "voice2minutes {{year}} all rights reserved"

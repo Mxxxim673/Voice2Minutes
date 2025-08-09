@@ -587,7 +587,6 @@ const MeetingMinutes: React.FC = () => {
                       </>
                     ) : (
                       <>
-                        <span className="icon">🚀</span>
                         {t('meetingMinutes.startGeneration')}
                       </>
                     )}
@@ -605,13 +604,6 @@ const MeetingMinutes: React.FC = () => {
                     <div className="empty-icon">📄</div>
                     <h3>{t('meetingMinutes.noOriginalText')}</h3>
                     <p>{t('meetingMinutes.originalTextHint')}</p>
-                    <button 
-                      className="btn btn-outline btn-sm"
-                      onClick={() => window.location.href = '/audio-to-text'}
-                    >
-                      <span className="icon">🎤</span>
-                      {t('meetingMinutes.goToTranscription')}
-                    </button>
                   </div>
                 )}
               </div>
@@ -711,7 +703,6 @@ const MeetingMinutes: React.FC = () => {
                             onClick={addOutlineItem}
                             className="btn btn-outline"
                           >
-                            <span className="icon">+</span>
                             {t('meetingMinutes.addOutlineItem')}
                           </button>
                           <button 
@@ -735,7 +726,6 @@ const MeetingMinutes: React.FC = () => {
                             onClick={handleCreateTemplate}
                             className="btn btn-primary btn-sm"
                           >
-                            <span className="icon">+</span>
                             {t('meetingMinutes.addTemplate')}
                           </button>
                         </div>
@@ -866,7 +856,6 @@ const MeetingMinutes: React.FC = () => {
                     onClick={handleEditText}
                     className="btn btn-outline btn-sm"
                   >
-                    <span className="icon">✏️</span>
                     {t('meetingMinutes.editText')}
                   </button>
                 )}
@@ -875,7 +864,6 @@ const MeetingMinutes: React.FC = () => {
                   className={`btn btn-outline ${!summary ? 'disabled' : ''}`}
                   disabled={!summary}
                 >
-                  <span className="icon">📋</span>
                   {t('common.copy')}
                 </button>
                 <button
@@ -883,7 +871,6 @@ const MeetingMinutes: React.FC = () => {
                   className={`btn btn-outline ${!summary ? 'disabled' : ''}`}
                   disabled={!summary}
                 >
-                  <span className="icon">📄</span>
                   {t('common.export')}
                 </button>
                 <button
@@ -891,7 +878,6 @@ const MeetingMinutes: React.FC = () => {
                   className={`btn btn-outline btn-danger ${!originalText && !summary ? 'disabled' : ''}`}
                   disabled={!originalText && !summary}
                 >
-                  <span className="icon">🗑️</span>
                   {t('common.clear')}
                 </button>
               </div>
