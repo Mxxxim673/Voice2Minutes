@@ -14,6 +14,10 @@ import Auth from './pages/Auth/Auth';
 import AuthCallback from './pages/AuthCallback/AuthCallback';
 import PaymentSuccess from './pages/PaymentSuccess/PaymentSuccess';
 import PaymentCancel from './pages/PaymentCancel/PaymentCancel';
+import OperatorInfo from './pages/OperatorInfo/OperatorInfo';
+import CommercialTransactionAct from './pages/CommercialTransactionAct/CommercialTransactionAct';
+import PrivacyPolicy from './pages/PrivacyPolicy/PrivacyPolicy';
+import RefundPolicy from './pages/RefundPolicy/RefundPolicy';
 import './styles/globals.css';
 
 function App() {
@@ -45,6 +49,10 @@ function App() {
                           <Route path="/usage" element={<Usage />} />
                           <Route path="/pricing" element={<Pricing />} />
                           <Route path="/mypage" element={<MyPage />} />
+                          <Route path="/operator-info" element={<OperatorInfo />} />
+                          <Route path="/commercial-transaction-act" element={<CommercialTransactionAct />} />
+                          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                          <Route path="/refund-policy" element={<RefundPolicy />} />
                         </Routes>
                       </Layout>
                     } />

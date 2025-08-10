@@ -89,13 +89,29 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         {children}
       </main>
 
-      <footer style={{ 
-        textAlign: 'center', 
-        padding: 'var(--spacing-lg)', 
-        color: 'var(--text-secondary)',
-        fontSize: 'var(--font-size-footnote)'
-      }}>
-        {t('footer.copyright', { year: currentYear })}
+      <footer className="footer">
+        <div className="footer-content">
+          <div className="footer-links">
+            <Link to="/operator-info" className="footer-link">
+              {t('operatorInfo.title')}
+            </Link>
+            <span className="footer-separator">|</span>
+            <Link to="/privacy-policy" className="footer-link">
+              {t('privacyPolicy.title')}
+            </Link>
+            <span className="footer-separator">|</span>
+            <Link to="/commercial-transaction-act" className="footer-link">
+              {t('commercialTransactionAct.title')}
+            </Link>
+            <span className="footer-separator">|</span>
+            <Link to="/refund-policy" className="footer-link">
+              {t('refundPolicy.title')}
+            </Link>
+          </div>
+          <div className="footer-copyright">
+            {t('footer.copyright', { year: currentYear })}
+          </div>
+        </div>
       </footer>
     </div>
   );

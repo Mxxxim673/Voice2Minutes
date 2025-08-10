@@ -1,0 +1,101 @@
+.language-selector {
+  position: relative;
+  display: inline-block;
+}
+
+.language-button {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  color: var(--primary-blue);
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  min-height: 32px;
+}
+
+.language-button:hover {
+  background-color: var(--light-gray);
+  border-color: var(--primary-blue);
+}
+
+.globe-icon {
+  font-size: 14px;
+}
+
+.language-code {
+  font-weight: var(--font-weight-semibold);
+  color: var(--primary-blue);
+}
+
+.arrow {
+  font-size: 10px;
+  transition: transform 0.2s ease-in-out;
+  color: var(--text-secondary);
+}
+
+.arrow-up {
+  transform: rotate(180deg);
+}
+
+.arrow-down {
+  transform: rotate(0deg);
+}
+
+.language-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: var(--background-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  z-index: 1000;
+  min-width: 150px;
+  margin-top: var(--spacing-xs);
+}
+
+.language-option {
+  display: block;
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: none;
+  border: none;
+  text-align: left;
+  color: var(--text-primary);
+  font-size: var(--font-size-footnote);
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.language-option:hover {
+  background-color: var(--light-gray);
+}
+
+.language-option.selected {
+  background-color: var(--primary-blue-light);
+  color: var(--primary-blue);
+  font-weight: var(--font-weight-medium);
+}
+
+.language-option:first-child {
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.language-option:last-child {
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+}
+
+.language-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+}

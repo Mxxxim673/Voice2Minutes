@@ -1,5 +1,41 @@
-.transcription-result {
+.transcription-result.card {
   margin-top: var(--spacing-xl);
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+/* 添加玻璃反光效果 */
+.transcription-result.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(80, 200, 120, 0.1), transparent);
+  transition: left 0.5s ease;
+  z-index: 1;
+}
+
+.transcription-result.card:hover::before {
+  left: 100%;
+}
+
+.transcription-result.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* 确保内容在反光效果之上 */
+.transcription-result.card > * {
+  position: relative;
+  z-index: 2;
 }
 
 .result-header {
@@ -68,4 +104,57 @@
   .transcription-textarea {
     min-height: 150px;
   }
+}
+
+/* Dark theme support */
+@media (prefers-color-scheme: dark) {
+  .transcription-result.card {
+    background: rgba(30, 30, 30, 0.95) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+  }
+  
+  .transcription-result.card::before {
+    background: linear-gradient(90deg, transparent, rgba(80, 200, 120, 0.15), transparent);
+  }
+  
+  .transcription-result.card:hover {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5) !important;
+  }
+}
+
+/* Manual theme switching - dark */
+[data-theme="dark"] .transcription-result.card {
+  background: rgba(30, 30, 30, 0.95) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+}
+
+[data-theme="dark"] .transcription-result.card::before {
+  background: linear-gradient(90deg, transparent, rgba(80, 200, 120, 0.15), transparent);
+}
+
+[data-theme="dark"] .transcription-result.card:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Manual theme switching - light */
+[data-theme="light"] .transcription-result.card {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-theme="light"] .transcription-result.card::before {
+  background: linear-gradient(90deg, transparent, rgba(80, 200, 120, 0.1), transparent);
+}
+
+[data-theme="light"] .transcription-result.card:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
 }
