@@ -68,9 +68,11 @@
   overflow-y: auto;
   min-height: 0;
   text-align: center;
-  margin: 0;
+  margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
+  padding-left: calc(var(--spacing-lg) + 10px);
+  padding-right: var(--spacing-lg);
 }
 
 .waveform-container {
