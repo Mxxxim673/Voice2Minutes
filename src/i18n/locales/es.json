@@ -193,7 +193,7 @@
     "bestValue": "La mejor relación calidad-precio",
     "perHour": "Por hora",
     "paymentInfo": {
-      "currency": "Los precios se muestran en euros (€, impuestos incluidos)",
+      "currency": "Los precios se muestran en yenes japoneses (¥, impuestos incluidos)",
       "security": "Todos los planes incluyen procesamiento seguro y privacidad de datos",
       "oneTime": "Si solo compra tiempo, no hay fecha de caducidad y se puede acumular",
       "cancellation": "Las suscripciones se pueden cancelar en cualquier momento"

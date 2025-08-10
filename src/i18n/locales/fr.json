@@ -193,7 +193,7 @@
     "bestValue": "Meilleur rapport qualité-prix",
     "perHour": "À l'heure",
     "paymentInfo": {
-      "currency": "Les prix sont affichés en euros (€, taxes comprises)",
+      "currency": "Les prix sont affichés en yens japonais (¥, taxes comprises)",
       "security": "Tous les forfaits incluent un traitement sécurisé et la confidentialité des données",
       "oneTime": "Si vous achetez uniquement du temps, il n'y a pas de date d'expiration et celui-ci peut être cumulé",
       "cancellation": "Les abonnements peuvent être résiliés à tout moment"
