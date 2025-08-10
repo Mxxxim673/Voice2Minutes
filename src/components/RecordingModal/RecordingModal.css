@@ -9,6 +9,8 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 .recording-modal {
@@ -17,8 +19,12 @@
   box-shadow: var(--shadow-xl);
   max-width: 500px;
   width: 90%;
-  max-height: 80vh;
+  max-height: 90vh;
   overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
 }
 
 .modal-header {
@@ -52,18 +58,27 @@
 }
 
 .modal-content {
-  padding: var(--spacing-xl);
+  padding: var(--spacing-lg);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--spacing-lg);
+  justify-content: flex-start;
+  gap: var(--spacing-md);
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  text-align: center;
+  margin: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .waveform-container {
   width: 100%;
   max-width: 400px;
   height: 80px;
-  background-color: var(--background-secondary);
+  background-color: var(--background-primary);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   padding: var(--spacing-sm);
   display: flex;
@@ -93,7 +108,8 @@
   font-weight: var(--font-weight-bold);
   color: var(--text-primary);
   font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
-  background-color: var(--background-secondary);
+  background-color: var(--background-primary);
+  border: 1px solid var(--border-color);
   padding: var(--spacing-md) var(--spacing-lg);
   border-radius: var(--radius-md);
 }
@@ -120,11 +136,21 @@
 .usage-limit-info {
   text-align: center;
   margin: var(--spacing-sm) 0;
+  background-color: var(--background-primary);
+  border: 1px solid var(--border-color);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-md);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .limit-text {
   font-size: var(--font-size-footnote);
   color: var(--text-secondary);
+  margin: 0 0 var(--spacing-xs) 0;
+}
+
+.user-type-info {
   margin: 0;
 }
 
@@ -166,11 +192,11 @@
 @media (max-width: 768px) {
   .recording-modal {
     width: 95%;
-    margin: var(--spacing-md);
   }
   
   .modal-content {
-    padding: var(--spacing-lg);
+    padding: var(--spacing-md);
+    justify-content: flex-start;
   }
   
   .waveform-container {
