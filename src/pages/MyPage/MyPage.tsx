@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../hooks/useAuth';
 import { getUserQuota } from '../../services/usageService';
+import { supabase } from '../../lib/supabase';
 import './MyPage.css';
 
 interface UserInfo {
@@ -27,6 +28,27 @@ interface PaymentRecord {
 const MyPage: React.FC = () => {
   const { t } = useTranslation();
   const { user, isGuest, setUser } = useAuth();
+
+  // 获取真实的认证token
+  const getAuthToken = async (): Promise<string | null> => {
+    // 管理员用户特殊处理
+    if (user?.email === 'max.z.software@gmail.com') {
+      return 'admin_token';
+    }
+    
+    // Supabase用户获取真实JWT token
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        return session.access_token;
+      }
+    } catch (error) {
+      console.error('获取Supabase token失败:', error);
+    }
+    
+    // 回退到localStorage中的token（可能是假token）
+    return localStorage.getItem('authToken');
+  };
   const [loading, setLoading] = useState(true);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [paymentRecords, setPaymentRecords] = useState<PaymentRecord[]>([]);
@@ -68,17 +90,22 @@ const MyPage: React.FC = () => {
             setPaymentRecords(adminRecords);
           } else {
             // 普通用户从服务器获取
-            const response = await fetch('/api/user/payment-history', {
-              method: 'GET',
-              headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                'Content-Type': 'application/json'
+            const token = await getAuthToken();
+            if (token) {
+              const response = await fetch('/api/user/payment-history', {
+                method: 'GET',
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json'
+                }
+              });
+              
+              if (response.ok) {
+                const paymentData = await response.json();
+                setPaymentRecords(paymentData.records || []);
+              } else {
+                setPaymentRecords([]);
               }
-            });
-            
-            if (response.ok) {
-              const paymentData = await response.json();
-              setPaymentRecords(paymentData.records || []);
             } else {
               setPaymentRecords([]);
             }
@@ -101,9 +128,37 @@ const MyPage: React.FC = () => {
       return;
     }
 
+    if (passwordForm.newPassword.length < 6) {
+      alert(t('myPage.passwordTooShort'));
+      return;
+    }
+
     try {
-      // Mock password change - in real app, call API
-      console.log('Password change requested');
+      // 获取真实的认证token
+      const token = await getAuthToken();
+      if (!token) {
+        throw new Error('无法获取认证token，请重新登录');
+      }
+
+      // 调用API修改密码
+      const response = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          currentPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || '密码修改失败');
+      }
+
       alert(t('myPage.passwordChangeSuccess'));
       setShowPasswordChangeModal(false);
       setPasswordForm({
@@ -113,7 +168,7 @@ const MyPage: React.FC = () => {
       });
     } catch (error) {
       console.error('Password change failed:', error);
-      alert(t('myPage.passwordChangeError'));
+      alert(error.message || t('myPage.passwordChangeError'));
     }
   };
 
@@ -146,10 +201,15 @@ const MyPage: React.FC = () => {
           loadUserData();
         } else {
           // 普通用户：调用API
+          const token = await getAuthToken();
+          if (!token) {
+            throw new Error('无法获取认证token，请重新登录');
+          }
+
           const response = await fetch('/api/subscription/cancel', {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+              'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'
             },
             body: JSON.stringify({

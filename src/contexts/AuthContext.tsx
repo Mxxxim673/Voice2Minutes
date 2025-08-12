@@ -3,6 +3,7 @@ import { sendVerificationEmail, generateVerificationCode } from '../services/ema
 import { useTranslation } from 'react-i18next';
 import { guestIdentityService, type GuestValidationResult } from '../services/guestIdentityService';
 import { AuthService } from '../services/authService';
+import { supabase } from '../lib/supabase';
 
 export interface User {
   id: string;
@@ -366,8 +367,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         createdAt: authUser.createdAt
       };
       
-      // 存储认证信息
-      localStorage.setItem('authToken', 'supabase_session');
+      // 获取并存储真实的Supabase token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        localStorage.setItem('authToken', session.access_token);
+      } else {
+        localStorage.setItem('authToken', 'supabase_session');
+      }
       localStorage.setItem('userData', JSON.stringify(userData));
       localStorage.removeItem('guestMode');
       // 保留访客使用记录，用于身份识别和配额管理
@@ -565,8 +571,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         isEmailVerified: true
       };
       
-      // 存储用户数据并登录
-      localStorage.setItem('authToken', 'supabase_session');
+      // 获取并存储真实的Supabase token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        localStorage.setItem('authToken', session.access_token);
+      } else {
+        localStorage.setItem('authToken', 'supabase_session');
+      }
       localStorage.setItem('userData', JSON.stringify(verifiedUser));
       
       // 清理待验证数据

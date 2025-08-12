@@ -240,13 +240,50 @@ export class AuthService {
   }
 
   /**
-   * 更新密码
+   * 更新密码（用于密码重置）
    */
   static async updatePassword(email: string, code: string, newPassword: string): Promise<void> {
     const { error } = await supabase.auth.updateUser({ 
       password: newPassword 
     })
     if (error) throw error
+  }
+
+  /**
+   * 修改当前用户密码
+   */
+  static async changePassword(currentPassword: string, newPassword: string): Promise<{ success: boolean, error?: string }> {
+    try {
+      // 首先验证当前密码
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        return { success: false, error: '用户未登录' }
+      }
+
+      // 通过重新登录验证当前密码
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email || '',
+        password: currentPassword
+      })
+
+      if (signInError) {
+        return { success: false, error: '当前密码错误' }
+      }
+
+      // 更新密码
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword
+      })
+
+      if (updateError) {
+        return { success: false, error: '密码更新失败: ' + updateError.message }
+      }
+
+      return { success: true }
+    } catch (error) {
+      console.error('修改密码失败:', error)
+      return { success: false, error: '修改密码时发生错误' }
+    }
   }
 
   /**
