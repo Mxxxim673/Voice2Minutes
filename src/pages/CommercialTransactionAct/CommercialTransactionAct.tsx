@@ -7,58 +7,51 @@ const CommercialTransactionAct: React.FC = () => {
   
   return (
     <div className="compliance-page">
-      <div className="compliance-container">
-        <h1 className="compliance-title">{t('commercialTransactionAct.title')}</h1>
-        <div className="compliance-content">
-          <div className="info-item">
-            <h3>{t('commercialTransactionAct.salesPrice')}</h3>
-            <p>{t('commercialTransactionAct.salesPriceValue')}</p>
-          </div>
+      <div className="letter-container">
+        <h1 className="letter-title">{t('commercialTransactionAct.title')}</h1>
+        
+        <div className="letter-content">
+          <p className="letter-paragraph">
+            <span className="letter-label">{t('commercialTransactionAct.salesPrice')}：</span>
+            <span className="letter-text">{t('commercialTransactionAct.salesPriceValue')}</span>
+          </p>
           
-          <div className="info-item">
-            <h3>{t('commercialTransactionAct.additionalFees')}</h3>
-            <p>{t('commercialTransactionAct.additionalFeesValue')}</p>
-          </div>
+          <p className="letter-paragraph">
+            <span className="letter-label">{t('commercialTransactionAct.additionalFees')}：</span>
+            <span className="letter-text">{t('commercialTransactionAct.additionalFeesValue')}</span>
+          </p>
           
-          <div className="info-item">
-            <h3>{t('commercialTransactionAct.paymentMethods')}</h3>
-            <p>{t('commercialTransactionAct.paymentMethodsValue')}</p>
-          </div>
+          <p className="letter-paragraph">
+            <span className="letter-label">{t('commercialTransactionAct.paymentMethods')}：</span>
+            <span className="letter-text">{t('commercialTransactionAct.paymentMethodsValue')}</span>
+          </p>
           
-          <div className="info-item">
-            <h3>{t('commercialTransactionAct.deliveryTiming')}</h3>
-            <p>{t('commercialTransactionAct.deliveryTimingValue')}</p>
-          </div>
+          <p className="letter-paragraph">
+            <span className="letter-label">{t('commercialTransactionAct.deliveryTiming')}：</span>
+            <span className="letter-text">{t('commercialTransactionAct.deliveryTimingValue')}</span>
+          </p>
           
-          <div className="info-item">
-            <h3>{t('commercialTransactionAct.returnsAndCancellations')}</h3>
-            <p>{t('commercialTransactionAct.returnsAndCancellationsValue')}</p>
-          </div>
+          <p className="letter-paragraph">
+            <span className="letter-label">{t('commercialTransactionAct.returnsAndCancellations')}：</span>
+            <span className="letter-text">{t('commercialTransactionAct.returnsAndCancellationsValue')}</span>
+          </p>
           
-          <div className="info-item">
-            <h3>{t('commercialTransactionAct.systemRequirements')}</h3>
-            <p>{t('commercialTransactionAct.systemRequirementsValue')}</p>
-          </div>
+          <p className="letter-paragraph">
+            <span className="letter-label">{t('commercialTransactionAct.systemRequirements')}：</span>
+            <span className="letter-text">{t('commercialTransactionAct.systemRequirementsValue')}</span>
+          </p>
           
-          <div className="info-item">
-            <h3>{t('commercialTransactionAct.importantNotes')}</h3>
-            <p>{t('commercialTransactionAct.importantNotesValue')}</p>
-          </div>
+          <p className="letter-paragraph">
+            <span className="letter-label">{t('commercialTransactionAct.importantNotes')}：</span>
+            <span className="letter-text">{t('commercialTransactionAct.importantNotesValue')}</span>
+          </p>
           
-          <div className="info-item">
-            <h3>{t('commercialTransactionAct.termsOfUse')}</h3>
-            <div className="sub-items">
-              <p><strong>{t('commercialTransactionAct.application')}</strong></p>
-              <p><strong>{t('commercialTransactionAct.userRegistration')}</strong></p>
-              <p><strong>{t('commercialTransactionAct.serviceFees')}</strong></p>
-              <p><strong>{t('commercialTransactionAct.prohibitedActs')}</strong></p>
-              <p><strong>{t('commercialTransactionAct.serviceSuspension')}</strong></p>
-              <p><strong>{t('commercialTransactionAct.intellectualProperty')}</strong></p>
-              <p><strong>{t('commercialTransactionAct.disclaimer')}</strong></p>
-              <p><strong>{t('commercialTransactionAct.amendments')}</strong></p>
-              <p><strong>{t('commercialTransactionAct.governingLaw')}</strong></p>
-            </div>
-          </div>
+          <p className="letter-paragraph">
+            <span className="letter-label">{t('commercialTransactionAct.termsOfUse')}：</span>
+            <span className="letter-text">
+              {t('commercialTransactionAct.application')} {t('commercialTransactionAct.userRegistration')} {t('commercialTransactionAct.serviceFees')} {t('commercialTransactionAct.prohibitedActs')} {t('commercialTransactionAct.serviceSuspension')} {t('commercialTransactionAct.intellectualProperty')} {t('commercialTransactionAct.disclaimer')} {t('commercialTransactionAct.amendments')} {t('commercialTransactionAct.governingLaw')}
+            </span>
+          </p>
         </div>
       </div>
     </div>

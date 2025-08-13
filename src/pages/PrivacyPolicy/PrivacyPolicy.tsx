@@ -7,38 +7,39 @@ const PrivacyPolicy: React.FC = () => {
   
   return (
     <div className="compliance-page">
-      <div className="compliance-container">
-        <h1 className="compliance-title">{t('privacyPolicy.title')}</h1>
-        <div className="compliance-content">
-          <div className="info-item">
-            <h3>{t('privacyPolicy.personalInfoCollected')}</h3>
-            <p>{t('privacyPolicy.personalInfoCollectedValue')}</p>
-          </div>
+      <div className="letter-container">
+        <h1 className="letter-title">{t('privacyPolicy.title')}</h1>
+        
+        <div className="letter-content">
+          <p className="letter-paragraph">
+            <span className="letter-label">{t('privacyPolicy.personalInfoCollected')}：</span>
+            <span className="letter-text">{t('privacyPolicy.personalInfoCollectedValue')}</span>
+          </p>
           
-          <div className="info-item">
-            <h3>{t('privacyPolicy.purposeOfUse')}</h3>
-            <p>{t('privacyPolicy.purposeOfUseValue')}</p>
-          </div>
+          <p className="letter-paragraph">
+            <span className="letter-label">{t('privacyPolicy.purposeOfUse')}：</span>
+            <span className="letter-text">{t('privacyPolicy.purposeOfUseValue')}</span>
+          </p>
           
-          <div className="info-item">
-            <h3>{t('privacyPolicy.thirdPartyDisclosure')}</h3>
-            <p>{t('privacyPolicy.thirdPartyDisclosureValue')}</p>
-          </div>
+          <p className="letter-paragraph">
+            <span className="letter-label">{t('privacyPolicy.thirdPartyDisclosure')}：</span>
+            <span className="letter-text">{t('privacyPolicy.thirdPartyDisclosureValue')}</span>
+          </p>
           
-          <div className="info-item">
-            <h3>{t('privacyPolicy.securityMeasures')}</h3>
-            <p>{t('privacyPolicy.securityMeasuresValue')}</p>
-          </div>
+          <p className="letter-paragraph">
+            <span className="letter-label">{t('privacyPolicy.securityMeasures')}：</span>
+            <span className="letter-text">{t('privacyPolicy.securityMeasuresValue')}</span>
+          </p>
           
-          <div className="info-item">
-            <h3>{t('privacyPolicy.requestsDisclosure')}</h3>
-            <p>{t('privacyPolicy.requestsDisclosureValue')}</p>
-          </div>
+          <p className="letter-paragraph">
+            <span className="letter-label">{t('privacyPolicy.requestsDisclosure')}：</span>
+            <span className="letter-text">{t('privacyPolicy.requestsDisclosureValue')}</span>
+          </p>
           
-          <div className="info-item">
-            <h3>{t('privacyPolicy.policyChanges')}</h3>
-            <p>{t('privacyPolicy.policyChangesValue')}</p>
-          </div>
+          <p className="letter-paragraph">
+            <span className="letter-label">{t('privacyPolicy.policyChanges')}：</span>
+            <span className="letter-text">{t('privacyPolicy.policyChangesValue')}</span>
+          </p>
         </div>
       </div>
     </div>

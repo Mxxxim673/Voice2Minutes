@@ -7,28 +7,29 @@ const RefundPolicy: React.FC = () => {
   
   return (
     <div className="compliance-page">
-      <div className="compliance-container">
-        <h1 className="compliance-title">{t('refundPolicy.title')}</h1>
-        <div className="compliance-content">
-          <div className="info-item">
-            <h3>{t('refundPolicy.timePlan')}</h3>
-            <p>{t('refundPolicy.timePlanValue')}</p>
-          </div>
+      <div className="letter-container">
+        <h1 className="letter-title">{t('refundPolicy.title')}</h1>
+        
+        <div className="letter-content">
+          <p className="letter-paragraph">
+            <span className="letter-label">{t('refundPolicy.timePlan')}：</span>
+            <span className="letter-text">{t('refundPolicy.timePlanValue')}</span>
+          </p>
           
-          <div className="info-item">
-            <h3>{t('refundPolicy.subscription')}</h3>
-            <p>{t('refundPolicy.subscriptionValue')}</p>
-          </div>
+          <p className="letter-paragraph">
+            <span className="letter-label">{t('refundPolicy.subscription')}：</span>
+            <span className="letter-text">{t('refundPolicy.subscriptionValue')}</span>
+          </p>
           
-          <div className="info-item">
-            <h3>{t('refundPolicy.systemOutages')}</h3>
-            <p>{t('refundPolicy.systemOutagesValue')}</p>
-          </div>
+          <p className="letter-paragraph">
+            <span className="letter-label">{t('refundPolicy.systemOutages')}：</span>
+            <span className="letter-text">{t('refundPolicy.systemOutagesValue')}</span>
+          </p>
           
-          <div className="info-item">
-            <h3>{t('refundPolicy.contactInfo')}</h3>
-            <p>{t('refundPolicy.contactInfoValue')}</p>
-          </div>
+          <p className="letter-paragraph">
+            <span className="letter-label">{t('refundPolicy.contactInfo')}：</span>
+            <span className="letter-text">{t('refundPolicy.contactInfoValue')}</span>
+          </p>
         </div>
       </div>
     </div>

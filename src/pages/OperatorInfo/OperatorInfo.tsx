@@ -7,38 +7,39 @@ const OperatorInfo: React.FC = () => {
   
   return (
     <div className="compliance-page">
-      <div className="compliance-container">
-        <h1 className="compliance-title">{t('operatorInfo.title')}</h1>
-        <div className="compliance-content">
-          <div className="info-item">
-            <h3>{t('operatorInfo.name')}</h3>
-            <p>{t('operatorInfo.nameValue')}</p>
-          </div>
+      <div className="letter-container">
+        <h1 className="letter-title">{t('operatorInfo.title')}</h1>
+        
+        <div className="letter-content">
+          <p className="letter-paragraph">
+            <span className="letter-label">{t('operatorInfo.name')}：</span>
+            <span className="letter-text">{t('operatorInfo.nameValue')}</span>
+          </p>
           
-          <div className="info-item">
-            <h3>{t('operatorInfo.address')}</h3>
-            <p>{t('operatorInfo.addressValue')}</p>
-          </div>
+          <p className="letter-paragraph">
+            <span className="letter-label">{t('operatorInfo.address')}：</span>
+            <span className="letter-text">{t('operatorInfo.addressValue')}</span>
+          </p>
           
-          <div className="info-item">
-            <h3>{t('operatorInfo.phone')}</h3>
-            <p>{t('operatorInfo.phoneValue')}</p>
-          </div>
+          <p className="letter-paragraph">
+            <span className="letter-label">{t('operatorInfo.phone')}：</span>
+            <span className="letter-text">{t('operatorInfo.phoneValue')}</span>
+          </p>
           
-          <div className="info-item">
-            <h3>{t('operatorInfo.contact')}</h3>
-            <p>{t('operatorInfo.contactValue')}</p>
-          </div>
+          <p className="letter-paragraph">
+            <span className="letter-label">{t('operatorInfo.contact')}：</span>
+            <span className="letter-text">{t('operatorInfo.contactValue')}</span>
+          </p>
           
-          <div className="info-item">
-            <h3>{t('operatorInfo.businessHours')}</h3>
-            <p>{t('operatorInfo.businessHoursValue')}</p>
-          </div>
+          <p className="letter-paragraph">
+            <span className="letter-label">{t('operatorInfo.businessHours')}：</span>
+            <span className="letter-text">{t('operatorInfo.businessHoursValue')}</span>
+          </p>
           
-          <div className="info-item">
-            <h3>{t('operatorInfo.operator')}</h3>
-            <p>{t('operatorInfo.operatorValue')}</p>
-          </div>
+          <p className="letter-paragraph">
+            <span className="letter-label">{t('operatorInfo.operator')}：</span>
+            <span className="letter-text">{t('operatorInfo.operatorValue')}</span>
+          </p>
         </div>
       </div>
     </div>
