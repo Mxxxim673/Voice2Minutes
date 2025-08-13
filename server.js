@@ -587,7 +587,13 @@ app.post('/api/auth/register', emailLimiter, async (req, res) => {
       return res.status(400).json({ error: '密码至少需要6个字符' });
     }
 
-    // 1. 首先检查邮箱是否已经注册
+    // 获取设备指纹和IP用于防滥用检查
+    const { fingerprint, deviceInfo } = req.body;
+    const clientIP = getClientIP(req);
+    
+    console.log(`🔍 注册防滥用检查 - Email: ${email}, 设备: ${fingerprint?.substring(0, 8)}..., IP: ${clientIP}`);
+
+    // 1. 获取所有用户信息，同时进行邮箱重复检查和防滥用检查
     const { data: existingUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers();
     if (!listError && existingUsers) {
       const existingUser = existingUsers.users.find(u => u.email === email);
@@ -605,6 +611,56 @@ app.post('/api/auth/register', emailLimiter, async (req, res) => {
           await supabaseAdmin.auth.admin.deleteUser(existingUser.id);
         }
       }
+
+      // 防滥用检查：同一设备指纹+IP组合最多允许注册3个不同邮箱
+      if (fingerprint && clientIP) {
+        try {
+          // 统计同一设备指纹+IP组合的已验证邮箱
+          const deviceKey = `${fingerprint}-${clientIP}`;
+          const registeredEmails = new Set();
+          
+          // 检查所有用户的元数据中是否有相同的设备指纹+IP组合
+          existingUsers.users.forEach(user => {
+            if (user.email_confirmed_at && user.user_metadata) {
+              const userDeviceKey = user.user_metadata.device_fingerprint && user.user_metadata.registration_ip 
+                ? `${user.user_metadata.device_fingerprint}-${user.user_metadata.registration_ip}`
+                : null;
+              
+              if (userDeviceKey === deviceKey) {
+                registeredEmails.add(user.email);
+              }
+            }
+          });
+          
+          // 如果已经有3个或更多邮箱注册，拒绝新注册
+          if (registeredEmails.size >= 3) {
+            console.log(`🚫 防滥用拦截: 设备指纹 ${fingerprint.substring(0, 8)}... IP ${clientIP} 已注册 ${registeredEmails.size} 个邮箱，超过限制`);
+            
+            // 多语言错误提示
+            const errorMessages = {
+              'zh': '该设备已注册邮箱数量过多，如需帮助请联系客服',
+              'ja': 'このデバイスで登録されたメールアドレスの数が上限に達しています。サポートが必要でしたらカスタマーサービスまでお問い合わせください',
+              'en': 'This device has registered too many email addresses. Please contact customer service if you need assistance',
+              'ko': '이 기기에서 등록된 이메일 주소 수가 한도에 도달했습니다. 도움이 필요하시면 고객 서비스에 문의해 주세요',
+              'fr': 'Cet appareil a enregistré trop d\'adresses e-mail. Veuillez contacter le service client si vous avez besoin d\'aide',
+              'de': 'Dieses Gerät hat zu viele E-Mail-Adressen registriert. Bitte wenden Sie sich an den Kundendienst, wenn Sie Hilfe benötigen',
+              'es': 'Este dispositivo ha registrado demasiadas direcciones de correo electrónico. Póngase en contacto con el servicio de atención al cliente si necesita ayuda'
+            };
+            
+            const errorMessage = errorMessages[language] || errorMessages['ja']; // 默认日语
+            
+            return res.status(429).json({ 
+              error: errorMessage,
+              code: 'DEVICE_REGISTRATION_LIMIT_EXCEEDED',
+              limit: 3,
+              current: registeredEmails.size
+            });
+          }
+        } catch (antiAbuseError) {
+          console.error('防滥用检查失败:', antiAbuseError);
+          // 如果防滥用检查失败，记录日志但不阻止注册
+        }
+      }
     }
 
     // 2. 使用Supabase Auth注册用户（立即确认邮箱，跳过邮件验证）
@@ -614,7 +670,11 @@ app.post('/api/auth/register', emailLimiter, async (req, res) => {
       email_confirm: true, // 立即确认邮箱，不发送验证邮件
       user_metadata: {
         lang: language,
-        timezone: 'Asia/Tokyo'
+        timezone: 'Asia/Tokyo',
+        device_fingerprint: fingerprint,
+        registration_ip: clientIP,
+        registration_timestamp: new Date().toISOString(),
+        user_agent: req.headers['user-agent']
       }
     });
 
@@ -2881,6 +2941,7 @@ setInterval(async () => {
     console.error('清理未验证用户失败:', error);
   }
 }, 60 * 60 * 1000); // 每小时执行一次
+
 
 // 启动服务器
 app.listen(PORT, () => {
