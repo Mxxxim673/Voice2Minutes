@@ -1,19 +1,104 @@
 .auth-page {
   min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 450px 1fr;
+  align-items: center;
+  background: linear-gradient(135deg, var(--primary-blue-light), var(--background-secondary));
+  position: relative;
+}
+
+/* 左侧品牌区域 */
+.auth-brand-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xl);
+}
+
+.brand-content {
+  max-width: 300px;
+  text-align: center;
+}
+
+.brand-title {
+  font-size: 2.5rem;
+  font-weight: var(--font-weight-bold);
+  color: var(--primary-blue);
+  margin-bottom: var(--spacing-md);
+  text-shadow: 0 2px 4px rgba(74, 144, 226, 0.3);
+}
+
+.brand-subtitle {
+  font-size: var(--font-size-title3);
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-xl);
+  line-height: 1.5;
+}
+
+.brand-features {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  font-size: var(--font-size-subhead);
+  color: var(--text-primary);
+  text-align: left;
+}
+
+.feature-icon {
+  font-size: 1.5rem;
+  width: 2rem;
+  text-align: center;
+}
+
+/* 中央登录区域 */
+.auth-main-section {
   display: flex;
   align-items: center;
   justify-content: center;
   padding: var(--spacing-lg);
-  background: linear-gradient(135deg, var(--primary-blue-light), var(--background-secondary));
 }
 
 .auth-container {
   background: var(--background-primary);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-xl);
-  max-width: 450px;
   width: 100%;
   overflow: hidden;
+}
+
+/* 右侧控制区域 */
+.auth-controls-section {
+  position: absolute;
+  top: var(--spacing-lg);
+  right: var(--spacing-lg);
+  z-index: 10;
+}
+
+.controls-content {
+  display: flex;
+  flex-direction: row;
+  gap: var(--spacing-md);
+  align-items: center;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.control-label {
+  font-size: var(--font-size-footnote);
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-semibold);
+  text-align: center;
 }
 
 .auth-header {
@@ -300,14 +385,75 @@
 }
 
 /* Mobile responsiveness */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .auth-page {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
     padding: var(--spacing-md);
   }
   
-  .auth-container {
-    max-width: none;
-    width: 100%;
+  .auth-brand-section {
+    order: 1;
+    padding: var(--spacing-lg) var(--spacing-md);
+  }
+  
+  .brand-content {
+    max-width: 100%;
+  }
+  
+  .brand-title {
+    font-size: 2rem;
+  }
+  
+  .brand-features {
+    flex-direction: row;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+  }
+  
+  .feature-item {
+    flex-direction: column;
+    text-align: center;
+    min-width: 120px;
+  }
+  
+  .auth-main-section {
+    order: 2;
+    padding: var(--spacing-md);
+  }
+  
+  .auth-controls-section {
+    position: static;
+    order: 3;
+    padding: var(--spacing-lg) var(--spacing-md);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .controls-content {
+    flex-direction: row;
+    gap: var(--spacing-lg);
+  }
+}
+
+@media (max-width: 768px) {
+  .auth-brand-section {
+    padding: var(--spacing-md);
+  }
+  
+  .brand-title {
+    font-size: 1.8rem;
+  }
+  
+  .brand-subtitle {
+    font-size: var(--font-size-subhead);
+  }
+  
+  .feature-item {
+    min-width: 100px;
+    font-size: var(--font-size-footnote);
   }
   
   .auth-header {
@@ -329,5 +475,13 @@
   .verification-input {
     font-size: var(--font-size-title2);
     letter-spacing: 0.3em;
+  }
+  
+  .controls-content {
+    gap: var(--spacing-md);
+  }
+  
+  .control-label {
+    font-size: var(--font-size-caption);
   }
 }

@@ -294,6 +294,13 @@
     "resetPassword": "Restablecer contraseña",
     "resetSuccess": "Restablecimiento de contraseña correcto. Inicie sesión con su nueva contraseña.",
     "resetFailed": "Restablecimiento de contraseña fallido. Inténtelo de nuevo.",
+    "brandSubtitle": "Servicio Profesional de Audio a Texto",
+    "brandFeature1": "Reconocimiento de Voz de Alta Precisión",
+    "brandFeature2": "Generación Automática de Actas",
+    "brandFeature3": "Soporte Multiidioma",
+    "brandFeature4": "Uso Sencillo e Intuitivo",
+    "themeControl": "Tema",
+    "languageControl": "Idioma",
     "guestSimpleNotice": "Algunas funciones están restringidas en el modo invitado. Inicie sesión para disfrutar de todas las funciones.",
     "guestLimitations": {
       "title": "Restricciones para usuarios invitados:",

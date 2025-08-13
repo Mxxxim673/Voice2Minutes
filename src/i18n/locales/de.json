@@ -294,6 +294,13 @@
     "resetPassword": "Passwort",
     "resetSuccess": "Passwort zurücksetzen erfolgreich. Bitte melden Sie sich mit Ihrem neuen Passwort an.",
     "resetFailed": "Passwort zurücksetzen fehlgeschlagen. Bitte versuchen Sie es erneut.",
+    "brandSubtitle": "Professioneller Audio-zu-Text Service",
+    "brandFeature1": "Hochpräzise Spracherkennung",
+    "brandFeature2": "Automatische Protokollerstellung",
+    "brandFeature3": "Mehrsprachige Unterstützung",
+    "brandFeature4": "Einfache und Intuitive Bedienung",
+    "themeControl": "Theme",
+    "languageControl": "Sprache",
     "guestSimpleNotice": "Einige Funktionen sind im Gastmodus eingeschränkt. Bitte melden Sie sich an, um alle Funktionen nutzen zu können.",
     "guestLimitations": {
       "title": "Einschränkungen für Gastbenutzer:",

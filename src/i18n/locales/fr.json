@@ -294,6 +294,13 @@
     "resetPassword": "Réinitialisation du mot de passe",
     "resetSuccess": "Réinitialisation du mot de passe réussie. Veuillez vous connecter avec votre nouveau mot de passe.",
     "resetFailed": "Échec de la réinitialisation du mot de passe. Veuillez réessayer.",
+    "brandSubtitle": "Service Professionnel de Transcription Audio",
+    "brandFeature1": "Reconnaissance Vocale Haute Précision",
+    "brandFeature2": "Génération Automatique de Comptes-Rendus",
+    "brandFeature3": "Support Multilingue",
+    "brandFeature4": "Utilisation Simple et Intuitive",
+    "themeControl": "Thème",
+    "languageControl": "Langue",
     "guestSimpleNotice": "Certaines fonctionnalités sont limitées en mode invité. Veuillez vous connecter pour profiter de toutes les fonctionnalités.",
     "guestLimitations": {
       "title": "Restrictions pour les utilisateurs invités :",

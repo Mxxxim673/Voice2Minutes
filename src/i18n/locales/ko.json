@@ -294,6 +294,13 @@
     "resetPassword": "비밀번호 재설정",
     "resetSuccess": "비밀번호 재설정이 성공적으로 완료되었습니다. 새로운 비밀번호로 로그인해 주세요.",
     "resetFailed": "비밀번호 재설정이 실패했습니다. 다시 시도해 주세요.",
+    "brandSubtitle": "전문 음성-텍스트 변환 서비스",
+    "brandFeature1": "고정밀 음성 인식",
+    "brandFeature2": "자동 회의록 생성",
+    "brandFeature3": "다국어 지원",
+    "brandFeature4": "간편한 사용법",
+    "themeControl": "테마",
+    "languageControl": "언어",
     "guestSimpleNotice": "게스트 모드에서는 일부 기능이 제한됩니다. 전체 기능을 경험하려면 로그인해 주세요.",
     "guestLimitations": {
       "title": "게스트 사용자 제한 사항:",

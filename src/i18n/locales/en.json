@@ -294,6 +294,13 @@
     "resetPassword": "Reset Password",
     "resetSuccess": "Password reset successful. Please log in with your new password.",
     "resetFailed": "Password reset failed. Please try again.",
+    "brandSubtitle": "Professional Audio-to-Text Service",
+    "brandFeature1": "High-Accuracy Audio Recognition",
+    "brandFeature2": "Automatic Meeting Minutes Generation",
+    "brandFeature3": "Multi-Language Support",
+    "brandFeature4": "Simple and Easy to Use",
+    "themeControl": "Theme",
+    "languageControl": "Language",
     "guestSimpleNotice": "Some features are restricted in guest mode. Please log in to experience full functionality.",
     "guestLimitations": {
       "title": "Guest user restrictions:",

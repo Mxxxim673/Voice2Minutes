@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import i18n from '../../i18n/config';
 import { useAuth } from '../../hooks/useAuth';
+import ThemeToggle from '../../components/ThemeToggle/ThemeToggle';
+import LanguageSelector from '../../components/LanguageSelector/LanguageSelector';
 import './Auth.css';
 
 type AuthMode = 'login' | 'register' | 'verify' | 'reset-password' | 'reset-verify';
@@ -64,10 +67,14 @@ const Auth: React.FC = () => {
         }
       } else if (mode === 'reset-password') {
         // 发送密码重置验证码
+        const currentLanguage = i18n.language || 'ja';
         const response = await fetch('/api/auth/send-reset-code', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: formData.email })
+          body: JSON.stringify({ 
+            email: formData.email,
+            language: currentLanguage
+          })
         });
         
         const result = await response.json();
@@ -436,61 +443,104 @@ const Auth: React.FC = () => {
 
   return (
     <div className="auth-page">
-      <div className="auth-container">
-        <div className="auth-header">
-          <h1 className="auth-title">
-            {mode === 'login' && t('auth.welcomeBack')}
-            {mode === 'register' && t('auth.createAccount')}
-            {mode === 'verify' && t('auth.verifyEmail')}
-            {mode === 'reset-password' && t('auth.resetPasswordTitle')}
-            {mode === 'reset-verify' && t('auth.resetPasswordTitle')}
-          </h1>
-          {!['verify', 'reset-verify'].includes(mode) && (
-            <p className="auth-subtitle">
-              {mode === 'login' && t('auth.loginSubtitle')}
-              {mode === 'register' && t('auth.registerSubtitle')}
-              {mode === 'reset-password' && t('auth.resetPasswordSubtitle')}
-            </p>
-          )}
+      {/* 左侧品牌区域 */}
+      <div className="auth-brand-section">
+        <div className="brand-content">
+          <h1 className="brand-title">Voice2Minutes</h1>
+          <p className="brand-subtitle">{t('auth.brandSubtitle')}</p>
+          <div className="brand-features">
+            <div className="feature-item">
+              <span className="feature-icon">🎯</span>
+              <span>{t('auth.brandFeature1')}</span>
+            </div>
+            <div className="feature-item">
+              <span className="feature-icon">⚡</span>
+              <span>{t('auth.brandFeature2')}</span>
+            </div>
+            <div className="feature-item">
+              <span className="feature-icon">🌍</span>
+              <span>{t('auth.brandFeature3')}</span>
+            </div>
+            <div className="feature-item">
+              <span className="feature-icon">✨</span>
+              <span>{t('auth.brandFeature4')}</span>
+            </div>
+          </div>
         </div>
+      </div>
 
-        <div className="auth-content">
-          {error && (
-            <div className="alert alert-error">
-              <span className="alert-icon">⚠️</span>
-              {error}
-            </div>
-          )}
-          
-          {success && (
-            <div className="alert alert-success">
-              <span className="alert-icon">✅</span>
-              {success}
-            </div>
-          )}
+      {/* 中央登录区域 */}
+      <div className="auth-main-section">
+        <div className="auth-container">
+          <div className="auth-header">
+            <h1 className="auth-title">
+              {mode === 'login' && t('auth.welcomeBack')}
+              {mode === 'register' && t('auth.createAccount')}
+              {mode === 'verify' && t('auth.verifyEmail')}
+              {mode === 'reset-password' && t('auth.resetPasswordTitle')}
+              {mode === 'reset-verify' && t('auth.resetPasswordTitle')}
+            </h1>
+            {!['verify', 'reset-verify'].includes(mode) && (
+              <p className="auth-subtitle">
+                {mode === 'login' && t('auth.loginSubtitle')}
+                {mode === 'register' && t('auth.registerSubtitle')}
+                {mode === 'reset-password' && t('auth.resetPasswordSubtitle')}
+              </p>
+            )}
+          </div>
 
-          {mode === 'login' && renderLoginForm()}
-          {mode === 'register' && renderRegisterForm()}
-          {mode === 'verify' && renderVerifyForm()}
-          {mode === 'reset-password' && renderResetPasswordForm()}
-          {mode === 'reset-verify' && renderResetVerifyForm()}
-
-          {!['verify', 'reset-password', 'reset-verify'].includes(mode) && (
-            <>
-              <div className="auth-divider">
-                <span>{t('auth.dividerOr')}</span>
+          <div className="auth-content">
+            {error && (
+              <div className="alert alert-error">
+                <span className="alert-icon">⚠️</span>
+                {error}
               </div>
-
-              <button onClick={handleGuestMode} className="button button-secondary guest-button">
-                <span className="guest-icon">👤</span>
-                {t('auth.continueAsGuest')}
-              </button>
-
-              <div className="guest-simple-notice">
-                <p>{t('auth.guestSimpleNotice')}</p>
+            )}
+            
+            {success && (
+              <div className="alert alert-success">
+                <span className="alert-icon">✅</span>
+                {success}
               </div>
-            </>
-          )}
+            )}
+
+            {mode === 'login' && renderLoginForm()}
+            {mode === 'register' && renderRegisterForm()}
+            {mode === 'verify' && renderVerifyForm()}
+            {mode === 'reset-password' && renderResetPasswordForm()}
+            {mode === 'reset-verify' && renderResetVerifyForm()}
+
+            {!['verify', 'reset-password', 'reset-verify'].includes(mode) && (
+              <>
+                <div className="auth-divider">
+                  <span>{t('auth.dividerOr')}</span>
+                </div>
+
+                <button onClick={handleGuestMode} className="button button-secondary guest-button">
+                  <span className="guest-icon">👤</span>
+                  {t('auth.continueAsGuest')}
+                </button>
+
+                <div className="guest-simple-notice">
+                  <p>{t('auth.guestSimpleNotice')}</p>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* 右侧控制区域 */}
+      <div className="auth-controls-section">
+        <div className="controls-content">
+          <div className="control-group">
+            <div className="control-label">{t('auth.themeControl')}</div>
+            <ThemeToggle />
+          </div>
+          <div className="control-group">
+            <div className="control-label">{t('auth.languageControl')}</div>
+            <LanguageSelector />
+          </div>
         </div>
       </div>
     </div>

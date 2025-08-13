@@ -294,6 +294,13 @@
     "resetPassword": "密码重置",
     "resetSuccess": "密码重置成功。请使用新密码登录",
     "resetFailed": "密码重置失败。请重新尝试",
+    "brandSubtitle": "专业的音频转文字服务",
+    "brandFeature1": "高精度音频识别",
+    "brandFeature2": "自动生成会议纪要",
+    "brandFeature3": "多语言支持",
+    "brandFeature4": "功能简单易用",
+    "themeControl": "主题",
+    "languageControl": "语言",
     "guestSimpleNotice": "在访客模式下，部分功能将受限。如需体验完整功能，请登录。",
     "guestLimitations": {
       "title": "访客用户限制：",

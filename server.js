@@ -856,7 +856,7 @@ app.post('/api/auth/send-reset-code', emailLimiter, async (req, res) => {
           subject: emailTemplate.subject,
           html: emailTemplate.html,
           text: emailTemplate.text,
-          fromName: 'Voice2Minutes 安全中心'
+          fromName: 'Voice2Minutes Team'
         })
       });
 

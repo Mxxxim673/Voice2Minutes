@@ -294,6 +294,13 @@
     "resetPassword": "パスワードリセット",
     "resetSuccess": "パスワードリセットが成功しました。新しいパスワードでログインしてください",
     "resetFailed": "パスワードリセットに失敗しました。再試行してください",
+    "brandSubtitle": "プロフェッショナル音声文字起こしサービス",
+    "brandFeature1": "高精度な音声認識",
+    "brandFeature2": "自動会議議事録生成",
+    "brandFeature3": "多言語対応",
+    "brandFeature4": "シンプルで使いやすい",
+    "themeControl": "テーマ",
+    "languageControl": "言語",
     "guestSimpleNotice": "ゲストモードでは一部の機能が制限されます。完全な機能を体験するにはログインしてください。",
     "guestLimitations": {
       "title": "ゲストユーザーの制限：",
