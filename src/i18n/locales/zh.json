@@ -10,6 +10,9 @@
     "copy": "复制文本",
     "export": "导出到Word",
     "clear": "清除当前记录",
+    "warning": "警告",
+    "info": "提示",
+    "confirm": "确定",
     "start": "开始",
     "stop": "停止",
     "upload": "上传",
@@ -41,6 +44,7 @@
   "audioToText": {
     "title": "语音转录",
     "subtitle": "将语音录音转换为准确的文本转录",
+    "guestTrialRemaining": "免费试用：还剩{{time}}",
     "uploadAudio": "上传语音文件",
     "recordAudio": "语音录音",
     "startTranscription": "开始转录",

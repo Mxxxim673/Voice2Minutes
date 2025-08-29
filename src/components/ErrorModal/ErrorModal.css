@@ -1,0 +1,147 @@
+/* Error Modal Styles */
+.error-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.error-modal-content {
+  background: white;
+  border-radius: 16px;
+  max-width: 480px;
+  width: 90%;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  animation: slideIn 0.3s ease-out;
+  overflow: hidden;
+}
+
+.error-modal-header {
+  padding: 24px 24px 16px;
+  text-align: center;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.error-modal-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  animation: pulse 2s infinite;
+}
+
+.error-modal-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+}
+
+.error-modal-body {
+  padding: 20px 24px;
+}
+
+.error-modal-message {
+  margin: 0;
+  line-height: 1.6;
+  color: #555;
+  font-size: 16px;
+  text-align: center;
+}
+
+.error-modal-footer {
+  padding: 16px 24px 24px;
+  text-align: center;
+}
+
+.error-modal-button {
+  background: linear-gradient(135deg, #4a90e2, #357abd);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 32px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 100px;
+}
+
+.error-modal-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(74, 144, 226, 0.3);
+}
+
+.error-modal-button:active {
+  transform: translateY(0);
+}
+
+/* Type-specific styles */
+.error-modal-error .error-modal-header {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+  color: white;
+}
+
+.error-modal-error .error-modal-title {
+  color: white;
+}
+
+.error-modal-warning .error-modal-header {
+  background: linear-gradient(135deg, #ffa726, #f57c00);
+  color: white;
+}
+
+.error-modal-warning .error-modal-title {
+  color: white;
+}
+
+.error-modal-info .error-modal-header {
+  background: linear-gradient(135deg, #42a5f5, #1e88e5);
+  color: white;
+}
+
+.error-modal-info .error-modal-title {
+  color: white;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { 
+    opacity: 0;
+    transform: scale(0.8) translateY(-20px);
+  }
+  to { 
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* Dark theme support */
+[data-theme="dark"] .error-modal-content {
+  background: #2a2a2a;
+  color: #e0e0e0;
+}
+
+[data-theme="dark"] .error-modal-title {
+  color: #e0e0e0;
+}
+
+[data-theme="dark"] .error-modal-message {
+  color: #b0b0b0;
+}

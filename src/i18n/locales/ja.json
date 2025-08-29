@@ -10,6 +10,9 @@
     "copy": "テキストをコピー",
     "export": "Wordにエクスポート",
     "clear": "現在の記録をクリア",
+    "warning": "警告",
+    "info": "お知らせ",
+    "confirm": "確定",
     "start": "開始",
     "stop": "停止",
     "upload": "アップロード",
@@ -41,6 +44,7 @@
   "audioToText": {
     "title": "音声文字起こし",
     "subtitle": "音声録音を正確なテキスト文字起こしに変換します",
+    "guestTrialRemaining": "無料体験：残り{{time}}",
     "uploadAudio": "音声ファイルをアップロード",
     "recordAudio": "音声録音",
     "startTranscription": "文字起こし開始",

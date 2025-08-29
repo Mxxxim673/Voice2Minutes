@@ -10,6 +10,9 @@
     "copy": "Text kopieren",
     "export": "In Word exportieren",
     "clear": "Aktuellen Datensatz löschen",
+    "warning": "Warnung",
+    "info": "Information",
+    "confirm": "OK",
     "start": "Start",
     "stop": "Stopp",
     "upload": "Hochladen",
@@ -41,6 +44,7 @@
   "audioToText": {
     "title": "Sprach-Transkription",
     "subtitle": "Wandeln Sie Sprachaufnahmen in präzise Texttranskripte um",
+    "guestTrialRemaining": "Kostenlose Testversion: {{time}} verbleibend",
     "uploadAudio": "Sprachdatei hochladen",
     "recordAudio": "Sprachaufnahme",
     "startTranscription": "Transkription starten",

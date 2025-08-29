@@ -10,6 +10,9 @@
     "copy": "Copier le texte",
     "export": "Exporter vers Word",
     "clear": "Effacer l'enregistrement actuel",
+    "warning": "Avertissement",
+    "info": "Information",
+    "confirm": "OK",
     "start": "Démarrer",
     "stop": "Arrêter",
     "upload": "Télécharger",
@@ -41,6 +44,7 @@
   "audioToText": {
     "title": "Transcription vocale",
     "subtitle": "Convertissez vos enregistrements vocaux en transcriptions textuelles précises",
+    "guestTrialRemaining": "Essai gratuit : {{time}} restant",
     "uploadAudio": "Télécharger un fichier vocal",
     "recordAudio": "Enregistrement vocal",
     "startTranscription": "Démarrer la transcription",

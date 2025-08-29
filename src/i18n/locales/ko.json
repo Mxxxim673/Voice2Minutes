@@ -10,6 +10,9 @@
     "copy": "텍스트 복사",
     "export": "Word로 내보내기",
     "clear": "현재 기록 지우기",
+    "warning": "경고",
+    "info": "정보",
+    "confirm": "확인",
     "start": "시작",
     "stop": "중지",
     "upload": "업로드",
@@ -41,6 +44,7 @@
   "audioToText": {
     "title": "음성 텍스트 변환",
     "subtitle": "음성 녹음을 정확한 텍스트로 변환합니다",
+    "guestTrialRemaining": "무료 체험: 남은 시간 {{time}}",
     "uploadAudio": "음성 파일 업로드",
     "recordAudio": "음성 녹음",
     "startTranscription": "변환 시작",

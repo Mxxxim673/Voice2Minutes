@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useDropzone } from 'react-dropzone';
 import { useAuth } from '../../hooks/useAuth';
 import RecordingModal from '../../components/RecordingModal/RecordingModal';
+import ErrorModal from '../../components/ErrorModal/ErrorModal';
 import { transcribeAudio } from '../../services/audioService';
 import { exportToWord } from '../../utils/exportUtils';
 import { getAudioDuration, truncateAudioForLimit } from '../../services/usageService';
@@ -27,6 +28,16 @@ const AudioToText: React.FC = () => {
   const [currentUsedMinutes, setCurrentUsedMinutes] = useState(0);
   const [fileDetectedDuration, setFileDetectedDuration] = useState<number | null>(null);
   const [fileUploadError, setFileUploadError] = useState<string | null>(null);
+  const [errorModalOpen, setErrorModalOpen] = useState(false);
+  const [errorModalMessage, setErrorModalMessage] = useState('');
+  const [errorModalType, setErrorModalType] = useState<'error' | 'warning'>('error');
+
+  // Show error in modal
+  const showErrorModal = (message: string, type: 'error' | 'warning' = 'error') => {
+    setErrorModalMessage(message);
+    setErrorModalType(type);
+    setErrorModalOpen(true);
+  };
 
   // 更新使用量数据
   const updateUsageData = async () => {
@@ -76,9 +87,8 @@ const AudioToText: React.FC = () => {
         console.log('📁 上传文件:', file.name, '大小:', (file.size / 1024 / 1024).toFixed(2), 'MB');
         
         // 清除之前的状态
-        setError(null);
-        setUsageLimitWarning(null);
-        setFileUploadError(null);
+        // Clear any previous errors
+        setErrorModalOpen(false);
         setFileDetectedDuration(null);
         
         // 检测音频时长
@@ -100,11 +110,12 @@ const AudioToText: React.FC = () => {
           
           // 检查是否超出剩余时长（管理员跳过检查）
           if (!isAdmin && fileDuration > remainingMinutes) {
-            setFileUploadError(
+            showErrorModal(
               t('audioToText.fileDurationExceedsQuota', { 
                 fileDuration: formatDuration(fileDuration), 
                 remainingTime: formatRemainingTime(remainingMinutes) 
-              })
+              }),
+              'warning'
             );
             // 不设置 uploadedFile，阻止后续处理
             return;
@@ -114,19 +125,20 @@ const AudioToText: React.FC = () => {
             
             if (!isAdmin && fileDuration > remainingMinutes * 0.8) {
               // 如果使用了80%以上的剩余时长，给出提醒（管理员跳过）
-              setUsageLimitWarning(
-                t('audioToText.fileExceedsQuotaWarning', { fileDuration: formatDuration(fileDuration) })
+              showErrorModal(
+                t('audioToText.fileExceedsQuotaWarning', { fileDuration: formatDuration(fileDuration) }),
+                'warning'
               );
             }
           }
         } catch (error) {
           console.error('❌ 文件时长检测失败:', error);
-          setFileUploadError(t('audioToText.fileDurationDetectionFailed'));
+          showErrorModal(t('audioToText.fileDurationDetectionFailed'), 'error');
         }
         
       } catch (error) {
         console.error('File processing error:', error);
-        setError(t('audioToText.fileProcessingError'));
+        showErrorModal(t('audioToText.fileProcessingError'), 'error');
       }
     }
   }, [isGuest, user, t]);
@@ -142,8 +154,7 @@ const AudioToText: React.FC = () => {
 
   const handleTranscription = async (audioFile: File) => {
     setIsProcessing(true);
-    setError(null);
-    setUsageLimitWarning(null);
+    setErrorModalOpen(false);
     
     try {
       // 统一的用户类型和配额检查
@@ -160,7 +171,7 @@ const AudioToText: React.FC = () => {
         originalDuration = await getAudioDuration(audioFile);
       } catch (error) {
         console.error('❌ 音频时长检测完全失败:', error);
-        setError(t('audioToText.audioDurationDetectionFailed'));
+        showErrorModal(t('audioToText.audioDurationDetectionFailed'), 'error');
         setIsProcessing(false);
         return;
       }
@@ -240,7 +251,7 @@ const AudioToText: React.FC = () => {
       
     } catch (error) {
       console.error('❌ 转录失败:', error);
-      setError(error instanceof Error ? error.message : t('audioToText.transcriptionProcessingError'));
+      showErrorModal(error instanceof Error ? error.message : t('audioToText.transcriptionProcessingError'), 'error');
     } finally {
       setIsProcessing(false);
     }
@@ -414,7 +425,7 @@ const AudioToText: React.FC = () => {
     
     if (audioBlob.size === 0) {
       console.error('❌ 音频数据为空，无法进行转录');
-      setError(t('audioToText.recordingDataEmpty'));
+      showErrorModal(t('audioToText.recordingDataEmpty'), 'error');
       return;
     }
     
@@ -427,7 +438,7 @@ const AudioToText: React.FC = () => {
       handleTranscription(audioFile);
     } catch (error) {
       console.error('❌ 音频格式处理失败:', error);
-      setError(t('audioToText.audioProcessingFailed'));
+      showErrorModal(t('audioToText.audioProcessingFailed'), 'error');
     }
   };
 
@@ -477,8 +488,7 @@ const AudioToText: React.FC = () => {
     // Clear all content including uploaded file and transcription results
     setTranscriptionResult(null);
     setUploadedFile(null);
-    setError(null);
-    setUsageLimitWarning(null);
+    setErrorModalOpen(false);
     setFileUploadError(null);
     setFileDetectedDuration(null);
     setIsProcessing(false);
@@ -521,6 +531,20 @@ const AudioToText: React.FC = () => {
                 {t('audioToText.audioInputMethod')}
               </h2>
               
+              {/* Guest Status Display - Only for non-logged in users */}
+              {(!user || isGuest) && (
+                <div className="guest-status-bar">
+                  <div className="guest-status-content">
+                    <span className="guest-icon">🎯</span>
+                    <span className="guest-text">
+                      {t('audioToText.guestTrialRemaining', { 
+                        time: formatRemainingTimeLocalized(Math.max(0, 5 - currentUsedMinutes)) 
+                      })}
+                    </span>
+                  </div>
+                </div>
+              )}
+
               {/* Upload Section */}
               <div className="audio-upload-area">
                 <h3>
@@ -650,23 +674,13 @@ const AudioToText: React.FC = () => {
           </div>
         )}
 
-        {fileUploadError && (
-          <div className="error-message card" style={{ backgroundColor: 'var(--error-red)', color: 'white' }}>
-            <p>⚠️ {fileUploadError}</p>
-          </div>
-        )}
-
-        {usageLimitWarning && (
-          <div className="warning-message card" style={{ backgroundColor: 'var(--warning-orange)', color: 'white' }}>
-            <p>{usageLimitWarning}</p>
-          </div>
-        )}
-
-        {error && (
-          <div className="error-message card" style={{ backgroundColor: 'var(--error-red)', color: 'white' }}>
-            <p>{error}</p>
-          </div>
-        )}
+        {/* Error Modal */}
+        <ErrorModal
+          isOpen={errorModalOpen}
+          onClose={() => setErrorModalOpen(false)}
+          message={errorModalMessage}
+          type={errorModalType}
+        />
 
         {/* Recording Modal */}
         <RecordingModal

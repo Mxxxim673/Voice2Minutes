@@ -10,6 +10,9 @@
     "copy": "Copy text",
     "export": "Export to Word",
     "clear": "Clear current record",
+    "warning": "Warning",
+    "info": "Info",
+    "confirm": "OK",
     "start": "Start",
     "stop": "Stop",
     "upload": "Upload",
@@ -41,6 +44,7 @@
   "audioToText": {
     "title": "Voice transcription",
     "subtitle": "Convert voice recordings into accurate text transcripts",
+    "guestTrialRemaining": "Free trial: {{time}} remaining",
     "uploadAudio": "Upload voice file",
     "recordAudio": "Voice recording",
     "startTranscription": "Start transcription",
