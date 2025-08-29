@@ -75,7 +75,9 @@
       "Bash(env)",
       "Bash(npx @jpisnice/shadcn-ui-mcp-server:*)",
       "mcp__sequential-thinking-project__sequentialthinking",
-      "mcp__sequential-thinking-global__sequentialthinking"
+      "mcp__sequential-thinking-global__sequentialthinking",
+      "Bash(gh repo create:*)",
+      "Bash(git remote remove:*)"
     ],
     "deny": []
   },
