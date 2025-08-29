@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "shadcn-ui-project": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "@jpisnice/shadcn-ui-mcp-server"
+      ],
+      "env": {}
+    },
+    "sequential-thinking-project": {
+      "type": "http",
+      "url": "https://server.smithery.ai/@smithery-ai/server-sequential-thinking/mcp"
+    }
+  }
+}
