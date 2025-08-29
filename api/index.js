@@ -40,7 +40,7 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
 // app.use(helmet()); // 安全头 - 暂时注释掉
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://voice2minutes.vercel.app', /\.vercel\.app$/]
+    ? ['https://voice2minutes.vercel.app', 'https://www.voice2minutes.com', 'https://voice2minutes.com', /\.vercel\.app$/]
     : ['http://localhost:5173', 'http://localhost:3000'],
   credentials: true
 }));
