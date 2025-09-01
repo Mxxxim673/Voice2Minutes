@@ -696,30 +696,28 @@ app.post('/api/auth/register', emailLimiter, async (req, res) => {
     // 获取邮件模板
     const emailTemplate = getVerificationEmailTemplate(language, verificationCode);
     
-    // 发送验证邮件
+    // 发送验证邮件 - 直接调用邮件发送逻辑
     try {
-      const emailResponse = await fetch(`http://localhost:${PORT}/api/email/send-verification`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          to: email,
-          subject: emailTemplate.subject,
-          html: emailTemplate.html,
-          text: emailTemplate.text,
-          fromEmail: process.env.SMTP_USER,
-          fromName: 'Voice2Minutes Team'
-        })
-      });
+      const transporter = createTransporter();
+      await transporter.verify();
       
-      const emailResult = await emailResponse.json();
+      const mailOptions = {
+        from: `"Voice2Minutes Team" <${process.env.SMTP_USER}>`,
+        to: email,
+        subject: emailTemplate.subject,
+        html: emailTemplate.html,
+        text: emailTemplate.text,
+        attachDataUrls: true,
+        alternatives: [
+          {
+            contentType: 'text/html; charset=utf-8',
+            content: emailTemplate.html
+          }
+        ]
+      };
       
-      if (!emailResult.success) {
-        throw new Error('验证邮件发送失败: ' + (emailResult.error || 'Unknown error'));
-      }
-      
-      console.log('📧 验证邮件发送成功:', emailResult.messageId);
+      const info = await transporter.sendMail(mailOptions);
+      console.log('📧 验证邮件发送成功:', info.messageId);
     } catch (emailError) {
       console.error('❌ 发送验证邮件失败:', emailError);
       // 注册失败，删除已创建的Supabase用户
@@ -904,29 +902,28 @@ app.post('/api/auth/send-reset-code', emailLimiter, async (req, res) => {
       language: req.body.language || 'zh'
     });
     
-    // 使用内部邮件发送API
+    // 直接发送重置邮件
     try {
-      const emailResponse = await fetch(`http://localhost:${PORT}/api/email/send-verification`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          to: email,
-          subject: emailTemplate.subject,
-          html: emailTemplate.html,
-          text: emailTemplate.text,
-          fromName: 'Voice2Minutes Team'
-        })
-      });
-
-      const emailResult = await emailResponse.json();
+      const transporter = createTransporter();
+      await transporter.verify();
       
-      if (!emailResponse.ok || !emailResult.success) {
-        throw new Error('密码重置邮件发送失败: ' + (emailResult.error || 'Unknown error'));
-      }
-
-      console.log('📧 密码重置邮件发送成功:', emailResult.messageId);
+      const mailOptions = {
+        from: `"Voice2Minutes Team" <${process.env.SMTP_USER}>`,
+        to: email,
+        subject: emailTemplate.subject,
+        html: emailTemplate.html,
+        text: emailTemplate.text,
+        attachDataUrls: true,
+        alternatives: [
+          {
+            contentType: 'text/html; charset=utf-8',
+            content: emailTemplate.html
+          }
+        ]
+      };
+      
+      const info = await transporter.sendMail(mailOptions);
+      console.log('📧 密码重置邮件发送成功:', info.messageId);
       
     } catch (error) {
       console.error('❌ 密码重置邮件发送失败:', error);
