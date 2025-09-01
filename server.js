@@ -725,15 +725,25 @@ app.post('/api/auth/register', emailLimiter, async (req, res) => {
       return res.status(500).json({ error: '验证邮件发送失败，请稍后重试' });
     }
     
-    // 4. 存储验证码信息（用于后续验证）
-    // 这里可以存储到数据库或缓存中，暂时存储在内存中
-    global.pendingVerifications = global.pendingVerifications || {};
-    global.pendingVerifications[email] = {
-      code: verificationCode,
-      userId: user.id,
-      timestamp: Date.now(),
-      language: language
-    };
+    // 4. 存储验证码信息到数据库（替代内存存储）
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10分钟后过期
+    
+    const { error: insertError } = await supabaseAdmin
+      .from('verification_codes')
+      .insert({
+        email: email,
+        code: verificationCode,
+        type: 'registration',
+        user_id: user.id,
+        language: language,
+        expires_at: expiresAt.toISOString()
+      });
+    
+    if (insertError) {
+      console.error('验证码存储失败:', insertError);
+      await supabaseAdmin.auth.admin.deleteUser(user.id);
+      return res.status(500).json({ error: '注册失败，请稍后重试' });
+    }
     
     console.log('✅ 用户注册成功，验证邮件已发送:', email);
     
@@ -771,28 +781,37 @@ app.post('/api/auth/verify-code', async (req, res) => {
       });
     }
     
-    // 检查待验证信息
-    global.pendingVerifications = global.pendingVerifications || {};
-    const pendingInfo = global.pendingVerifications[email];
+    // 从数据库检查验证码
+    const { data: verificationRecord, error: fetchError } = await supabaseAdmin
+      .from('verification_codes')
+      .select('*')
+      .eq('email', email)
+      .eq('type', 'registration')
+      .is('used_at', null)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
     
-    if (!pendingInfo) {
+    if (fetchError || !verificationRecord) {
       return res.status(400).json({ 
         error: '没有找到待验证的邮箱，请重新注册' 
       });
     }
     
-    // 检查验证码是否过期 (10分钟)
-    const now = Date.now();
-    const codeAge = now - pendingInfo.timestamp;
-    const CODE_EXPIRY = 10 * 60 * 1000;
+    // 检查验证码是否过期
+    const now = new Date();
+    const expiresAt = new Date(verificationRecord.expires_at);
     
-    if (codeAge >= CODE_EXPIRY) {
-      // 清理过期数据
-      delete global.pendingVerifications[email];
+    if (now > expiresAt) {
+      // 清理过期验证码
+      await supabaseAdmin
+        .from('verification_codes')
+        .delete()
+        .eq('id', verificationRecord.id);
       
       // 删除未验证的Supabase用户
       try {
-        await supabaseAdmin.auth.admin.deleteUser(pendingInfo.userId);
+        await supabaseAdmin.auth.admin.deleteUser(verificationRecord.user_id);
       } catch (error) {
         console.warn('清理过期用户失败:', error);
       }
@@ -803,7 +822,7 @@ app.post('/api/auth/verify-code', async (req, res) => {
     }
     
     // 验证验证码
-    if (verificationCode.trim() !== pendingInfo.code.trim()) {
+    if (verificationCode.trim() !== verificationRecord.code.trim()) {
       return res.status(400).json({ 
         error: '验证码不正确' 
       });
@@ -813,8 +832,8 @@ app.post('/api/auth/verify-code', async (req, res) => {
     
     // 初始化用户数据
     const { error: initError } = await supabaseAdmin.rpc('init_user', {
-      p_user_id: pendingInfo.userId,
-      p_lang: pendingInfo.language || 'zh',
+      p_user_id: verificationRecord.user_id,
+      p_lang: verificationRecord.language || 'zh',
       p_timezone: 'Asia/Tokyo',
       p_free_minutes: 10
     });
@@ -827,8 +846,11 @@ app.post('/api/auth/verify-code', async (req, res) => {
       });
     }
     
-    // 清理验证信息
-    delete global.pendingVerifications[email];
+    // 标记验证码为已使用
+    await supabaseAdmin
+      .from('verification_codes')
+      .update({ used_at: new Date().toISOString() })
+      .eq('id', verificationRecord.id);
     
     console.log('✅ 邮箱验证成功，用户已激活:', email);
     
@@ -881,17 +903,24 @@ app.post('/api/auth/send-reset-code', emailLimiter, async (req, res) => {
     const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
     const timestamp = Date.now();
     
-    // 存储重置验证码
-    if (!global.pendingVerifications) {
-      global.pendingVerifications = {};
-    }
+    // 存储重置验证码到数据库
+    const expiresAt = new Date(timestamp + 10 * 60 * 1000); // 10分钟后过期
     
-    global.pendingVerifications[`reset_${email}`] = {
-      code: resetCode,
-      timestamp: timestamp,
-      purpose: 'password_reset',
-      userId: existingUser.id
-    };
+    const { error: insertError } = await supabaseAdmin
+      .from('verification_codes')
+      .insert({
+        email: email,
+        code: resetCode,
+        type: 'password_reset',
+        user_id: existingUser.id,
+        language: req.body.language || 'zh',
+        expires_at: expiresAt.toISOString()
+      });
+    
+    if (insertError) {
+      console.error('重置验证码存储失败:', insertError);
+      return res.status(500).json({ error: '重置验证码生成失败，请稍后重试' });
+    }
     
     console.log('🔑 生成密码重置验证码:', resetCode, '给用户:', email);
     
@@ -959,11 +988,18 @@ app.post('/api/auth/reset-password', async (req, res) => {
       return res.status(400).json({ error: '密码长度至少6位' });
     }
     
-    // 检查重置验证码
-    const resetKey = `reset_${email}`;
-    const storedVerification = global.pendingVerifications?.[resetKey];
+    // 从数据库检查重置验证码
+    const { data: resetRecord, error: fetchError } = await supabaseAdmin
+      .from('verification_codes')
+      .select('*')
+      .eq('email', email)
+      .eq('type', 'password_reset')
+      .is('used_at', null)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
     
-    if (!storedVerification) {
+    if (fetchError || !resetRecord) {
       return res.status(400).json({ 
         error: '未找到重置请求，请重新申请密码重置',
         code: 'RESET_NOT_FOUND' 
@@ -971,20 +1007,24 @@ app.post('/api/auth/reset-password', async (req, res) => {
     }
     
     // 检查验证码是否正确
-    if (storedVerification.code !== verificationCode.trim()) {
+    if (resetRecord.code !== verificationCode.trim()) {
       return res.status(400).json({ 
         error: '验证码错误',
         code: 'INVALID_CODE' 
       });
     }
     
-    // 检查验证码是否过期（10分钟）
-    const now = Date.now();
-    const codeAge = now - storedVerification.timestamp;
-    const CODE_EXPIRY = 10 * 60 * 1000; // 10分钟
+    // 检查验证码是否过期
+    const now = new Date();
+    const expiresAt = new Date(resetRecord.expires_at);
     
-    if (codeAge >= CODE_EXPIRY) {
-      delete global.pendingVerifications[resetKey];
+    if (now > expiresAt) {
+      // 清理过期验证码
+      await supabaseAdmin
+        .from('verification_codes')
+        .delete()
+        .eq('id', resetRecord.id);
+        
       return res.status(400).json({ 
         error: '验证码已过期，请重新申请密码重置',
         code: 'CODE_EXPIRED' 
@@ -993,7 +1033,7 @@ app.post('/api/auth/reset-password', async (req, res) => {
     
     // 重置用户密码
     const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
-      storedVerification.userId,
+      resetRecord.user_id,
       { password: newPassword }
     );
     
@@ -1005,8 +1045,11 @@ app.post('/api/auth/reset-password', async (req, res) => {
       });
     }
     
-    // 清理重置验证码
-    delete global.pendingVerifications[resetKey];
+    // 标记重置验证码为已使用
+    await supabaseAdmin
+      .from('verification_codes')
+      .update({ used_at: new Date().toISOString() })
+      .eq('id', resetRecord.id);
     
     console.log('✅ 密码重置成功:', email);
     
