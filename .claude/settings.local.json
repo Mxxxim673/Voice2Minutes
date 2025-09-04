@@ -77,7 +77,8 @@
       "mcp__sequential-thinking-project__sequentialthinking",
       "mcp__sequential-thinking-global__sequentialthinking",
       "Bash(gh repo create:*)",
-      "Bash(git remote remove:*)"
+      "Bash(git remote remove:*)",
+      "Bash(pip3 install:*)"
     ],
     "deny": []
   },
