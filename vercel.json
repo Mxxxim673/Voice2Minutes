@@ -1,7 +1,13 @@
 {
   "version": 2,
-  "buildCommand": "npm run deploy:legal",
+  "buildCommand": "npm ci --include=dev && npm run build",
   "outputDirectory": "dist",
+  "git": {
+    "deploymentEnabled": {
+      "main": true,
+      "gh-pages": false
+    }
+  },
   "routes": [
     {
       "src": "/api/(.*)",
