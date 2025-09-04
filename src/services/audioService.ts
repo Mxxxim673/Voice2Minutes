@@ -131,11 +131,11 @@ export const transcribeAudio = async (
   }
 };
 
-const transcribeFile = async (audioFile: File): Promise<string> => {
+const transcribeFile = async (audioFile: File, skipSizeCheck: boolean = false): Promise<string> => {
   console.log(`Transcribing file: ${audioFile.name}, size: ${(audioFile.size / 1024 / 1024).toFixed(2)}MB, type: ${audioFile.type}`);
   
-  // Validate file size
-  if (audioFile.size > MAX_FILE_SIZE) {
+  // Validate file size (skip check for segments from large file processing)
+  if (!skipSizeCheck && audioFile.size > MAX_FILE_SIZE) {
     throw new Error(`File size ${(audioFile.size / 1024 / 1024).toFixed(2)}MB exceeds maximum allowed size of ${MAX_FILE_SIZE / 1024 / 1024}MB`);
   }
   
@@ -292,8 +292,8 @@ const transcribeWithWebAudioAPI = async (audioFile: File): Promise<string> => {
         }
       }
       
-      // Transcribe this segment
-      const segmentTranscription = await transcribeFile(segmentFile);
+      // Transcribe this segment (skip size check for segments)
+      const segmentTranscription = await transcribeFile(segmentFile, true);
       transcriptions.push(segmentTranscription);
       
       // Add delay between segments
