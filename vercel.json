@@ -1,13 +1,7 @@
 {
   "version": 2,
-  "buildCommand": "npm ci --include=dev && npm run build",
+  "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "git": {
-    "deploymentEnabled": {
-      "main": true,
-      "gh-pages": false
-    }
-  },
   "routes": [
     {
       "src": "/api/(.*)",
