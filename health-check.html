@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Health Check</title>
+</head>
+<body>
+    <h1>Health Check</h1>
+    <div id="status">Checking...</div>
+    <script type="module">
+        try {
+            console.log('Health check script running...');
+            
+            // Test basic React import
+            import('react').then(() => {
+                console.log('✅ React import successful');
+                document.getElementById('status').innerHTML += '<br>✅ React import successful';
+            }).catch(err => {
+                console.error('❌ React import failed:', err);
+                document.getElementById('status').innerHTML += '<br>❌ React import failed: ' + err.message;
+            });
+            
+            // Test our main app import
+            import('/src/main.tsx').then(() => {
+                console.log('✅ Main app import successful');
+                document.getElementById('status').innerHTML += '<br>✅ Main app import successful';
+            }).catch(err => {
+                console.error('❌ Main app import failed:', err);
+                document.getElementById('status').innerHTML += '<br>❌ Main app import failed: ' + err.message;
+            });
+            
+        } catch (err) {
+            console.error('❌ Health check script error:', err);
+            document.getElementById('status').innerHTML += '<br>❌ Script error: ' + err.message;
+        }
+    </script>
+</body>
+</html>
