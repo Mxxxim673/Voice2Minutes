@@ -176,19 +176,19 @@ const AudioToText: React.FC = () => {
         return;
       }
       
-      // 计算剩余配额
-      const totalQuota = isGuestUser ? 5 : (user?.quotaMinutes || 10);
-      const remainingMinutes = Math.max(0, totalQuota - currentUsage);
+      // 计算剩余配额 - admin用户无限制
+      const totalQuota = isAdmin ? Infinity : (isGuestUser ? 5 : (user?.quotaMinutes || 10));
+      const remainingMinutes = isAdmin ? Infinity : Math.max(0, totalQuota - currentUsage);
       
-      console.log(`🎵 音频时长: ${formatDuration(originalDuration)}, 剩余配额: ${formatRemainingTime(remainingMinutes)}`);
-      console.log(`👤 用户类型: ${userType}, 游客用户: ${isGuestUser}`);
+      console.log(`🎵 音频时长: ${formatDuration(originalDuration)}, 剩余配额: ${isAdmin ? '∞ (无限制)' : formatRemainingTime(remainingMinutes)}`);
+      console.log(`👤 用户类型: ${userType}, 游客用户: ${isGuestUser}, 管理员: ${isAdmin}`);
       
       let actualAudioFile = audioFile;
       let actualDuration = originalDuration;
       let wasTruncated = false;
       
-      // 智能处理：如果没有剩余配额，直接提示用户
-      if (remainingMinutes <= 0) {
+      // 智能处理：如果没有剩余配额，直接提示用户（管理员跳过检查）
+      if (!isAdmin && remainingMinutes <= 0) {
         setError(isGuestUser ? 
           t('audioToText.guestQuotaExhausted') : 
           t('audioToText.quotaExhaustedGeneral')
@@ -258,8 +258,15 @@ const AudioToText: React.FC = () => {
   };
 
   const handleStartTranscription = () => {
+    console.log('🔍 DEBUG: handleStartTranscription called');
+    console.log('🔍 DEBUG: uploadedFile:', uploadedFile);
+    console.log('🔍 DEBUG: isProcessing:', isProcessing);
+    
     if (uploadedFile) {
+      console.log('✅ DEBUG: Starting transcription for file:', uploadedFile.name);
       handleTranscription(uploadedFile);
+    } else {
+      console.log('❌ DEBUG: No uploaded file found!');
     }
   };
 

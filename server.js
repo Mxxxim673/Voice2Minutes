@@ -9,6 +9,7 @@ import fs from 'fs';
 import path from 'path';
 import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
+import multer from 'multer';
 
 dotenv.config();
 
@@ -39,7 +40,9 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
 // 中间件配置 - 暂时禁用helmet进行调试
 // app.use(helmet()); // 安全头 - 暂时注释掉
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000'], // Vite 和其他本地端口
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://voice2minutes.vercel.app', 'https://www.voice2minutes.com', 'https://voice2minutes.com', /\.vercel\.app$/]
+    : ['http://localhost:5173', 'http://localhost:3000'],
   credentials: true
 }));
 
@@ -2937,6 +2940,104 @@ app.get('/api/payment/session/:sessionId', async (req, res) => {
   }
 });
 
+// 配置multer进行文件上传
+const upload = multer({ storage: multer.memoryStorage() });
+
+// OpenAI Whisper API 代理路由
+app.post('/api/transcription', upload.single('file'), async (req, res) => {
+  try {
+    const openaiApiKey = process.env.VITE_OPENAI_API_KEY;
+    if (!openaiApiKey) {
+      return res.status(500).json({ error: 'OpenAI API key not configured' });
+    }
+
+    console.log('🎙️ 转录请求:', {
+      hasFile: !!req.file,
+      fileName: req.file?.originalname,
+      fileSize: req.file?.size,
+      mimeType: req.file?.mimetype
+    });
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'No audio file provided' });
+    }
+
+    // 重试配置
+    const maxRetries = 3;
+    const retryDelay = 2000; // 2秒
+    
+    let lastError;
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`🔄 转录尝试 ${attempt}/${maxRetries}${attempt > 1 ? ' (重试)' : ''}`);
+        
+        // 创建FormData发送到OpenAI API
+        const formData = new FormData();
+        formData.append('file', new Blob([req.file.buffer], { type: req.file.mimetype }), req.file.originalname);
+        formData.append('model', 'whisper-1');
+        formData.append('response_format', 'verbose_json');
+        formData.append('timestamp_granularities[]', 'segment');
+
+        const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openaiApiKey}`,
+          },
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          
+          // 检查是否为服务器错误（可重试）
+          const isServerError = response.status >= 500 || 
+                                errorData.error?.type === 'server_error' ||
+                                errorData.error?.code === 'server_error';
+          
+          if (isServerError && attempt < maxRetries) {
+            console.warn(`⚠️ OpenAI服务器错误 (尝试 ${attempt}/${maxRetries}), 将在${retryDelay/1000}秒后重试:`, errorData);
+            lastError = errorData;
+            await new Promise(resolve => setTimeout(resolve, retryDelay));
+            continue; // 继续重试
+          } else {
+            console.error('OpenAI API Error (不可重试或重试次数已用完):', errorData);
+            return res.status(response.status).json(errorData);
+          }
+        }
+
+        const data = await response.json();
+        console.log(`✅ 转录成功 (尝试 ${attempt}/${maxRetries}), segments:`, data.segments?.length || 0);
+        
+        return res.json(data);
+        
+      } catch (fetchError) {
+        console.error(`❌ 网络请求失败 (尝试 ${attempt}/${maxRetries}):`, fetchError);
+        lastError = fetchError;
+        
+        if (attempt < maxRetries) {
+          console.log(`⏳ 等待${retryDelay/1000}秒后重试...`);
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+        }
+      }
+    }
+    
+    // 所有重试都失败了
+    console.error('❌ 所有重试都失败，返回最后一个错误');
+    return res.status(500).json({ 
+      error: 'OpenAI API failed after all retries',
+      lastError: lastError,
+      attempts: maxRetries
+    });
+
+  } catch (error) {
+    console.error('转录代理失败:', error);
+    res.status(500).json({ 
+      error: 'Transcription proxy failed',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
 // 404处理
 app.use('*', (req, res) => {
   res.status(404).json({
@@ -2981,7 +3082,6 @@ setInterval(async () => {
     console.error('清理未验证用户失败:', error);
   }
 }, 60 * 60 * 1000); // 每小时执行一次
-
 
 // 启动服务器
 app.listen(PORT, () => {

@@ -87,7 +87,6 @@ export const getAudioDuration = (file: File): Promise<number> => {
     
     audio.addEventListener('loadedmetadata', () => {
       clearTimeout(timeoutId);
-      URL.revokeObjectURL(url);
       
       const durationSeconds = audio.duration;
       const durationMinutes = durationSeconds / 60;
@@ -98,6 +97,11 @@ export const getAudioDuration = (file: File): Promise<number> => {
         时长分钟: durationMinutes.toFixed(4) + 'min',
         文件大小: file.size + ' bytes'
       });
+      
+      // 延迟释放URL，确保音频加载完成
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+      }, 100);
       
       resolve(durationMinutes);
     });

@@ -4,6 +4,9 @@ const API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 const WHISPER_API_ENDPOINT = 'https://api.openai.com/v1/audio/transcriptions';
 const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
 
+console.log('🔍 DEBUG: API_KEY length:', API_KEY?.length || 0);
+console.log('🔍 DEBUG: API_KEY exists:', !!API_KEY);
+
 if (!API_KEY) {
   console.error('OpenAI API key not found in environment variables');
 }
@@ -164,34 +167,59 @@ const transcribeFile = async (audioFile: File, skipSizeCheck: boolean = false): 
 
   const formData = new FormData();
   formData.append('file', audioFile);
-  formData.append('model', 'whisper-1');
-  formData.append('response_format', 'verbose_json');
-  formData.append('timestamp_granularities[]', 'segment');
 
   try {
-    console.log('Sending request to OpenAI Whisper API...');
-    const response = await fetch(WHISPER_API_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${API_KEY}`,
-      },
-      body: formData,
-    });
+    console.log('Sending request to local backend API...');
+    console.log('🔍 DEBUG: File size:', audioFile.size, 'bytes');
+    
+    // 使用环境变量或相对路径来构建 API URL
+    // 生产环境：如果设置了 VITE_API_BASE_URL 则使用，否则使用相对路径
+    // 开发环境：使用相对路径，Vite proxy 会处理
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
+    const apiUrl = apiBaseUrl 
+      ? `${apiBaseUrl}/api/transcription`
+      : '/api/transcription';
+    
+    console.log('🔍 DEBUG: API URL:', apiUrl);
+    console.log('🔍 DEBUG: Environment:', import.meta.env.MODE);
+    console.log('🔍 DEBUG: API Base URL:', apiBaseUrl || '(使用相对路径)');
+    
+    // 使用后端API代理
+    let response: Response;
+    try {
+      response = await fetch(apiUrl, {
+        method: 'POST',
+        body: formData,
+      });
+    } catch (fetchError) {
+      console.error('❌ Fetch 请求失败:', fetchError);
+      // 检查是否是网络错误或 CORS 错误
+      if (fetchError instanceof TypeError && fetchError.message.includes('fetch')) {
+        throw new Error(
+          `无法连接到服务器。请检查：\n` +
+          `1. 后端服务器是否正在运行\n` +
+          `2. API URL 是否正确: ${apiUrl}\n` +
+          `3. 网络连接是否正常\n` +
+          `4. CORS 配置是否正确`
+        );
+      }
+      throw fetchError;
+    }
 
-    console.log(`API Response status: ${response.status}`);
+    console.log(`Backend API Response status: ${response.status}`);
 
     if (!response.ok) {
       let errorMessage = `HTTP ${response.status}`;
       try {
         const errorData = await response.json();
-        errorMessage = errorData.error?.message || errorData.message || errorMessage;
-        console.error('API Error details:', errorData);
+        errorMessage = errorData.error || errorData.message || errorMessage;
+        console.error('Backend API Error details:', errorData);
       } catch (parseError) {
         console.error('Could not parse error response:', parseError);
         const responseText = await response.text().catch(() => 'Unable to read response');
         console.error('Raw error response:', responseText);
       }
-      throw new Error(`OpenAI API Error: ${errorMessage}`);
+      throw new Error(`Backend API Error: ${errorMessage}`);
     }
 
     const data = await response.json();
